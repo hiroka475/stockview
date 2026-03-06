@@ -3,7 +3,7 @@
  * オフラインキャッシュとPWA機能を提供する
  */
 
-const CACHE_NAME = "stockview-v1";
+const CACHE_NAME = "stockview-v2";
 
 // 起動に必要な静的ファイルをキャッシュ
 const STATIC_ASSETS = [

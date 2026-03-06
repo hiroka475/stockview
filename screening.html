@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockView スクリーニング</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    /* ヘッダー */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1976d2;
+    }
+    .header-link {
+      font-size: 13px;
+      color: #666;
+      text-decoration: none;
+    }
+    .header-link:hover { color: #1976d2; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* レイアウト */
+    .main {
+      display: flex;
+      height: calc(100vh - 49px);
+    }
+
+    /* フィルターパネル */
+    .filter-panel {
+      width: 280px;
+      min-width: 280px;
+      background: #fff;
+      border-right: 1px solid #e0e0e0;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .filter-section {
+      margin-bottom: 16px;
+    }
+    .filter-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #eee;
+    }
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .filter-label {
+      font-size: 12px;
+      color: #666;
+      width: 100px;
+      flex-shrink: 0;
+    }
+    .filter-input {
+      width: 70px;
+      padding: 4px 6px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: right;
+    }
+    .filter-input:focus {
+      border-color: #1976d2;
+      outline: none;
+    }
+    .filter-unit {
+      font-size: 11px;
+      color: #999;
+    }
+    .filter-prefix {
+      font-size: 11px;
+      color: #999;
+    }
+
+    /* ボタン */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary {
+      background: #1976d2;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #1565c0; }
+    .btn-primary:disabled {
+      background: #90caf9;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #fff;
+      color: #666;
+      border: 1px solid #d0d0d0;
+    }
+    .btn-secondary:hover { background: #f5f5f5; }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+    .filter-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /* 結果パネル */
+    .results-panel {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+    }
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .results-count {
+      font-size: 13px;
+      color: #666;
+    }
+    .results-count strong {
+      color: #1976d2;
+      font-size: 16px;
+    }
+
+    /* テーブル */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .results-table thead {
+      background: #fafafa;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .results-table th {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      text-align: right;
+      border-bottom: 2px solid #e0e0e0;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .results-table th:first-child,
+    .results-table th:nth-child(2) {
+      text-align: left;
+    }
+    .results-table th:hover {
+      background: #f0f0f0;
+    }
+    .results-table th .sort-arrow {
+      font-size: 10px;
+      margin-left: 2px;
+      color: #1976d2;
+    }
+    .results-table td {
+      padding: 8px 12px;
+      font-size: 13px;
+      text-align: right;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .results-table td:first-child,
+    .results-table td:nth-child(2) {
+      text-align: left;
+    }
+    .results-table tbody tr {
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .results-table tbody tr:hover {
+      background: #f0f7ff;
+    }
+    .td-code {
+      font-weight: 600;
+      color: #1976d2;
+    }
+    .td-name {
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .td-positive { color: #26a69a; }
+    .td-negative { color: #ef5350; }
+    .td-highlight { font-weight: 600; color: #e65100; }
+    .td-na { color: #ccc; font-size: 11px; }
+
+    /* ツールチップ（ヘッダー定義表示） */
+    .tip-icon {
+      font-size: 10px;
+      color: #aaa;
+      cursor: help;
+      margin-left: 2px;
+      vertical-align: middle;
+    }
+    .results-table th:hover .tip-icon {
+      color: #1976d2;
+    }
+    .col-tooltip {
+      position: fixed;
+      z-index: 200;
+      background: #333;
+      color: #fff;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 1.5;
+      padding: 8px 12px;
+      border-radius: 6px;
+      max-width: 280px;
+      white-space: pre-line;
+      pointer-events: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .col-tooltip.show { opacity: 1; }
+
+    /* ローディング */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.85);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e0e0e0;
+      border-top: 3px solid #1976d2;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-size: 14px;
+      color: #666;
+    }
+    .loading-progress {
+      font-size: 12px;
+      color: #999;
+    }
+
+    /* 空メッセージ */
+    .empty-msg {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>StockView スクリーニング</h1>
+    <a href="/" class="header-link">← チャートに戻る</a>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-primary btn-sm" id="addToWatchlistBtn" disabled>ウォッチリストに追加</button>
+    <button class="btn btn-secondary btn-sm" id="csvExportBtn" disabled>CSV出力</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- フィルターパネル -->
+  <div class="filter-panel">
+    <div class="filter-section">
+      <div class="filter-section-title">市場区分</div>
+      <div class="filter-row">
+        <select id="fMarket" style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;">
+          <option value="">すべて</option>
+          <option value="プライム" selected>プライム</option>
+          <option value="スタンダード">スタンダード</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">規模</div>
+      <div class="filter-row" style="flex-wrap:wrap;gap:4px;">
+        <label style="font-size:12px;display:flex;align-items:center;gap:3px;">
+          <input type="checkbox" class="size-filter" value="大型株" checked> 大型株
+        </label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:3px;">
+          <input type="checkbox" class="size-filter" value="中型株" checked> 中型株
+        </label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:3px;">
+          <input type="checkbox" class="size-filter" value="小型株" checked> 小型株
+        </label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:3px;">
+          <input type="checkbox" class="size-filter" value="" checked> 区分なし
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">配当</div>
+      <div class="filter-row">
+        <span class="filter-label">配当利回り</span>
+        <input type="number" class="filter-input" id="fMinYield" placeholder="0" step="0.5">
+        <span class="filter-unit">% 以上</span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">配当性向</span>
+        <input type="number" class="filter-input" id="fMaxPayout" placeholder="" step="5">
+        <span class="filter-unit">% 以下</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">割安度</div>
+      <div class="filter-row">
+        <span class="filter-label">PER</span>
+        <input type="number" class="filter-input" id="fMaxPER" placeholder="" step="1">
+        <span class="filter-unit">倍以下</span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">PBR</span>
+        <input type="number" class="filter-input" id="fMaxPBR" placeholder="" step="0.1">
+        <span class="filter-unit">倍以下</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">収益性</div>
+      <div class="filter-row">
+        <span class="filter-label">営業利益率</span>
+        <input type="number" class="filter-input" id="fMinMargin" placeholder="" step="1">
+        <span class="filter-unit">% 以上</span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">ROE</span>
+        <input type="number" class="filter-input" id="fMinROE" placeholder="" step="1">
+        <span class="filter-unit">% 以上</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">財務健全性</div>
+      <div class="filter-row">
+        <span class="filter-label">自己資本比率</span>
+        <input type="number" class="filter-input" id="fMinEquity" placeholder="" step="5">
+        <span class="filter-unit">% 以上</span>
+      </div>
+    </div>
+
+
+    <div class="filter-actions">
+      <button class="btn btn-primary" id="fetchBtn">データ表示</button>
+      <button class="btn btn-secondary" id="forceRefreshBtn" title="IR BANKから最新データを再取得します（時間がかかります）">強制再取得</button>
+      <button class="btn btn-secondary" id="clearBtn">クリア</button>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
+        <label style="font-size:12px;color:#666;">取得件数:</label>
+        <input type="number" id="fetchLimit" min="0" max="99999" value="0" style="width:70px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;">
+        <span style="font-size:11px;color:#999;">0=全件</span>
+      </div>
+      <div id="cacheInfo" style="margin-top:4px;font-size:11px;color:#999;"></div>
+    </div>
+  </div>
+
+  <!-- 結果パネル -->
+  <div class="results-panel">
+    <div class="results-header">
+      <div class="results-count" id="resultsCount">
+        データを読み込み中です...
+      </div>
+    </div>
+    <div id="irbank-warning" style="display:none; background:#fff3e0; color:#e65100; padding:10px 16px; border-radius:6px; font-size:13px; margin-bottom:8px; border-left:4px solid #ff9800;"></div>
+    <div id="resultsBody">
+      <div class="empty-msg">
+        バックグラウンドでデータを取得しています。取得中もフィルターは操作できます。<br>
+        初回は全銘柄のデータ取得に時間がかかります（キャッシュ済みなら数秒）。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ローディング -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">データを取得中...</div>
+  <div class="loading-progress" id="loadingProgress">0 / 0 銘柄</div>
+</div>
+
+<script>
+  // ==========================================
+  // スクリーニングアプリ
+  // ==========================================
+
+  let candidates = [];       // 候補銘柄リスト
+  let candidateMarketMap = {}; // {code: "プライム"} 市場区分マップ
+  let candidateSizeMap = {};   // {code: "大型株"} 規模区分マップ
+  let stockData = {};         // 取得済みデータ {code: {...}}
+  let filteredResults = [];   // フィルター後の結果
+  let sortColumn = "dividendYield";
+  let sortAsc = false;
+
+  // ==========================================
+  // 初期化
+  // ==========================================
+  let isLoading = false;  // データ取得中フラグ
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    // 候補リスト取得
+    try {
+      const res = await fetch("/api/screening/candidates");
+      candidates = await res.json();
+      // 市場区分・規模マップを構築
+      candidates.forEach(c => {
+        const m = c.market || "";
+        if (m.includes("プライム")) candidateMarketMap[c.code] = "プライム";
+        else if (m.includes("スタンダード")) candidateMarketMap[c.code] = "スタンダード";
+        else if (m.includes("グロース")) candidateMarketMap[c.code] = "グロース";
+        else candidateMarketMap[c.code] = m;
+
+        candidateSizeMap[c.code] = c.size || "";
+      });
+    } catch (e) {
+      console.error("候補リスト取得エラー:", e);
+      candidates = [];
+    }
+
+    // イベントリスナー
+    document.getElementById("fetchBtn").addEventListener("click", () => startScreening(false));
+    document.getElementById("forceRefreshBtn").addEventListener("click", () => {
+      if (confirm("IR BANKから全銘柄のデータを再取得します。\nアクセス制限を避けるため時間がかかります。\n実行しますか？")) {
+        startScreening(true);
+      }
+    });
+    document.getElementById("clearBtn").addEventListener("click", clearFilters);
+    document.getElementById("csvExportBtn").addEventListener("click", exportCSV);
+    document.getElementById("addToWatchlistBtn").addEventListener("click", addToWatchlist);
+
+    // フィルター入力時にリアルタイムで結果を更新
+    document.querySelectorAll(".filter-input").forEach(input => {
+      input.addEventListener("input", () => {
+        if (Object.keys(stockData).length > 0) {
+          applyFilters();
+          updateResultsCount();
+        }
+      });
+    });
+
+    // 市場区分フィルター変更時もリアルタイム更新
+    document.getElementById("fMarket").addEventListener("change", () => {
+      if (Object.keys(stockData).length > 0) {
+        applyFilters();
+        updateResultsCount();
+      }
+    });
+
+    // 規模フィルター変更時もリアルタイム更新
+    document.querySelectorAll(".size-filter").forEach(cb => {
+      cb.addEventListener("change", () => {
+        if (Object.keys(stockData).length > 0) {
+          applyFilters();
+          updateResultsCount();
+        }
+      });
+    });
+
+    // ページ読み込み時にキャッシュデータを自動表示
+    startScreening(false);
+  });
+
+  // ==========================================
+  // データ取得 + スクリーニング実行
+  // ==========================================
+  let lastFetchMsg = "";  // 最後の取得結果メッセージ
+
+  function updateResultsCount() {
+    const total = Object.keys(stockData).length;
+    if (total === 0) return;
+    const suffix = lastFetchMsg ? `　<span style="font-size:11px;color:#999;">${lastFetchMsg}</span>` : "";
+    document.getElementById("resultsCount").innerHTML =
+      `<strong>${filteredResults.length}</strong> / ${total} 銘柄が条件に一致${suffix}`;
+  }
+
+  async function startScreening(forceRefresh = false) {
+    if (isLoading) return;  // 二重実行防止
+    isLoading = true;
+
+    const btn = document.getElementById("fetchBtn");
+    const forceBtn = document.getElementById("forceRefreshBtn");
+    btn.disabled = true;
+    forceBtn.disabled = true;
+    btn.textContent = forceRefresh ? "再取得中..." : "読み込み中...";
+
+    // 前回のエラーをクリア
+    window._screeningErrors = [];
+    const warnEl = document.getElementById("irbank-warning");
+    if (warnEl) warnEl.style.display = "none";
+
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.classList.add("show");
+
+    const limit = parseInt(document.getElementById("fetchLimit").value) || 0;
+    const marketFilter = document.getElementById("fMarket").value;
+    // 市場区分で候補を絞り込んでから取得
+    const filteredCandidates = marketFilter
+      ? candidates.filter(c => candidateMarketMap[c.code] === marketFilter)
+      : candidates;
+    const allCodes = filteredCandidates.map(c => c.code);
+    const codes = limit > 0 ? allCodes.slice(0, limit) : allCodes;
+    const batchSize = 10;  // 10銘柄ずつ送信（APIレート制限対策）
+    let processed = 0;
+    let totalCached = 0;
+    let totalFetched = 0;
+    const startTime = Date.now();
+
+    try {
+      for (let i = 0; i < codes.length; i += batchSize) {
+        const batch = codes.slice(i, i + batchSize);
+        const res = await fetch("/api/screening/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codes: batch, force: forceRefresh }),
+        });
+        const data = await res.json();
+
+        // 結果をマージ
+        Object.assign(stockData, data.results || {});
+        processed += batch.length;
+        totalCached += data.cached || 0;
+        totalFetched += data.fetched || 0;
+
+        // IR BANKエラーを収集
+        if (data.errors && data.errors.length > 0) {
+          if (!window._screeningErrors) window._screeningErrors = [];
+          window._screeningErrors.push(...data.errors);
+        }
+
+        // 進捗表示
+        const pct = Math.round(Math.min(processed, codes.length) / codes.length * 100);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+        document.getElementById("loadingProgress").textContent =
+          `${Math.min(processed, codes.length)} / ${codes.length} 銘柄（${pct}%・${elapsed}秒経過）`;
+
+        // 途中経過を即座にテーブルに反映
+        applyFilters();
+        updateResultsCount();
+      }
+
+      // 完了メッセージ
+      const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      lastFetchMsg = totalCached > 0
+        ? `${totalCached}銘柄はキャッシュから即時取得、${totalFetched}銘柄を新規取得（${totalTime}秒）`
+        : `${codes.length}銘柄のデータを取得しました（${totalTime}秒）`;
+
+      // IR BANKエラーがあった場合に警告表示
+      const errs = window._screeningErrors || [];
+      if (errs.length > 0) {
+        const isRateLimit = errs.some(e => e.error && (e.error.includes("制限") || e.error.includes("403") || e.error.includes("取得できません")));
+        const warnEl = document.getElementById("irbank-warning");
+        if (warnEl) {
+          warnEl.textContent = isRateLimit
+            ? `⚠ IR BANKのアクセス制限により${errs.length}銘柄のデータを取得できませんでした。しばらく時間をおいて再取得してください。`
+            : `⚠ ${errs.length}銘柄のIR BANKデータ取得に失敗しました。`;
+          warnEl.style.display = "block";
+        }
+        lastFetchMsg += `（⚠ ${errs.length}銘柄エラー）`;
+      }
+      window._screeningErrors = [];
+      updateResultsCount();
+
+    } catch (e) {
+      console.error("データ取得エラー:", e);
+      document.getElementById("resultsBody").innerHTML =
+        '<div class="empty-msg">データの取得に失敗しました。サーバーが起動しているか確認してください。</div>';
+    } finally {
+      overlay.classList.remove("show");
+      isLoading = false;
+      btn.disabled = false;
+      forceBtn.disabled = false;
+      btn.textContent = "データ表示";
+      document.getElementById("csvExportBtn").disabled = false;
+      document.getElementById("addToWatchlistBtn").disabled = false;
+
+      // キャッシュの最終更新日時を表示
+      const allData = Object.values(stockData);
+      if (allData.length > 0) {
+        const timestamps = allData.map(d => d.lastUpdated || 0).filter(t => t > 0);
+        if (timestamps.length > 0) {
+          const oldest = new Date(Math.min(...timestamps) * 1000);
+          const newest = new Date(Math.max(...timestamps) * 1000);
+          const fmt = d => `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+          document.getElementById("cacheInfo").textContent =
+            `データ更新: ${fmt(oldest)} 〜 ${fmt(newest)}`;
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // フィルター適用
+  // ==========================================
+  function getFilterValue(id) {
+    const v = document.getElementById(id).value;
+    return v === "" ? null : parseFloat(v);
+  }
+
+  function applyFilters() {
+    const marketFilter = document.getElementById("fMarket").value;
+    const checkedSizes = [...document.querySelectorAll(".size-filter:checked")].map(cb => cb.value);
+    const minYield = getFilterValue("fMinYield");
+    const maxPayout = getFilterValue("fMaxPayout");
+    const maxPER = getFilterValue("fMaxPER");
+    const maxPBR = getFilterValue("fMaxPBR");
+    const minMargin = getFilterValue("fMinMargin");
+    const minROE = getFilterValue("fMinROE");
+    const minEquity = getFilterValue("fMinEquity");
+
+    filteredResults = Object.values(stockData).filter(s => {
+      // 市場区分
+      if (marketFilter && candidateMarketMap[s.code] !== marketFilter) return false;
+
+      // 規模
+      if (checkedSizes.length < 4) {  // 全部チェックなら無視
+        const stockSize = candidateSizeMap[s.code] || "";
+        if (!checkedSizes.includes(stockSize)) return false;
+      }
+
+      // 配当利回り
+      if (minYield !== null && (s.dividendYield == null || s.dividendYield < minYield)) return false;
+
+      // 配当性向
+      if (maxPayout !== null && (s.payoutRatio == null || s.payoutRatio > maxPayout)) return false;
+
+      // PER
+      if (maxPER !== null) {
+        if (s.per == null || s.per <= 0 || s.per > maxPER) return false;
+      }
+
+      // PBR
+      if (maxPBR !== null) {
+        if (s.pbr == null || s.pbr <= 0 || s.pbr > maxPBR) return false;
+      }
+
+      // 営業利益率
+      if (minMargin !== null && (s.operatingMargin == null || s.operatingMargin < minMargin)) return false;
+
+      // ROE
+      if (minROE !== null && (s.roe == null || s.roe < minROE)) return false;
+
+      // 自己資本比率
+      if (minEquity !== null && (s.equityRatio == null || s.equityRatio < minEquity)) return false;
+
+      return true;
+    });
+
+    // ソート
+    sortResults();
+    renderResults();
+  }
+
+  // ==========================================
+  // ソート
+  // ==========================================
+  function sortResults() {
+    filteredResults.sort((a, b) => {
+      let va = a[sortColumn];
+      let vb = b[sortColumn];
+      // null を末尾に
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      // 文字列比較
+      if (typeof va === "string") {
+        return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+      }
+      return sortAsc ? va - vb : vb - va;
+    });
+  }
+
+  function setSort(column) {
+    if (sortColumn === column) {
+      sortAsc = !sortAsc;
+    } else {
+      sortColumn = column;
+      sortAsc = false;
+    }
+    sortResults();
+    renderResults();
+  }
+
+  // ==========================================
+  // 結果テーブル描画
+  // ==========================================
+  const columns = [
+    { key: "code", label: "コード" },
+    { key: "name", label: "銘柄名" },
+    { key: "price", label: "株価",
+      tip: "Yahoo Finance からリアルタイム取得",
+      fmt: v => v ? `¥${Math.round(v).toLocaleString()}` : "-" },
+    { key: "dividendYield", label: "配当利回り",
+      tip: "IR BANK 年間配当（予想優先）÷ Yahoo株価 × 100\n予想配当が発表済みならそちらを使用",
+      fmt: v => v ? `${v.toFixed(2)}%` : "-", cls: v => v >= 4 ? "td-highlight" : v >= 3 ? "td-positive" : "" },
+    { key: "dividendAnnual", label: "年間配当",
+      tip: "IR BANK の1株配当（予想優先）\n来期の配当予想が発表済みならそちらを使用",
+      fmt: v => v ? `¥${v}` : "-" },
+    { key: "per", label: "PER",
+      tip: "Yahoo株価 ÷ IR BANK EPS（予想優先）\n「予」= 予想EPS、「実」= 実績EPS で計算",
+      fmt: (v, s) => {
+      if (!v || v <= 0) return "-";
+      const type = s && s.perType ? s.perType : "";
+      const suffix = type === "予想" ? '<span style="font-size:0.7em;color:#4fc3f7"> 予</span>' : type ? '<span style="font-size:0.7em;color:#aaa"> 実</span>' : "";
+      return `${v.toFixed(1)}${suffix}`;
+    }},
+    { key: "pbr", label: "PBR",
+      tip: "Yahoo株価 ÷ IR BANK BPS（予想優先）",
+      fmt: v => v && v > 0 ? `${v.toFixed(2)}` : "-" },
+    { key: "operatingMargin", label: "営業利益率",
+      tip: "IR BANK の営業利益率（直近決算）\n営業利益 ÷ 売上高 × 100",
+      fmt: v => v != null ? `${v.toFixed(1)}%` : "-" },
+    { key: "roe", label: "ROE",
+      tip: "IR BANK の自己資本利益率（直近決算）\n当期純利益 ÷ 自己資本 × 100",
+      fmt: v => v != null ? `${v.toFixed(1)}%` : "-" },
+    { key: "equityRatio", label: "自己資本比率",
+      tip: "IR BANK の自己資本比率（直近決算）\n自己資本 ÷ 総資産 × 100",
+      fmt: v => v != null ? `${v.toFixed(1)}%` : "-" },
+    { key: "payoutRatio", label: "配当性向",
+      tip: "IR BANK の配当性向（直近決算）\n1株配当 ÷ EPS × 100",
+      fmt: v => v != null ? `${v.toFixed(1)}%` : "-" },
+  ];
+
+  function renderResults() {
+    const container = document.getElementById("resultsBody");
+    const countEl = document.getElementById("resultsCount");
+
+    countEl.innerHTML = `<strong>${filteredResults.length}</strong> / ${Object.keys(stockData).length} 銘柄が条件に一致`;
+
+    if (filteredResults.length === 0) {
+      container.innerHTML = '<div class="empty-msg">条件に一致する銘柄がありません。フィルターを緩めてみてください。</div>';
+      return;
+    }
+
+    let html = '<table class="results-table"><thead><tr>';
+    columns.forEach(col => {
+      const arrow = sortColumn === col.key ? (sortAsc ? " ▲" : " ▼") : "";
+      const tipAttr = col.tip ? ` data-tip="${col.tip.replace(/"/g, '&quot;')}"` : "";
+      const tipIcon = col.tip ? ' <span class="tip-icon">ⓘ</span>' : "";
+      html += `<th onclick="setSort('${col.key}')"${tipAttr}>${col.label}${tipIcon}<span class="sort-arrow">${arrow}</span></th>`;
+    });
+    html += "</tr></thead><tbody>";
+
+    filteredResults.forEach(s => {
+      html += `<tr onclick="openFundamentals('${s.code}')">`;
+      columns.forEach(col => {
+        const val = s[col.key];
+        const display = col.fmt ? col.fmt(val, s) : (val ?? "-");
+        const cls = col.cls ? col.cls(val) : "";
+        const tdClass = col.key === "code" ? "td-code" :
+                        col.key === "name" ? "td-name" : "";
+        const allClasses = [tdClass, cls, (display === "-" ? "td-na" : "")].filter(Boolean).join(" ");
+        html += `<td class="${allClasses}">${display}</td>`;
+      });
+      html += "</tr>";
+    });
+
+    html += "</tbody></table>";
+    container.innerHTML = html;
+  }
+
+  // ==========================================
+  // ファンダメンタルズ分析ページへ遷移
+  // ==========================================
+  function openFundamentals(code) {
+    window.open(`/fundamentals.html?code=${code}`, "_blank");
+  }
+
+  // ==========================================
+  // フィルタークリア
+  // ==========================================
+  function clearFilters() {
+    document.querySelectorAll(".filter-input").forEach(input => input.value = "");
+    document.getElementById("fMarket").value = "";
+    document.querySelectorAll(".size-filter").forEach(cb => cb.checked = true);
+    if (Object.keys(stockData).length > 0) {
+      applyFilters();
+    }
+  }
+
+  // ==========================================
+  // CSV出力
+  // ==========================================
+  function exportCSV() {
+    if (filteredResults.length === 0) return;
+
+    const headers = columns.map(c => c.label);
+    const rows = filteredResults.map(s =>
+      columns.map(col => {
+        const v = s[col.key];
+        if (v == null) return "";
+        return String(v);
+      })
+    );
+
+    let csv = "\uFEFF";  // BOM for Excel
+    csv += headers.join(",") + "\n";
+    rows.forEach(row => {
+      csv += row.map(v => `"${v}"`).join(",") + "\n";
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `screening_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ==========================================
+  // ウォッチリストに一括追加
+  // ==========================================
+  function addToWatchlist() {
+    if (filteredResults.length === 0) {
+      alert("追加する銘柄がありません。");
+      return;
+    }
+
+    // カスタムリスト一覧を取得
+    const CUSTOM_LISTS_KEY = "stockview_custom_watchlists";
+    const WATCHLIST_KEY_JP = "stockview_watchlist_jp";
+    let customLists = {};
+    try {
+      customLists = JSON.parse(localStorage.getItem(CUSTOM_LISTS_KEY) || "{}");
+    } catch (e) { customLists = {}; }
+
+    const tabIds = Object.keys(customLists);
+
+    // 追加先を選択
+    let options = ["メイン（JP）"];
+    tabIds.forEach(id => options.push(customLists[id].name));
+    options.push("＋ 新しいリストを作成");
+
+    const choiceMsg = "追加先を選んでください:\n" + options.map((o, i) => `${i + 1}. ${o}`).join("\n");
+    const choice = prompt(choiceMsg, "1");
+    if (!choice) return;
+
+    const idx = parseInt(choice) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= options.length) return;
+
+    let targetKey = null;
+    let targetCustomId = null;
+
+    if (idx === 0) {
+      // メイン（JP）
+      targetKey = WATCHLIST_KEY_JP;
+    } else if (idx <= tabIds.length) {
+      // カスタムタブ
+      targetCustomId = tabIds[idx - 1];
+    } else {
+      // 新規作成
+      const name = prompt("新しいリスト名を入力:");
+      if (!name || !name.trim()) return;
+      targetCustomId = "custom_" + Date.now();
+      customLists[targetCustomId] = { name: name.trim(), stocks: [] };
+    }
+
+    // 追加先リストを取得
+    let watchlist = [];
+    if (targetKey) {
+      try { watchlist = JSON.parse(localStorage.getItem(targetKey) || "[]"); } catch { watchlist = []; }
+    } else if (targetCustomId) {
+      watchlist = customLists[targetCustomId]?.stocks || [];
+    }
+
+    const existingCodes = new Set(watchlist.map(w => w.symbol));
+    let addedCount = 0;
+
+    filteredResults.forEach(s => {
+      const code = s.code;
+      if (!existingCodes.has(code)) {
+        watchlist.push({
+          symbol: code,
+          name: s.name || code,
+          addedAt: Date.now(),
+        });
+        existingCodes.add(code);
+        addedCount++;
+      }
+    });
+
+    // 保存
+    if (targetKey) {
+      localStorage.setItem(targetKey, JSON.stringify(watchlist));
+    } else if (targetCustomId) {
+      customLists[targetCustomId].stocks = watchlist;
+      localStorage.setItem(CUSTOM_LISTS_KEY, JSON.stringify(customLists));
+    }
+
+    const skipped = filteredResults.length - addedCount;
+    const listName = targetKey ? "メイン（JP）" : customLists[targetCustomId]?.name;
+    let msg = `${addedCount}銘柄を「${listName}」に追加しました。`;
+    if (skipped > 0) msg += `\n（${skipped}銘柄は既に登録済み）`;
+    msg += "\n\nStockViewに戻ると反映されます。";
+    alert(msg);
+  }
+
+  // ==========================================
+  // ツールチップ（カラム定義の表示）
+  // ==========================================
+  (function() {
+    // ツールチップ要素を作成
+    const tipEl = document.createElement("div");
+    tipEl.className = "col-tooltip";
+    document.body.appendChild(tipEl);
+
+    let hideTimer = null;
+
+    document.addEventListener("mouseover", function(e) {
+      const th = e.target.closest("th[data-tip]");
+      if (!th) return;
+      clearTimeout(hideTimer);
+      tipEl.textContent = th.getAttribute("data-tip");
+      tipEl.classList.add("show");
+
+      // 位置計算
+      const rect = th.getBoundingClientRect();
+      let left = rect.left + rect.width / 2 - tipEl.offsetWidth / 2;
+      let top = rect.bottom + 6;
+      // 画面からはみ出さない
+      if (left < 8) left = 8;
+      if (left + tipEl.offsetWidth > window.innerWidth - 8) left = window.innerWidth - tipEl.offsetWidth - 8;
+      if (top + tipEl.offsetHeight > window.innerHeight - 8) top = rect.top - tipEl.offsetHeight - 6;
+      tipEl.style.left = left + "px";
+      tipEl.style.top = top + "px";
+    });
+
+    document.addEventListener("mouseout", function(e) {
+      const th = e.target.closest("th[data-tip]");
+      if (!th) return;
+      hideTimer = setTimeout(() => tipEl.classList.remove("show"), 100);
+    });
+  })();
+</script>
+</body>
+</html>

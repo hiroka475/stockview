@@ -137,8 +137,12 @@
   {"symbol":"ZM","name":"Zoom Video Communications","sector":"Technology"},
   {"symbol":"ZS","name":"Zscaler Inc.","sector":"Technology"},
   {"symbol":"QQQ","name":"Invesco QQQ Trust (NASDAQ 100)","sector":"ETF"},
+  {"symbol":"VT","name":"Vanguard Total World Stock ETF","sector":"ETF"},
   {"symbol":"VTI","name":"Vanguard Total Stock Market ETF","sector":"ETF"},
   {"symbol":"ARKK","name":"ARK Innovation ETF","sector":"ETF"},
   {"symbol":"DIA","name":"SPDR Dow Jones Industrial ETF","sector":"ETF"},
-  {"symbol":"IWM","name":"iShares Russell 2000 ETF","sector":"ETF"}
+  {"symbol":"IWM","name":"iShares Russell 2000 ETF","sector":"ETF"},
+  {"symbol":"^VIX","name":"VIX恐怖指数","sector":"指標"},
+  {"symbol":"^TNX","name":"米国10年債利回り","sector":"指標"},
+  {"symbol":"USDJPY=X","name":"米ドル/円","sector":"為替"}
 ]
