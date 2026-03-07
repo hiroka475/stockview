@@ -17,6 +17,13 @@ import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from datetime import datetime, timedelta
 
+# Render等のクラウド環境ではstdoutバッファリングを無効化（ログ即時表示のため）
+if os.environ.get("RENDER") or os.environ.get("PORT"):
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+
+print("[起動] StockView サーバーを初期化中...")
+
 # brotli モジュール（IR BANKのレスポンス解凍に必要）
 # なければ自動インストールを試みる
 try:
@@ -27,8 +34,7 @@ except ImportError:
     try:
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "brotli", "-q"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            timeout=30,
         )
         import brotli
         _HAS_BROTLI = True
