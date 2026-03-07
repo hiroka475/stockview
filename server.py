@@ -14,7 +14,6 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from datetime import datetime, timedelta
 
@@ -66,20 +65,6 @@ if os.path.exists(_us_stocks_path):
         US_STOCKS = json.load(f)
     print(f"  米国株マスタ: {len(US_STOCKS)}銘柄 読み込み完了")
 
-# スクリーニング候補リスト
-SCREENING_CANDIDATES = []
-_candidates_path = os.path.join(_base_dir, "dividend-candidates.json")
-if os.path.exists(_candidates_path):
-    with open(_candidates_path, "r", encoding="utf-8") as f:
-        SCREENING_CANDIDATES = json.load(f)
-    print(f"  スクリーニング候補: {len(SCREENING_CANDIDATES)}銘柄 読み込み完了")
-
-# スクリーニング用キャッシュ（長期保持: 30日間）
-# IR BANKのデータは決算発表時（年4回）しか変わらないため30日キャッシュで十分。
-# 株価のみサーバー起動時に毎回Yahoo Financeから更新する。
-_screening_cache = {}
-_SCREENING_CACHE_TTL = 2592000  # 30日間（秒）
-_SCREENING_CACHE_FILE = os.path.join(_base_dir, "screening-cache.json")
 
 # ファンダメンタルズ専用キャッシュ（長期保持: 30日間 + ファイル永続化）
 # IR BANKのデータは決算発表時（年4回）しか変わらないため30日キャッシュで十分。
@@ -90,20 +75,6 @@ _FUNDAMENTALS_CACHE_FILE = os.path.join(_base_dir, "fundamentals-cache.json")
 # IR BANKへのアクセス間隔制御（過剰アクセス防止）
 _last_irbank_access = 0
 _IRBANK_ACCESS_INTERVAL = 3  # 最低3秒間隔
-
-# 起動時にキャッシュファイルがあれば読み込む
-if os.path.exists(_SCREENING_CACHE_FILE):
-    try:
-        with open(_SCREENING_CACHE_FILE, "r", encoding="utf-8") as f:
-            _saved = json.load(f)
-        for code, data in _saved.items():
-            _screening_cache[f"screening|{code}"] = {
-                "data": data,
-                "timestamp": data.get("lastUpdated", time.time()),
-            }
-        print(f"  スクリーニングキャッシュ: {len(_saved)}銘柄 読み込み完了")
-    except Exception as e:
-        print(f"  スクリーニングキャッシュ読み込みエラー: {e}")
 
 # 起動時にファンダメンタルズキャッシュファイルがあれば読み込む
 if os.path.exists(_FUNDAMENTALS_CACHE_FILE):
@@ -170,8 +141,6 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             self.handle_search_api(query)
         elif path == "/api/alerts/load":
             self.handle_alerts_load()
-        elif path == "/api/screening/candidates":
-            self.handle_screening_candidates()
         else:
             # 静的ファイル（HTML/CSS/JS）を配信
             super().do_GET()
@@ -193,8 +162,6 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             self.handle_alerts_save()
         elif path == "/api/alerts/check":
             self.handle_alerts_check()
-        elif path == "/api/screening/batch":
-            self.handle_screening_batch()
         else:
             self.send_json_error("Not Found", 404)
 
@@ -298,103 +265,6 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             self.send_json_response({"triggered": triggered})
         except Exception as e:
             self.send_json_error(f"アラートチェックエラー: {e}", 500)
-
-    # ==========================================
-    # スクリーニング関連API
-    # ==========================================
-
-    def handle_screening_candidates(self):
-        """GET /api/screening/candidates — 候補銘柄リストを返す"""
-        self.send_json_response(SCREENING_CANDIDATES)
-
-    def handle_screening_batch(self):
-        """
-        POST /api/screening/batch — 複数銘柄のスクリーニングデータを一括取得（並列処理）
-        リクエスト: {"codes": ["7203", "8306", ...], "force": false}
-        レスポンス: {"results": {code: {...metrics...}, ...}, "errors": [...], "cached": N, "fetched": N}
-
-        force=true の場合はキャッシュを無視してIR BANKから再取得する。
-        force=false（デフォルト）の場合はキャッシュ優先で返す。
-        """
-        try:
-            body = self._read_body_json()
-            codes = body.get("codes", [])
-            force_refresh = body.get("force", False)
-            if not codes:
-                self.send_json_response({"results": {}, "errors": [], "cached": 0, "fetched": 0})
-                return
-
-            results = {}
-            errors = []
-            codes_to_fetch = []
-
-            # キャッシュヒットチェック
-            for code in codes:
-                if force_refresh:
-                    # 強制再取得モード: 全銘柄を再取得
-                    codes_to_fetch.append(code)
-                    continue
-
-                cache_key = f"screening|{code}"
-                cached = _screening_cache.get(cache_key)
-                if cached and (time.time() - cached["timestamp"] < _SCREENING_CACHE_TTL):
-                    d = cached["data"]
-                    has_irbank_data = d.get("dividendType") is not None  # 新形式チェック
-                    has_valuation = (d.get("per") not in (None, 0)) or (d.get("pbr") not in (None, 0))
-                    has_dividend = (d.get("dividendYield") not in (None, 0))
-                    if has_irbank_data and (has_valuation or not has_dividend):
-                        results[code] = d
-                    else:
-                        codes_to_fetch.append(code)
-                else:
-                    codes_to_fetch.append(code)
-
-            cached_count = len(results)
-
-            # キャッシュミスした銘柄を並列取得（最大5並列、レート制限対策）
-            if codes_to_fetch:
-                # 小バッチに分けてウェイトを入れる
-                mini_batch_size = 5
-                for mb_start in range(0, len(codes_to_fetch), mini_batch_size):
-                    mb = codes_to_fetch[mb_start:mb_start + mini_batch_size]
-                    with ThreadPoolExecutor(max_workers=5) as executor:
-                        future_map = {
-                            executor.submit(_fetch_screening_data_static, code): code
-                            for code in mb
-                        }
-                        for future in as_completed(future_map):
-                            code = future_map[future]
-                            try:
-                                data = future.result()
-                                if data:
-                                    results[code] = data
-                                    # IR BANKエラーのデータはキャッシュしない（次回再取得させる）
-                                    if not data.get("_irbank_error"):
-                                        _screening_cache[f"screening|{code}"] = {
-                                            "data": data,
-                                            "timestamp": time.time(),
-                                        }
-                                    else:
-                                        errors.append({"code": code, "error": data["_irbank_error"]})
-                            except Exception as e:
-                                errors.append({"code": code, "error": str(e)})
-                    # バッチ間に待機（IR BANKレート制限対策: 3秒間隔）
-                    if mb_start + mini_batch_size < len(codes_to_fetch):
-                        time.sleep(3)
-
-                # 取得後にキャッシュファイルに保存
-                _save_screening_cache()
-
-            self.send_json_response({
-                "results": results,
-                "errors": errors,
-                "cached": cached_count,
-                "fetched": len(codes_to_fetch),
-            })
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            self.send_json_error(f"バッチ取得エラー: {e}", 500)
 
     def handle_stock_api(self, path, query):
         """
@@ -530,85 +400,6 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {args[0]}")
 
 
-# ==========================================
-# スクリーニング用ユーティリティ関数
-# ==========================================
-
-def _get_latest_value(section_data):
-    """セクションデータの直近の有効な値を取得する"""
-    values = section_data.get("values", [])
-    for v in reversed(values):
-        if v is not None:
-            return v
-    return None
-
-
-def _get_latest_value_with_type(section_data, periods):
-    """
-    セクションデータの直近の有効な値と、予想/実績の種別を返す。
-    IR BANKのperiod（例: "2025/03"）が現在日付より未来なら「予想」、過去なら「実績」。
-
-    Returns:
-        (value, type_str): 値と種別（"予想" or "実績"）のタプル
-    """
-    values = section_data.get("values", [])
-    now = datetime.now()
-    for i in range(len(values) - 1, -1, -1):
-        if values[i] is not None:
-            # 期間の末日と現在日付を比較して予想/実績を判定
-            val_type = "実績"
-            if i < len(periods):
-                period_str = periods[i]
-                try:
-                    parts = period_str.split("/")
-                    year = int(parts[0])
-                    month = int(parts[1]) if len(parts) > 1 else 12
-                    # 期末月の翌月末までに決算発表されるため、期末+3ヶ月を目安に判定
-                    # 例: 2025/03期 → 2025年6月頃までは予想扱い
-                    from datetime import date
-                    fiscal_end = date(year, month, 1)
-                    # 決算発表は通常期末から2-3ヶ月後なので、期末+3ヶ月以内なら予想
-                    months_since_end = (now.year - fiscal_end.year) * 12 + (now.month - fiscal_end.month)
-                    if months_since_end < 3:
-                        val_type = "予想"
-                except (ValueError, IndexError):
-                    pass
-            return values[i], val_type
-    return None, "不明"
-
-
-def _calc_growth_rate(section_data):
-    """セクションデータから前年比成長率を計算する"""
-    values = section_data.get("values", [])
-    # 直近2つの有効な値を取得
-    recent = []
-    for v in reversed(values):
-        if v is not None and v != 0:
-            recent.append(v)
-            if len(recent) == 2:
-                break
-    if len(recent) < 2:
-        return None
-    current, previous = recent[0], recent[1]
-    return round((current - previous) / abs(previous) * 100, 1)
-
-
-def _calc_consecutive_dividend_years(section_data):
-    """連続増配年数を計算する"""
-    values = section_data.get("values", [])
-    # 末尾からNoneを除去
-    clean = [v for v in values if v is not None]
-    if len(clean) < 2:
-        return 0
-    years = 0
-    for i in range(len(clean) - 1, 0, -1):
-        if clean[i] >= clean[i - 1] and clean[i - 1] > 0:
-            years += 1
-        else:
-            break
-    return years
-
-
 def _fetch_yahoo_valuation_safe(code):
     """
     Yahoo Finance v10 APIからPER/PBRを取得する（エラー時は空dictを返す）
@@ -659,151 +450,6 @@ def _fetch_yahoo_valuation_safe(code):
     except Exception as e:
         print(f"  Yahoo Finance v10 ({code}): 取得失敗 ({e}) → IR BANKフォールバック")
         return {}
-
-
-def _fetch_screening_data_static(code):
-    """
-    1銘柄のスクリーニング用データを取得する（スレッドから呼べるスタティック関数）
-    株価のみYahoo Finance、それ以外は全てIR BANKから取得する。
-    EPS/BPS/配当は予想値を優先し、なければ実績値を使用する。
-    PER/PBR = Yahoo株価 ÷ IR BANK EPS/BPS で計算。
-    """
-    result = {
-        "code": code,
-        "name": "",
-        "sector": "",
-    }
-
-    # マスタデータから名前・セクターを取得
-    for s in SCREENING_CANDIDATES:
-        if s["code"] == code:
-            result["name"] = s["name"]
-            result["sector"] = s["sector"]
-            break
-
-    # ===== Yahoo Finance から株価のみ取得（リトライ付き）=====
-    symbol = f"{code}.T"
-    for attempt in range(3):
-        try:
-            div_data = fetch_dividend_data(symbol)
-            result["price"] = div_data.get("price", 0)
-            print(f"  [Screening] {code} 株価: Yahoo Finance = {result['price']}")
-            break
-        except Exception as e:
-            if attempt < 2 and ("401" in str(e) or "429" in str(e) or "500" in str(e)):
-                time.sleep(1 + attempt)
-                continue
-            print(f"  [Screening] {code} 株価取得エラー: {e}")
-
-    # ===== IR BANK からファンダメンタルズ全て取得（リトライ付き）=====
-    irbank_ok = False
-    for attempt in range(3):
-        try:
-            funda = fetch_fundamentals_data(code)
-
-            # IR BANKのエラーチェック（アクセス制限等）
-            if funda.get("error"):
-                print(f"  [Screening] {code} IR BANKエラー: {funda['error']}")
-                if attempt < 2:
-                    time.sleep(2 + attempt)
-                    continue
-                result["_irbank_error"] = funda["error"]
-                break
-
-            sections = funda.get("sections", {})
-            periods = funda.get("periods", [])
-
-            # データが空でないことを確認（アクセス制限時は空のsectionsが返る）
-            if not sections or all(
-                all(v is None for v in sec.get("values", []))
-                for sec in sections.values()
-            ):
-                print(f"  [Screening] {code} IR BANKデータ空（アクセス制限の可能性）")
-                if attempt < 2:
-                    time.sleep(2 + attempt)
-                    continue
-                result["_irbank_error"] = "IR BANKからデータを取得できませんでした（アクセス制限の可能性）"
-                break
-
-            # --- 配当（IR BANK、予想優先）---
-            dividend_val, dividend_type = _get_latest_value_with_type(
-                sections.get("dividend", {}), periods
-            )
-            result["dividendAnnual"] = dividend_val
-            result["dividendType"] = dividend_type
-            print(f"  [Screening] {code} 配当: IR BANK {dividend_type} = {dividend_val}")
-
-            # --- 配当利回り（IR BANK配当 ÷ Yahoo株価）---
-            price = result.get("price", 0)
-            if price and price > 0 and dividend_val and dividend_val > 0:
-                result["dividendYield"] = round(dividend_val / price * 100, 2)
-                print(f"  [Screening] {code} 配当利回り: {dividend_val}÷{price}×100 = {result['dividendYield']}%")
-            else:
-                result["dividendYield"] = 0
-
-            # --- EPS（IR BANK、予想優先）---
-            eps_val, eps_type = _get_latest_value_with_type(
-                sections.get("eps", {}), periods
-            )
-            result["eps"] = eps_val
-            result["epsType"] = eps_type
-            print(f"  [Screening] {code} EPS: IR BANK {eps_type} = {eps_val}")
-
-            # --- BPS（IR BANK、予想優先）---
-            bps_val, bps_type = _get_latest_value_with_type(
-                sections.get("bps", {}), periods
-            )
-            result["bps"] = bps_val
-            result["bpsType"] = bps_type
-
-            # --- PER = 株価 ÷ EPS（予想優先）---
-            if price and price > 0 and eps_val and eps_val > 0:
-                result["per"] = round(price / eps_val, 2)
-                result["perType"] = eps_type
-                print(f"  [Screening] {code} PER: {price}÷{eps_val} = {result['per']} ({eps_type})")
-
-            # --- PBR = 株価 ÷ BPS（予想優先）---
-            if price and price > 0 and bps_val and bps_val > 0:
-                result["pbr"] = round(price / bps_val, 2)
-                result["pbrType"] = bps_type
-                print(f"  [Screening] {code} PBR: {price}÷{bps_val} = {result['pbr']} ({bps_type})")
-
-            # --- 営業利益率・ROE・自己資本比率・配当性向（IR BANK）---
-            result["operatingMargin"] = _get_latest_value(sections.get("operatingMargin", {}))
-            result["roe"] = _get_latest_value(sections.get("roe", {}))
-            result["equityRatio"] = _get_latest_value(sections.get("equityRatio", {}))
-            result["payoutRatio"] = _get_latest_value(sections.get("payoutRatio", {}))
-
-            # --- 売上成長率・連続増配年数 ---
-            result["revenueGrowth1y"] = _calc_growth_rate(sections.get("revenue", {}))
-            result["consecutiveDividendYears"] = _calc_consecutive_dividend_years(sections.get("dividend", {}))
-
-            irbank_ok = True
-            break
-        except Exception as e:
-            if attempt < 2 and ("401" in str(e) or "429" in str(e) or "500" in str(e)):
-                time.sleep(1 + attempt)
-                continue
-            print(f"  [Screening] {code} ファンダメンタルズ取得エラー: {e}")
-            result["_irbank_error"] = str(e)
-
-    result["lastUpdated"] = int(time.time())
-    return result
-
-
-def _save_screening_cache():
-    """スクリーニングキャッシュをファイルに保存"""
-    try:
-        cache_data = {}
-        for key, entry in _screening_cache.items():
-            if key.startswith("screening|"):
-                code = key.replace("screening|", "")
-                cache_data[code] = entry["data"]
-        with open(_SCREENING_CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump(cache_data, f, ensure_ascii=False)
-        print(f"  [Cache] screening-cache.json 保存完了 ({len(cache_data)}銘柄)")
-    except Exception as e:
-        print(f"  [Cache] 保存エラー: {e}")
 
 
 def _save_fundamentals_cache():
@@ -1978,82 +1624,6 @@ def search_yahoo_finance(query: str, market: str) -> list:
     return results[:10]
 
 
-def _background_screening_update():
-    """
-    バックグラウンドでスクリーニングデータを更新する。
-    サーバー起動時に別スレッドで実行される。
-    - キャッシュが30日以内 → 株価のみ更新（IR BANKアクセスなし）
-    - キャッシュが30日超/ない → IR BANKからフル取得（3秒間隔）
-    """
-    import threading
-    print(f"  [バックグラウンド更新] 開始 ({len(SCREENING_CANDIDATES)}銘柄)")
-
-    success = 0
-    price_only = 0
-    errors = 0
-    start = time.time()
-
-    for i, candidate in enumerate(SCREENING_CANDIDATES):
-        code = candidate["code"]
-
-        # 既存キャッシュの確認
-        cache_key = f"screening|{code}"
-        cached = _screening_cache.get(cache_key)
-        cache_age_hours = 999
-        if cached:
-            cache_age_hours = (time.time() - cached["timestamp"]) / 3600
-
-        # 12時間以内のキャッシュがある → 株価のみ更新
-        if cached and cache_age_hours < 720 and cached["data"].get("dividendType"):  # 30日 = 720時間
-            try:
-                symbol = f"{code}.T"
-                div_data = fetch_dividend_data(symbol)
-                price = div_data.get("price", 0)
-                if price and price > 0:
-                    d = dict(cached["data"])
-                    d["price"] = price
-                    div_annual = d.get("dividendAnnual", 0)
-                    if div_annual and div_annual > 0:
-                        d["dividendYield"] = round(div_annual / price * 100, 2)
-                    eps = d.get("eps")
-                    if eps and eps > 0:
-                        d["per"] = round(price / eps, 2)
-                    bps = d.get("bps")
-                    if bps and bps > 0:
-                        d["pbr"] = round(price / bps, 2)
-                    d["lastUpdated"] = int(time.time())
-                    _screening_cache[cache_key] = {"data": d, "timestamp": time.time()}
-                    price_only += 1
-            except Exception:
-                pass
-            continue
-
-        # フル取得（IR BANKアクセスあり）
-        try:
-            data = _fetch_screening_data_static(code)
-            if data and not data.get("_irbank_error"):
-                _screening_cache[cache_key] = {"data": data, "timestamp": time.time()}
-                success += 1
-            else:
-                errors += 1
-        except Exception:
-            errors += 1
-
-        # 進捗ログ（50銘柄ごと）
-        if (i + 1) % 50 == 0:
-            elapsed = time.time() - start
-            print(f"  [バックグラウンド更新] {i+1}/{len(SCREENING_CANDIDATES)} 処理済み（{elapsed:.0f}秒）")
-
-        # 10銘柄ごとにキャッシュ保存
-        if (i + 1) % 10 == 0:
-            _save_screening_cache()
-
-    # 最終保存
-    _save_screening_cache()
-    elapsed = time.time() - start
-    print(f"  [バックグラウンド更新] 完了: フル取得={success}, 株価更新={price_only}, エラー={errors}（{elapsed:.0f}秒）")
-
-
 def main():
     """サーバーを起動する"""
     # Renderなどのクラウド環境ではPORT環境変数が設定される
@@ -2066,11 +1636,6 @@ def main():
     print("=" * 50)
     print("  Ctrl+C で停止できます")
     print()
-
-    # バックグラウンドでスクリーニングデータを更新
-    import threading
-    bg_thread = threading.Thread(target=_background_screening_update, daemon=True)
-    bg_thread.start()
 
     try:
         server.serve_forever()
