@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- タスク名 -->
+    <key>Label</key>
+    <string>com.stockview.update-irbank</string>
+
+    <!-- 実行するコマンド -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/ogurahirokazu/claude-code-lab/stock-view/update-screening-data.py</string>
+        <string>--mode</string>
+        <string>irbank</string>
+        <string>--batch-size</string>
+        <string>800</string>
+    </array>
+
+    <!-- 作業ディレクトリ -->
+    <key>WorkingDirectory</key>
+    <string>/Users/ogurahirokazu/claude-code-lab/stock-view</string>
+
+    <!-- 水曜 5:30 と 土曜 5:30 に実行 -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <!-- 水曜日 -->
+            <key>Weekday</key>
+            <integer>3</integer>
+            <key>Hour</key>
+            <integer>5</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+        <dict>
+            <!-- 土曜日 -->
+            <key>Weekday</key>
+            <integer>6</integer>
+            <key>Hour</key>
+            <integer>5</integer>
+            <key>Minute</key>
+            <integer>30</integer>
+        </dict>
+    </array>
+
+    <!-- ログ出力先 -->
+    <key>StandardOutPath</key>
+    <string>/Users/ogurahirokazu/claude-code-lab/stock-view/logs/update-irbank.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ogurahirokazu/claude-code-lab/stock-view/logs/update-irbank-error.log</string>
+
+    <!-- 環境変数（PATHを明示的に設定） -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>

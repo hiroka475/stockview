@@ -102,6 +102,86 @@
       color: #999;
     }
 
+    /* データ更新ボタン */
+
+    /* 業種マルチセレクト */
+    .sector-filter-wrap {
+      position: relative;
+    }
+    .sector-selected {
+      min-height: 30px;
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      align-items: center;
+      background: #fff;
+    }
+    .sector-selected:hover {
+      border-color: #1976d2;
+    }
+    .sector-placeholder {
+      color: #999;
+    }
+    .sector-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: #e3f2fd;
+      color: #1565c0;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .sector-tag-x {
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      color: #90a4ae;
+    }
+    .sector-tag-x:hover {
+      color: #e53935;
+    }
+    .sector-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .sector-dropdown.show {
+      display: block;
+    }
+    .sector-option {
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .sector-option:hover {
+      background: #f0f0f0;
+    }
+    .sector-option.checked {
+      background: #e3f2fd;
+    }
+    .sector-option input {
+      margin: 0;
+    }
+
     /* ボタン */
     .btn {
       padding: 8px 16px;
@@ -184,7 +264,8 @@
       user-select: none;
     }
     .results-table th:first-child,
-    .results-table th:nth-child(2) {
+    .results-table th:nth-child(2),
+    .results-table th:nth-child(3) {
       text-align: left;
     }
     .results-table th:hover {
@@ -202,7 +283,8 @@
       border-bottom: 1px solid #f0f0f0;
     }
     .results-table td:first-child,
-    .results-table td:nth-child(2) {
+    .results-table td:nth-child(2),
+    .results-table td:nth-child(3) {
       text-align: left;
     }
     .results-table tbody tr {
@@ -302,10 +384,11 @@
 <div class="header">
   <div class="header-left">
     <h1>StockView スクリーニング</h1>
-    <a href="/" class="header-link">← チャートに戻る</a>
   </div>
   <div class="header-right">
-    <button class="btn btn-primary btn-sm" id="addToWatchlistBtn" disabled>ウォッチリストに追加</button>
+    <span id="fetchStatus" style="font-size:11px;color:#999;"></span>
+    <button class="btn btn-secondary btn-sm" id="updateDataBtn" onclick="updateDataAuto()">データ更新</button>
+    <button class="btn btn-primary btn-sm" id="copyCodesBtn" disabled>銘柄コードをコピー</button>
     <button class="btn btn-secondary btn-sm" id="csvExportBtn" disabled>CSV出力</button>
   </div>
 </div>
@@ -321,6 +404,16 @@
           <option value="プライム" selected>プライム</option>
           <option value="スタンダード">スタンダード</option>
         </select>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">業種 <span id="sectorCount" style="font-weight:400;color:#999;font-size:11px;"></span></div>
+      <div class="sector-filter-wrap">
+        <div id="sectorSelected" class="sector-selected" onclick="document.getElementById('sectorDropdown').classList.toggle('show')">
+          <span class="sector-placeholder">すべて</span>
+        </div>
+        <div id="sectorDropdown" class="sector-dropdown"></div>
       </div>
     </div>
 
@@ -395,30 +488,33 @@
 
 
     <div class="filter-actions">
-      <button class="btn btn-primary" id="fetchBtn">データ表示</button>
-      <button class="btn btn-secondary" id="forceRefreshBtn" title="IR BANKから最新データを再取得します（時間がかかります）">強制再取得</button>
+      <button class="btn btn-primary" id="searchBtn">検索</button>
       <button class="btn btn-secondary" id="clearBtn">クリア</button>
-      <div style="margin-top:8px;display:flex;align-items:center;gap:6px;">
-        <label style="font-size:12px;color:#666;">取得件数:</label>
-        <input type="number" id="fetchLimit" min="0" max="99999" value="0" style="width:70px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;">
-        <span style="font-size:11px;color:#999;">0=全件</span>
-      </div>
-      <div id="cacheInfo" style="margin-top:4px;font-size:11px;color:#999;"></div>
     </div>
+
+    <div id="cacheInfo" style="margin-top:8px;font-size:11px;color:#999;"></div>
+
+    <div style="margin-top:8px;padding:8px 10px;background:#f0f7ff;border-radius:6px;border:1px solid #d0e3f7;font-size:11px;color:#555;line-height:1.6;">
+      <b style="color:#1565c0;">自動更新</b><br>
+      株価：毎週土曜 5:00（Yahoo Finance）<br>
+      決算：水曜・土曜 5:30（IR BANK）<br>
+      <span style="color:#888;">※ Mac未起動時は次回起動時に自動実行</span>
+    </div>
+
   </div>
 
   <!-- 結果パネル -->
   <div class="results-panel">
     <div class="results-header">
       <div class="results-count" id="resultsCount">
-        データを読み込み中です...
+        「検索」ボタンを押してキャッシュ済みデータから検索できます
       </div>
     </div>
     <div id="irbank-warning" style="display:none; background:#fff3e0; color:#e65100; padding:10px 16px; border-radius:6px; font-size:13px; margin-bottom:8px; border-left:4px solid #ff9800;"></div>
     <div id="resultsBody">
       <div class="empty-msg">
-        バックグラウンドでデータを取得しています。取得中もフィルターは操作できます。<br>
-        初回は全銘柄のデータ取得に時間がかかります（キャッシュ済みなら数秒）。
+        左のフィルターを設定して「検索」ボタンを押してください。<br>
+        データが古い場合はヘッダーの「データ取得」で最新化できます。
       </div>
     </div>
   </div>
@@ -427,7 +523,7 @@
 <!-- ローディング -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-spinner"></div>
-  <div class="loading-text">データを取得中...</div>
+  <div class="loading-text" id="loadingText">データを取得中...</div>
   <div class="loading-progress" id="loadingProgress">0 / 0 銘柄</div>
 </div>
 
@@ -439,6 +535,7 @@
   let candidates = [];       // 候補銘柄リスト
   let candidateMarketMap = {}; // {code: "プライム"} 市場区分マップ
   let candidateSizeMap = {};   // {code: "大型株"} 規模区分マップ
+  let candidateSectorMap = {}; // {code: "水産・農林業"} 業種マップ
   let stockData = {};         // 取得済みデータ {code: {...}}
   let filteredResults = [];   // フィルター後の結果
   let sortColumn = "dividendYield";
@@ -463,22 +560,57 @@
         else candidateMarketMap[c.code] = m;
 
         candidateSizeMap[c.code] = c.size || "";
+        candidateSectorMap[c.code] = c.sector || "";
+      });
+
+      // 業種ドロップダウンを動的に構築
+      const sectors = [...new Set(Object.values(candidateSectorMap).filter(s => s))].sort();
+      const dropdown = document.getElementById("sectorDropdown");
+      sectors.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "sector-option";
+        div.innerHTML = `<input type="checkbox" value="${s}"><span>${s}</span>`;
+        div.addEventListener("click", (e) => {
+          if (e.target.tagName !== "INPUT") {
+            const cb = div.querySelector("input");
+            cb.checked = !cb.checked;
+          }
+          div.classList.toggle("checked", div.querySelector("input").checked);
+          updateSectorDisplay();
+          if (Object.keys(stockData).length > 0) {
+            applyFilters();
+            updateResultsCount();
+          }
+        });
+        dropdown.appendChild(div);
+      });
+
+      // ドロップダウン外クリックで閉じる
+      document.addEventListener("click", (e) => {
+        const sectorWrap = document.querySelector(".sector-filter-wrap");
+        if (!sectorWrap.contains(e.target)) {
+          dropdown.classList.remove("show");
+        }
       });
     } catch (e) {
       console.error("候補リスト取得エラー:", e);
       candidates = [];
     }
 
-    // イベントリスナー
-    document.getElementById("fetchBtn").addEventListener("click", () => startScreening(false));
-    document.getElementById("forceRefreshBtn").addEventListener("click", () => {
-      if (confirm("IR BANKから全銘柄のデータを再取得します。\nアクセス制限を避けるため時間がかかります。\n実行しますか？")) {
-        startScreening(true);
+    // クラウド環境判定（Render上では「データ更新」ボタンを非表示）
+    try {
+      const envRes = await fetch("/api/env");
+      const envData = await envRes.json();
+      if (envData.isCloud) {
+        document.getElementById("updateDataBtn").style.display = "none";
       }
-    });
+    } catch (e) { /* ローカル環境ではエラーでもOK */ }
+
+    // イベントリスナー
+    document.getElementById("searchBtn").addEventListener("click", searchFromCache);
     document.getElementById("clearBtn").addEventListener("click", clearFilters);
     document.getElementById("csvExportBtn").addEventListener("click", exportCSV);
-    document.getElementById("addToWatchlistBtn").addEventListener("click", addToWatchlist);
+    document.getElementById("copyCodesBtn").addEventListener("click", copyCodes);
 
     // フィルター入力時にリアルタイムで結果を更新
     document.querySelectorAll(".filter-input").forEach(input => {
@@ -508,14 +640,13 @@
       });
     });
 
-    // ページ読み込み時にキャッシュデータを自動表示
-    startScreening(false);
+    // ページ読み込み時は自動取得しない（ユーザーがボタンを押すまで待つ）
   });
 
   // ==========================================
-  // データ取得 + スクリーニング実行
+  // 検索（キャッシュのみ・外部アクセスなし）
   // ==========================================
-  let lastFetchMsg = "";  // 最後の取得結果メッセージ
+  let lastFetchMsg = "";
 
   function updateResultsCount() {
     const total = Object.keys(stockData).length;
@@ -525,82 +656,277 @@
       `<strong>${filteredResults.length}</strong> / ${total} 銘柄が条件に一致${suffix}`;
   }
 
-  async function startScreening(forceRefresh = false) {
-    if (isLoading) return;  // 二重実行防止
-    isLoading = true;
+  function updateCacheInfo() {
+    const allData = Object.values(stockData);
+    if (allData.length === 0) return;
+    const timestamps = allData.map(d => d.lastUpdated || 0).filter(t => t > 0);
+    if (timestamps.length === 0) return;
+    const oldest = new Date(Math.min(...timestamps) * 1000);
+    const newest = new Date(Math.max(...timestamps) * 1000);
+    const fmt = d => `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    document.getElementById("cacheInfo").textContent =
+      `データ: ${fmt(oldest)} 〜 ${fmt(newest)}`;
 
-    const btn = document.getElementById("fetchBtn");
-    const forceBtn = document.getElementById("forceRefreshBtn");
+    // 1週間以上古いデータの数を表示
+    const oneWeekAgo = Date.now() / 1000 - 7 * 24 * 60 * 60;
+    const staleCount = allData.filter(d => (d.lastUpdated || 0) < oneWeekAgo).length;
+    if (staleCount > 0) {
+      document.getElementById("cacheInfo").textContent += ` （${staleCount}件が1週間以上前）`;
+    }
+  }
+
+  async function searchFromCache() {
+    // キャッシュ済みデータのみで検索（IR BANKにアクセスしない）
+    const btn = document.getElementById("searchBtn");
     btn.disabled = true;
-    forceBtn.disabled = true;
-    btn.textContent = forceRefresh ? "再取得中..." : "読み込み中...";
+    btn.textContent = "検索中...";
 
-    // 前回のエラーをクリア
+    try {
+      const res = await fetch("/api/screening/cache");
+      const cacheData = await res.json();
+
+      // 業種情報を付与してstockDataに格納
+      stockData = {};
+      for (const [code, item] of Object.entries(cacheData)) {
+        item.sector = candidateSectorMap[code] || item.sector || "";
+        stockData[code] = item;
+      }
+
+      lastFetchMsg = `${Object.keys(stockData).length}銘柄のキャッシュデータ`;
+      applyFilters();
+      updateResultsCount();
+      updateCacheInfo();
+      document.getElementById("csvExportBtn").disabled = false;
+      document.getElementById("copyCodesBtn").disabled = false;
+
+    } catch (e) {
+      console.error("検索エラー:", e);
+      document.getElementById("resultsBody").innerHTML =
+        '<div class="empty-msg">キャッシュの読み込みに失敗しました。サーバーが起動しているか確認してください。</div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "検索";
+    }
+  }
+
+  // ==========================================
+  // データ更新（自動判定）
+  // ==========================================
+  async function updateDataAuto() {
+    if (isLoading) return;
+
+    // キャッシュ未読み込みなら先に読み込む
+    if (Object.keys(stockData).length === 0) {
+      await searchFromCache();
+    }
+
+    const cachedCodes = Object.keys(stockData);
+    const now = Date.now() / 1000;
+
+    // キャッシュが空 → IR BANKで決算データを取得（初回）
+    if (cachedCodes.length === 0) {
+      if (confirm("キャッシュが空です。IR BANKから決算データを取得します。\n（古い順に500銘柄・約25分）\n実行しますか？")) {
+        await updateIrbank();
+      }
+      return;
+    }
+
+    // Yahoo（株価）とIR BANK（決算）の古さを比較
+    let yahooOldest = Infinity;
+    let irbankOldest = Infinity;
+    for (const code of cachedCodes) {
+      const item = stockData[code];
+      const yTs = item.lastUpdated_yahoo || item.lastUpdated || 0;
+      const iTs = item.lastUpdated_irbank || item.lastUpdated || 0;
+      if (yTs < yahooOldest) yahooOldest = yTs;
+      if (iTs < irbankOldest) irbankOldest = iTs;
+    }
+
+    const yahooAge = now - yahooOldest;   // 秒
+    const irbankAge = now - irbankOldest; // 秒
+    const yahooDays = Math.floor(yahooAge / 86400);
+    const irbankDays = Math.floor(irbankAge / 86400);
+
+    // どちらも1日以内なら更新不要
+    if (yahooDays < 1 && irbankDays < 1) {
+      showFetchStatus("データは最新です（株価・決算ともに1日以内に更新済み）");
+      return;
+    }
+
+    // 自動判定：より古い方を更新
+    // 株価は3日以上で「古い」、決算は7日以上で「古い」とする
+    const yahooNeedsUpdate = yahooDays >= 3;
+    const irbankNeedsUpdate = irbankDays >= 7;
+
+    if (yahooNeedsUpdate && irbankNeedsUpdate) {
+      // 両方古い → 株価を先に（高速）
+      if (confirm(`株価データが${yahooDays}日前、決算データが${irbankDays}日前です。\nまず株価を更新します（約2分）。\n実行しますか？`)) {
+        await updateYahoo();
+      }
+    } else if (irbankNeedsUpdate) {
+      if (confirm(`決算データが${irbankDays}日前です。\nIR BANKから更新します（古い順800銘柄・約40分）。\n実行しますか？`)) {
+        await updateIrbank();
+      }
+    } else if (yahooNeedsUpdate) {
+      if (confirm(`株価データが${yahooDays}日前です。\nYahoo Financeから更新します（約2分）。\n実行しますか？`)) {
+        await updateYahoo();
+      }
+    } else {
+      // どちらも基準内だが1日以上経過
+      if (confirm(`株価: ${yahooDays}日前、決算: ${irbankDays}日前\nデータは比較的新しいですが、株価を更新しますか？（約2分）`)) {
+        await updateYahoo();
+      }
+    }
+  }
+
+  // ==========================================
+  // 株価更新（Yahoo Finance・高速）
+  // ==========================================
+  async function updateYahoo() {
+    if (isLoading) return;
+
+    // キャッシュ未読み込みなら先に読み込む
+    if (Object.keys(stockData).length === 0) {
+      await searchFromCache();
+    }
+
+    const cachedCodes = Object.keys(stockData);
+    if (cachedCodes.length === 0) {
+      showFetchStatus("キャッシュが空です。先に決算データを取得してください。");
+      return;
+    }
+
+    isLoading = true;
+    const btn = document.getElementById("updateDataBtn");
+    btn.disabled = true;
+    btn.textContent = "株価更新中...";
+
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.classList.add("show");
+    document.getElementById("loadingText").textContent = "Yahoo Financeから株価を取得中...";
+
+    const batchSize = 50;  // Yahoo Financeは高速なので大きめバッチ
+    let processed = 0;
+    let totalUpdated = 0;
+    const startTime = Date.now();
+
+    try {
+      for (let i = 0; i < cachedCodes.length; i += batchSize) {
+        const batch = cachedCodes.slice(i, i + batchSize);
+        const res = await fetch("/api/screening/update-yahoo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codes: batch }),
+        });
+        const data = await res.json();
+        totalUpdated += data.updated || 0;
+        processed += batch.length;
+
+        // 進捗
+        const pct = Math.round(Math.min(processed, cachedCodes.length) / cachedCodes.length * 100);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+        document.getElementById("loadingProgress").textContent =
+          `${Math.min(processed, cachedCodes.length)} / ${cachedCodes.length} 銘柄（${pct}%・${elapsed}秒経過）`;
+      }
+
+      // 更新されたキャッシュを再読み込み
+      await searchFromCache();
+      const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      lastFetchMsg = `株価更新: ${totalUpdated}銘柄（${totalTime}秒）`;
+      updateResultsCount();
+
+    } catch (e) {
+      console.error("株価更新エラー:", e);
+    } finally {
+      overlay.classList.remove("show");
+      document.getElementById("loadingText").textContent = "データを取得中...";
+      isLoading = false;
+      btn.disabled = false;
+      btn.textContent = "データ更新";
+      showFetchStatus(`${totalUpdated}銘柄の株価を更新しました`);
+    }
+  }
+
+  // ==========================================
+  // 決算データ更新（IR BANK・低速・古い順500件）
+  // ==========================================
+  async function updateIrbank() {
+    if (isLoading) return;
+
+    // キャッシュ未読み込みなら先に読み込む
+    if (Object.keys(stockData).length === 0) {
+      await searchFromCache();
+    }
+
+    const IRBANK_BATCH = 800;
+    const now = Date.now() / 1000;
+
+    // IR BANKデータが古い順にソート（キャッシュにない = 最優先）
+    const allCodes = candidates.map(c => c.code);
+    const codesByAge = allCodes.map(code => {
+      const item = stockData[code];
+      const ts = item ? (item.lastUpdated_irbank || item.lastUpdated || 0) : 0;
+      return { code, ts };
+    }).sort((a, b) => a.ts - b.ts);
+
+    const targetCodes = codesByAge.slice(0, IRBANK_BATCH).map(c => c.code);
+
+    isLoading = true;
+    const btn = document.getElementById("updateDataBtn");
+    btn.disabled = true;
+    btn.textContent = "IR BANK取得中...";
+
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.classList.add("show");
+    document.getElementById("loadingText").textContent = "IR BANKから決算データを取得中...";
+
     window._screeningErrors = [];
     const warnEl = document.getElementById("irbank-warning");
     if (warnEl) warnEl.style.display = "none";
 
-    const overlay = document.getElementById("loadingOverlay");
-    overlay.classList.add("show");
-
-    const limit = parseInt(document.getElementById("fetchLimit").value) || 0;
-    const marketFilter = document.getElementById("fMarket").value;
-    // 市場区分で候補を絞り込んでから取得
-    const filteredCandidates = marketFilter
-      ? candidates.filter(c => candidateMarketMap[c.code] === marketFilter)
-      : candidates;
-    const allCodes = filteredCandidates.map(c => c.code);
-    const codes = limit > 0 ? allCodes.slice(0, limit) : allCodes;
-    const batchSize = 10;  // 10銘柄ずつ送信（APIレート制限対策）
+    const batchSize = 10;
     let processed = 0;
-    let totalCached = 0;
     let totalFetched = 0;
     const startTime = Date.now();
 
     try {
-      for (let i = 0; i < codes.length; i += batchSize) {
-        const batch = codes.slice(i, i + batchSize);
+      for (let i = 0; i < targetCodes.length; i += batchSize) {
+        const batch = targetCodes.slice(i, i + batchSize);
         const res = await fetch("/api/screening/batch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ codes: batch, force: forceRefresh }),
+          body: JSON.stringify({ codes: batch, force: true }),
         });
         const data = await res.json();
 
-        // 結果をマージ
-        Object.assign(stockData, data.results || {});
+        const results = data.results || {};
+        for (const [code, item] of Object.entries(results)) {
+          item.sector = candidateSectorMap[code] || item.sector || "";
+        }
+        Object.assign(stockData, results);
         processed += batch.length;
-        totalCached += data.cached || 0;
         totalFetched += data.fetched || 0;
 
-        // IR BANKエラーを収集
         if (data.errors && data.errors.length > 0) {
           if (!window._screeningErrors) window._screeningErrors = [];
           window._screeningErrors.push(...data.errors);
         }
 
-        // 進捗表示
-        const pct = Math.round(Math.min(processed, codes.length) / codes.length * 100);
+        const pct = Math.round(Math.min(processed, targetCodes.length) / targetCodes.length * 100);
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
         document.getElementById("loadingProgress").textContent =
-          `${Math.min(processed, codes.length)} / ${codes.length} 銘柄（${pct}%・${elapsed}秒経過）`;
+          `${Math.min(processed, targetCodes.length)} / ${targetCodes.length} 銘柄（${pct}%・${elapsed}秒経過）`;
 
-        // 途中経過を即座にテーブルに反映
         applyFilters();
         updateResultsCount();
       }
 
-      // 完了メッセージ
       const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-      lastFetchMsg = totalCached > 0
-        ? `${totalCached}銘柄はキャッシュから即時取得、${totalFetched}銘柄を新規取得（${totalTime}秒）`
-        : `${codes.length}銘柄のデータを取得しました（${totalTime}秒）`;
+      lastFetchMsg = `決算データ更新: ${totalFetched}銘柄（${totalTime}秒）`;
 
-      // IR BANKエラーがあった場合に警告表示
       const errs = window._screeningErrors || [];
       if (errs.length > 0) {
         const isRateLimit = errs.some(e => e.error && (e.error.includes("制限") || e.error.includes("403") || e.error.includes("取得できません")));
-        const warnEl = document.getElementById("irbank-warning");
         if (warnEl) {
           warnEl.textContent = isRateLimit
             ? `⚠ IR BANKのアクセス制限により${errs.length}銘柄のデータを取得できませんでした。しばらく時間をおいて再取得してください。`
@@ -611,32 +937,58 @@
       }
       window._screeningErrors = [];
       updateResultsCount();
+      updateCacheInfo();
 
     } catch (e) {
-      console.error("データ取得エラー:", e);
-      document.getElementById("resultsBody").innerHTML =
-        '<div class="empty-msg">データの取得に失敗しました。サーバーが起動しているか確認してください。</div>';
+      console.error("決算データ取得エラー:", e);
     } finally {
       overlay.classList.remove("show");
+      document.getElementById("loadingText").textContent = "データを取得中...";
       isLoading = false;
       btn.disabled = false;
-      forceBtn.disabled = false;
-      btn.textContent = "データ表示";
-      document.getElementById("csvExportBtn").disabled = false;
-      document.getElementById("addToWatchlistBtn").disabled = false;
+      btn.textContent = "データ更新";
+      showFetchStatus(`${totalFetched}銘柄の決算データを更新しました`);
+    }
+  }
 
-      // キャッシュの最終更新日時を表示
-      const allData = Object.values(stockData);
-      if (allData.length > 0) {
-        const timestamps = allData.map(d => d.lastUpdated || 0).filter(t => t > 0);
-        if (timestamps.length > 0) {
-          const oldest = new Date(Math.min(...timestamps) * 1000);
-          const newest = new Date(Math.max(...timestamps) * 1000);
-          const fmt = d => `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-          document.getElementById("cacheInfo").textContent =
-            `データ更新: ${fmt(oldest)} 〜 ${fmt(newest)}`;
-        }
-      }
+  function showFetchStatus(msg) {
+    document.getElementById("fetchStatus").textContent = msg;
+    setTimeout(() => { document.getElementById("fetchStatus").textContent = ""; }, 5000);
+  }
+
+  // ==========================================
+  // 業種マルチセレクト
+  // ==========================================
+  function getSelectedSectors() {
+    return [...document.querySelectorAll("#sectorDropdown input:checked")].map(cb => cb.value);
+  }
+
+  function updateSectorDisplay() {
+    const selected = getSelectedSectors();
+    const container = document.getElementById("sectorSelected");
+    const countEl = document.getElementById("sectorCount");
+
+    if (selected.length === 0) {
+      container.innerHTML = '<span class="sector-placeholder">すべて</span>';
+      countEl.textContent = "";
+    } else {
+      container.innerHTML = selected.map(s =>
+        `<span class="sector-tag">${s}<span class="sector-tag-x" onclick="event.stopPropagation();removeSector('${s}')">×</span></span>`
+      ).join("");
+      countEl.textContent = `(${selected.length})`;
+    }
+  }
+
+  function removeSector(name) {
+    const cb = [...document.querySelectorAll("#sectorDropdown input")].find(i => i.value === name);
+    if (cb) {
+      cb.checked = false;
+      cb.closest(".sector-option").classList.remove("checked");
+    }
+    updateSectorDisplay();
+    if (Object.keys(stockData).length > 0) {
+      applyFilters();
+      updateResultsCount();
     }
   }
 
@@ -650,6 +1002,7 @@
 
   function applyFilters() {
     const marketFilter = document.getElementById("fMarket").value;
+    const selectedSectors = getSelectedSectors();
     const checkedSizes = [...document.querySelectorAll(".size-filter:checked")].map(cb => cb.value);
     const minYield = getFilterValue("fMinYield");
     const maxPayout = getFilterValue("fMaxPayout");
@@ -659,9 +1012,18 @@
     const minROE = getFilterValue("fMinROE");
     const minEquity = getFilterValue("fMinEquity");
 
-    filteredResults = Object.values(stockData).filter(s => {
+    filteredResults = Object.values(stockData).map(s => {
+      // 業種を候補リストから確実に付与
+      if (!s.sector && candidateSectorMap[s.code]) {
+        s.sector = candidateSectorMap[s.code];
+      }
+      return s;
+    }).filter(s => {
       // 市場区分
       if (marketFilter && candidateMarketMap[s.code] !== marketFilter) return false;
+
+      // 業種（複数選択）
+      if (selectedSectors.length > 0 && !selectedSectors.includes(candidateSectorMap[s.code])) return false;
 
       // 規模
       if (checkedSizes.length < 4) {  // 全部チェックなら無視
@@ -737,6 +1099,7 @@
   const columns = [
     { key: "code", label: "コード" },
     { key: "name", label: "銘柄名" },
+    { key: "sector", label: "業種" },
     { key: "price", label: "株価",
       tip: "Yahoo Finance からリアルタイム取得",
       fmt: v => v ? `¥${Math.round(v).toLocaleString()}` : "-" },
@@ -798,7 +1161,8 @@
         const display = col.fmt ? col.fmt(val, s) : (val ?? "-");
         const cls = col.cls ? col.cls(val) : "";
         const tdClass = col.key === "code" ? "td-code" :
-                        col.key === "name" ? "td-name" : "";
+                        col.key === "name" ? "td-name" :
+                        col.key === "sector" ? "td-name" : "";
         const allClasses = [tdClass, cls, (display === "-" ? "td-na" : "")].filter(Boolean).join(" ");
         html += `<td class="${allClasses}">${display}</td>`;
       });
@@ -822,6 +1186,8 @@
   function clearFilters() {
     document.querySelectorAll(".filter-input").forEach(input => input.value = "");
     document.getElementById("fMarket").value = "";
+    document.querySelectorAll("#sectorDropdown input").forEach(cb => { cb.checked = false; cb.closest(".sector-option").classList.remove("checked"); });
+    updateSectorDisplay();
     document.querySelectorAll(".size-filter").forEach(cb => cb.checked = true);
     if (Object.keys(stockData).length > 0) {
       applyFilters();
@@ -859,91 +1225,35 @@
   }
 
   // ==========================================
-  // ウォッチリストに一括追加
+  // 銘柄コードをクリップボードにコピー
   // ==========================================
-  function addToWatchlist() {
+  function copyCodes() {
     if (filteredResults.length === 0) {
-      alert("追加する銘柄がありません。");
+      alert("コピーする銘柄がありません。");
       return;
     }
 
-    // カスタムリスト一覧を取得
-    const CUSTOM_LISTS_KEY = "stockview_custom_watchlists";
-    const WATCHLIST_KEY_JP = "stockview_watchlist_jp";
-    let customLists = {};
-    try {
-      customLists = JSON.parse(localStorage.getItem(CUSTOM_LISTS_KEY) || "{}");
-    } catch (e) { customLists = {}; }
-
-    const tabIds = Object.keys(customLists);
-
-    // 追加先を選択
-    let options = ["メイン（JP）"];
-    tabIds.forEach(id => options.push(customLists[id].name));
-    options.push("＋ 新しいリストを作成");
-
-    const choiceMsg = "追加先を選んでください:\n" + options.map((o, i) => `${i + 1}. ${o}`).join("\n");
-    const choice = prompt(choiceMsg, "1");
-    if (!choice) return;
-
-    const idx = parseInt(choice) - 1;
-    if (isNaN(idx) || idx < 0 || idx >= options.length) return;
-
-    let targetKey = null;
-    let targetCustomId = null;
-
-    if (idx === 0) {
-      // メイン（JP）
-      targetKey = WATCHLIST_KEY_JP;
-    } else if (idx <= tabIds.length) {
-      // カスタムタブ
-      targetCustomId = tabIds[idx - 1];
-    } else {
-      // 新規作成
-      const name = prompt("新しいリスト名を入力:");
-      if (!name || !name.trim()) return;
-      targetCustomId = "custom_" + Date.now();
-      customLists[targetCustomId] = { name: name.trim(), stocks: [] };
-    }
-
-    // 追加先リストを取得
-    let watchlist = [];
-    if (targetKey) {
-      try { watchlist = JSON.parse(localStorage.getItem(targetKey) || "[]"); } catch { watchlist = []; }
-    } else if (targetCustomId) {
-      watchlist = customLists[targetCustomId]?.stocks || [];
-    }
-
-    const existingCodes = new Set(watchlist.map(w => w.symbol));
-    let addedCount = 0;
-
-    filteredResults.forEach(s => {
-      const code = s.code;
-      if (!existingCodes.has(code)) {
-        watchlist.push({
-          symbol: code,
-          name: s.name || code,
-          addedAt: Date.now(),
-        });
-        existingCodes.add(code);
-        addedCount++;
-      }
+    const codes = filteredResults.map(s => s.code).join("\n");
+    navigator.clipboard.writeText(codes).then(() => {
+      // ボタンを一時的に変更してフィードバック
+      const btn = document.getElementById("copyCodesBtn");
+      const original = btn.textContent;
+      btn.textContent = `✓ ${filteredResults.length}件コピー`;
+      btn.style.background = "#26a69a";
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.background = "";
+      }, 2000);
+    }).catch(() => {
+      // フォールバック: テキストエリア経由でコピー
+      const ta = document.createElement("textarea");
+      ta.value = codes;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      alert(`${filteredResults.length}件の銘柄コードをコピーしました。`);
     });
-
-    // 保存
-    if (targetKey) {
-      localStorage.setItem(targetKey, JSON.stringify(watchlist));
-    } else if (targetCustomId) {
-      customLists[targetCustomId].stocks = watchlist;
-      localStorage.setItem(CUSTOM_LISTS_KEY, JSON.stringify(customLists));
-    }
-
-    const skipped = filteredResults.length - addedCount;
-    const listName = targetKey ? "メイン（JP）" : customLists[targetCustomId]?.name;
-    let msg = `${addedCount}銘柄を「${listName}」に追加しました。`;
-    if (skipped > 0) msg += `\n（${skipped}銘柄は既に登録済み）`;
-    msg += "\n\nStockViewに戻ると反映されます。";
-    alert(msg);
   }
 
   // ==========================================

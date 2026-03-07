@@ -2,9 +2,7 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# キャッシュファイル（実行時に生成される）
-screening-cache.json
-fundamentals-cache.json
+# アラート（ユーザー固有データ）
 alerts.json
 
 # バックアップファイル

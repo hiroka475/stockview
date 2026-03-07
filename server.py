@@ -147,6 +147,12 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             self.handle_search_api(query)
         elif path == "/api/alerts/load":
             self.handle_alerts_load()
+        elif path == "/api/screening/candidates":
+            self.handle_screening_candidates()
+        elif path == "/api/screening/cache":
+            self.handle_screening_cache_get()
+        elif path == "/api/env":
+            self.handle_env_api()
         else:
             # 静的ファイル（HTML/CSS/JS）を配信
             super().do_GET()
@@ -168,9 +174,268 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             self.handle_alerts_save()
         elif path == "/api/alerts/check":
             self.handle_alerts_check()
+        elif path == "/api/screening/batch":
+            self.handle_screening_batch()
+        elif path == "/api/screening/update-yahoo":
+            self.handle_screening_update_yahoo()
+        elif path == "/api/webhook/update":
+            self.handle_webhook_update()
         else:
             self.send_json_error("Not Found", 404)
 
+
+    # ==========================================
+    # スクリーニング関連API
+    # ==========================================
+
+    def _get_screening_cache_path(self):
+        """screening-cache.jsonのパスを返す"""
+        return os.path.join(_base_dir, "screening-cache.json")
+
+    def _load_screening_cache(self):
+        """screening-cache.jsonを読み込む"""
+        path = self._get_screening_cache_path()
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"[スクリーニング] キャッシュ読み込みエラー: {e}")
+        return {}
+
+    def _save_screening_cache(self, cache):
+        """screening-cache.jsonに保存する"""
+        path = self._get_screening_cache_path()
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(cache, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[スクリーニング] キャッシュ保存エラー: {e}")
+
+    def handle_screening_candidates(self):
+        """GET /api/screening/candidates - 候補銘柄リストを返す"""
+        candidates_path = os.path.join(_base_dir, "dividend-candidates.json")
+        if os.path.exists(candidates_path):
+            try:
+                with open(candidates_path, "r", encoding="utf-8") as f:
+                    candidates = json.load(f)
+                # 規模区分を正規化
+                for c in candidates:
+                    size = c.get("size", "")
+                    if "Large" in size or "Core30" in size:
+                        c["size"] = "大型株"
+                    elif "Mid" in size or "400" in size:
+                        c["size"] = "中型株"
+                    elif "Small" in size:
+                        c["size"] = "小型株"
+                    else:
+                        c["size"] = ""
+                self.send_json_response(candidates)
+            except Exception as e:
+                self.send_json_error(f"候補リスト読み込みエラー: {e}")
+        else:
+            self.send_json_error("dividend-candidates.json が見つかりません", 404)
+
+    def handle_screening_cache_get(self):
+        """GET /api/screening/cache - キャッシュ済みデータをそのまま返す（外部アクセスなし）"""
+        try:
+            cache = self._load_screening_cache()
+            self.send_json_response(cache)
+        except Exception as e:
+            self.send_json_error(f"キャッシュ読み込みエラー: {e}")
+
+    def handle_screening_batch(self):
+        """POST /api/screening/batch - バッチでスクリーニングデータを返す"""
+        try:
+            body = self._read_body_json()
+            codes = body.get("codes", [])
+            force = body.get("force", False)
+
+            cache = self._load_screening_cache()
+            results = {}
+            cached_count = 0
+            fetched_count = 0
+            errors = []
+
+            for code in codes:
+                if not force and code in cache:
+                    # キャッシュから返す
+                    results[code] = cache[code]
+                    cached_count += 1
+                else:
+                    # キャッシュになければIR BANK + Yahoo Financeから取得を試みる
+                    try:
+                        data = self._fetch_screening_data_static(code)
+                        if data:
+                            results[code] = data
+                            cache[code] = data
+                            fetched_count += 1
+                        elif code in cache:
+                            # 取得失敗時は既存キャッシュを使う
+                            results[code] = cache[code]
+                            cached_count += 1
+                    except Exception as e:
+                        print(f"[スクリーニング] {code} 取得エラー: {e}")
+                        errors.append({"code": code, "error": str(e)})
+                        if code in cache:
+                            results[code] = cache[code]
+                            cached_count += 1
+
+            # キャッシュを保存（新しいデータがあれば）
+            if fetched_count > 0:
+                self._save_screening_cache(cache)
+
+            self.send_json_response({
+                "results": results,
+                "cached": cached_count,
+                "fetched": fetched_count,
+                "errors": errors,
+            })
+
+        except Exception as e:
+            print(f"[スクリーニング] バッチ処理エラー: {e}")
+            self.send_json_error(f"バッチ処理エラー: {e}")
+
+    def handle_screening_update_yahoo(self):
+        """POST /api/screening/update-yahoo - Yahoo Financeから株価のみ更新（IR BANKアクセスなし）"""
+        try:
+            body = self._read_body_json()
+            codes = body.get("codes", [])
+
+            cache = self._load_screening_cache()
+            updated_count = 0
+            errors = []
+
+            for code in codes:
+                try:
+                    symbol = f"{code}.T"
+                    div_data = fetch_dividend_data(symbol)
+                    price = div_data.get("price", 0)
+                    if not price or price <= 0:
+                        continue
+
+                    existing = cache.get(code, {})
+                    if not existing:
+                        # キャッシュに存在しない銘柄は株価だけでは作れない→スキップ
+                        continue
+
+                    existing["price"] = price
+
+                    # 既存のEPS/BPS/配当で PER/PBR/利回りを再計算
+                    div_annual = existing.get("dividendAnnual")
+                    if div_annual and div_annual > 0:
+                        existing["dividendYield"] = round(div_annual / price * 100, 2)
+
+                    eps = existing.get("eps")
+                    if eps and eps > 0:
+                        existing["per"] = round(price / eps, 2)
+
+                    bps = existing.get("bps")
+                    if bps and bps > 0:
+                        existing["pbr"] = round(price / bps, 2)
+
+                    existing["lastUpdated_yahoo"] = int(time.time())
+                    existing["lastUpdated"] = int(time.time())
+                    cache[code] = existing
+                    updated_count += 1
+
+                except Exception as e:
+                    errors.append({"code": code, "error": str(e)})
+
+            if updated_count > 0:
+                self._save_screening_cache(cache)
+
+            self.send_json_response({
+                "updated": updated_count,
+                "errors": errors,
+            })
+
+        except Exception as e:
+            print(f"[スクリーニング] Yahoo更新エラー: {e}")
+            self.send_json_error(f"Yahoo更新エラー: {e}")
+
+    def _fetch_screening_data_static(self, code):
+        """
+        1銘柄分のスクリーニングデータを取得する
+        株価: Yahoo Finance / それ以外: IR BANK (fetch_fundamentals_data経由)
+        """
+        try:
+            # Yahoo Financeから株価を取得
+            symbol = f"{code}.T"
+            div_data = fetch_dividend_data(symbol)
+            price = div_data.get("price", 0)
+            if not price or price <= 0:
+                return None
+
+            # IR BANKからファンダメンタルズを取得
+            fund_data = fetch_fundamentals_data(code)
+            if not fund_data or "sections" not in fund_data:
+                return None
+
+            sections = fund_data["sections"]
+            result = {
+                "code": code,
+                "name": fund_data.get("stockName", code),
+                "price": price,
+                "lastUpdated": int(time.time()),
+            }
+
+            # 配当（予想優先）
+            div_val, div_type = _get_latest_value_with_type(sections.get("dividend"))
+            result["dividendAnnual"] = div_val
+            result["dividendType"] = div_type
+            if price > 0 and div_val and div_val > 0:
+                result["dividendYield"] = round(div_val / price * 100, 2)
+            else:
+                result["dividendYield"] = 0
+
+            # EPS（予想優先）
+            eps_val, eps_type = _get_latest_value_with_type(sections.get("eps"))
+            result["eps"] = eps_val
+            result["epsType"] = eps_type
+
+            # BPS（予想優先）
+            bps_val, bps_type = _get_latest_value_with_type(sections.get("bps"))
+            result["bps"] = bps_val
+            result["bpsType"] = bps_type
+
+            # PER = 株価 ÷ EPS
+            if eps_val and eps_val > 0:
+                result["per"] = round(price / eps_val, 2)
+                result["perType"] = "予想" if eps_type == "予想" else "実績"
+            else:
+                result["per"] = None
+                result["perType"] = None
+
+            # PBR = 株価 ÷ BPS
+            if bps_val and bps_val > 0:
+                result["pbr"] = round(price / bps_val, 2)
+                result["pbrType"] = "予想" if bps_type == "予想" else "実績"
+            else:
+                result["pbr"] = None
+                result["pbrType"] = None
+
+            # 営業利益率
+            margin_val, _ = _get_latest_value_with_type(sections.get("operatingMargin"))
+            result["operatingMargin"] = margin_val
+
+            # ROE
+            roe_val, _ = _get_latest_value_with_type(sections.get("roe"))
+            result["roe"] = roe_val
+
+            # 自己資本比率
+            equity_val, _ = _get_latest_value_with_type(sections.get("equityRatio"))
+            result["equityRatio"] = equity_val
+
+            # 配当性向
+            payout_val, _ = _get_latest_value_with_type(sections.get("payoutRatio"))
+            result["payoutRatio"] = payout_val
+
+            return result
+
+        except Exception as e:
+            print(f"[スクリーニング] {code} データ取得失敗: {e}")
+            return None
 
     # ==========================================
     # アラート関連API
@@ -401,6 +666,47 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
         """エラーをJSON形式で返す"""
         self.send_json_response({"error": message}, status)
 
+    def handle_env_api(self):
+        """GET /api/env - 環境情報を返す（Render上かどうかの判定用）"""
+        is_render = bool(os.environ.get("RENDER"))
+        self.send_json_response({"isCloud": is_render})
+
+    def handle_webhook_update(self):
+        """POST /api/webhook/update?key=SECRET&mode=yahoo|irbank - 外部cronからの更新トリガー"""
+        parsed = urllib.parse.urlparse(self.path)
+        query = urllib.parse.parse_qs(parsed.query)
+
+        # 認証チェック
+        key = query.get("key", [""])[0]
+        expected_key = os.environ.get("WEBHOOK_SECRET", "")
+        if not expected_key or key != expected_key:
+            self.send_json_error("Unauthorized", 401)
+            return
+
+        mode = query.get("mode", ["yahoo"])[0]
+        if mode not in ("yahoo", "irbank", "full"):
+            self.send_json_error("Invalid mode. Use yahoo, irbank, or full.", 400)
+            return
+
+        # バックグラウンドでupdate-screening-data.pyを実行
+        script_path = os.path.join(_base_dir, "update-screening-data.py")
+        cmd = [sys.executable, script_path, "--mode", mode]
+        if mode == "irbank":
+            cmd += ["--batch-size", "800"]
+
+        try:
+            subprocess.Popen(
+                cmd,
+                cwd=_base_dir,
+                stdout=open(os.path.join(_base_dir, "logs", "webhook-update.log"), "a"),
+                stderr=subprocess.STDOUT,
+            )
+            print(f"[Webhook] {mode}モードの更新を開始しました")
+            self.send_json_response({"status": "started", "mode": mode})
+        except Exception as e:
+            print(f"[Webhook] 更新スクリプトの起動エラー: {e}")
+            self.send_json_error(f"Failed to start update: {e}", 500)
+
     def log_message(self, format, *args):
         """ログメッセージを日本語フレンドリーにする"""
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {args[0]}")
@@ -485,6 +791,36 @@ def _wait_irbank_rate_limit():
         print(f"  IR BANK: レート制限待機 {wait_time:.1f}秒...")
         time.sleep(wait_time)
     _last_irbank_access = time.time()
+
+
+def _get_latest_value_with_type(section):
+    """
+    セクションの values から直近の非null値を取得し、「予想」か「実績」かを判定する
+
+    Args:
+        section: {"values": [...], "label": "...", "unit": "..."} 形式のdict
+
+    Returns:
+        (value, type_str): 値と "予想" or "実績" のタプル。データがなければ (None, None)
+    """
+    if not section or "values" not in section:
+        return None, None
+
+    values = section["values"]
+    if not values:
+        return None, None
+
+    # 末尾から非null値を探す（最新データは配列の末尾に近い）
+    for i in range(len(values) - 1, -1, -1):
+        if values[i] is not None:
+            # 最後の値が予想かどうか: 末尾付近の値は予想値の可能性が高い
+            # 判定: 最後から2番目以降に非null値があり、それが最後の非null値と
+            # 同じインデックスなら実績、最後のインデックスなら予想の可能性
+            is_forecast = (i == len(values) - 1)
+            type_str = "予想" if is_forecast else "実績"
+            return values[i], type_str
+
+    return None, None
 
 
 def fetch_yahoo_finance(symbol: str, interval: str, date_range: str) -> dict:
