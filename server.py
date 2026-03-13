@@ -1094,7 +1094,7 @@ def _predict_next_ex_div_date(dividends: dict) -> str:
     current_month = today.month
     current_year = today.year
 
-    for offset in range(1, 13):  # 最大12ヶ月先まで探す
+    for offset in range(0, 12):  # 今月を含めて最大12ヶ月先まで探す
         check_month = ((current_month - 1 + offset) % 12) + 1
         check_year = current_year + ((current_month - 1 + offset) // 12)
         if check_month in unique_months:
