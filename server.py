@@ -548,7 +548,7 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
         URL: /api/stock/{symbol}?interval=1d&range=1y
         """
         # URLからシンボルを取り出す（例: /api/stock/AAPL → AAPL）
-        symbol = path.replace("/api/stock/", "").strip("/")
+        symbol = urllib.parse.unquote(path.replace("/api/stock/", "").strip("/"))
         if not symbol:
             self.send_json_error("銘柄コードが指定されていません", 400)
             return
@@ -583,7 +583,7 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
         Yahoo Finance の quoteSummary API から配当情報を取得する
         - Forward（予想）配当を優先、なければTrailing（実績）にフォールバック
         """
-        symbol = path.replace("/api/dividend/", "").strip("/")
+        symbol = urllib.parse.unquote(path.replace("/api/dividend/", "").strip("/"))
         if not symbol:
             self.send_json_error("銘柄コードが指定されていません", 400)
             return
@@ -614,7 +614,7 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
         URL: /api/fundamentals/{code}
         IR BANKからファンダメンタルズデータを取得する（日本株のみ対応）
         """
-        code = path.replace("/api/fundamentals/", "").strip("/")
+        code = urllib.parse.unquote(path.replace("/api/fundamentals/", "").strip("/"))
         # .Tを除去して4桁コードにする
         code = code.replace(".T", "")
         if not code or not code.isdigit() or len(code) != 4:
