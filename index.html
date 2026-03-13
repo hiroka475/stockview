@@ -1557,15 +1557,45 @@
     </div>
 
     <div class="watchlist-sort-bar">
+      <div id="flagFilter" style="position:relative;display:inline-block;">
+        <button class="watchlist-sort-btn" id="flagFilterBtn" title="フラグフィルタ" style="display:flex;align-items:center;gap:4px;">
+          <span id="flagFilterIcon" style="width:10px;height:10px;border-radius:50%;border:2px solid #888;background:transparent;display:inline-block;"></span>
+          <span id="flagFilterLabel">フラグ</span>
+        </button>
+        <div id="flagDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:999;background:#2a2a2a;border:1px solid #555;border-radius:6px;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.5);min-width:100px;">
+          <div class="flag-dropdown-item" data-flag="" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="width:12px;height:12px;border-radius:50%;border:2px solid #888;background:transparent;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">すべて</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="green" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#4caf50;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">緑</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="blue" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#42a5f5;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">青</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="pink" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#f48fb1;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">ピンク</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="orange" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#ffa726;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">オレンジ</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="red" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#ef5350;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">赤</span>
+          </div>
+          <hr style="border:none;border-top:1px solid #555;margin:4px 0;">
+          <div id="clearAllFlagsBtn" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="font-size:12px;color:#ff6b6b;">✕</span>
+            <span style="color:#ff6b6b;font-size:11px;">フラグを全削除</span>
+          </div>
+        </div>
+      </div>
       <button class="watchlist-sort-btn active" id="sortCodeBtn" title="コード順">コード <span id="sortCodeArrow">▲</span></button>
       <button class="watchlist-sort-btn" id="sortChangeBtn" title="変動率順">変動率 <span id="sortChangeArrow">-</span></button>
-      <select id="divMonthFilter" title="配当月フィルタ" style="font-size:11px;padding:2px 4px;border:1px solid #555;border-radius:4px;background:#2a2a2a;color:#ccc;cursor:pointer;">
-        <option value="">配当月</option>
-        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
-        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
-        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
-        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-      </select>
     </div>
 
     <div class="watchlist-items" id="watchlistItems">
@@ -2986,8 +3016,15 @@
         const alertInfo = getAlert(item.symbol);
         const alertIcon = (alertInfo && alertInfo.enabled) ? '<span class="watchlist-item-alert-icon" title="アラート設定中">🔔</span>' : '';
 
+        const flagColor = getFlag(item.symbol);
+        const flagHex = flagColor ? FLAG_COLORS[flagColor] : "transparent";
+        const flagStyle = flagColor
+          ? `background:${flagHex};border:1px solid ${flagHex};`
+          : `background:transparent;border:1px solid #555;`;
+
         el.innerHTML = `
           <div class="watchlist-item-left">
+            <span class="watchlist-flag-dot" data-symbol="${item.symbol}" title="フラグ設定" style="width:10px;height:10px;min-width:10px;border-radius:50%;cursor:pointer;display:inline-block;${flagStyle}margin-right:4px;"></span>
             <span class="watchlist-item-symbol">${displaySymbol}${alertIcon}</span>
             <span class="watchlist-item-name">${shortName}</span>
           </div>
@@ -2999,9 +3036,16 @@
           <button class="watchlist-item-delete" title="削除">×</button>
         `;
 
+        // フラグドットのクリック
+        el.querySelector(".watchlist-flag-dot").addEventListener("click", (e) => {
+          e.stopPropagation();
+          showFlagMenu(item.symbol, e.target);
+        });
+
         // クリックでチャート切り替え＋詳細パネル表示
         el.addEventListener("click", (e) => {
           if (e.target.closest(".watchlist-item-delete")) return;
+          if (e.target.closest(".watchlist-flag-dot")) return;
           loadSymbol(item.symbol);
           // アクティブ表示を更新
           container.querySelectorAll(".watchlist-item").forEach((i) => i.classList.remove("active"));
@@ -3054,8 +3098,7 @@
       // 名前が更新されたら保存
       if (needsSave) saveWatchlist(list);
 
-      // 各銘柄の価格・変動率・配当データを取得
-      _divDataLoaded = false;
+      // 各銘柄の価格・変動率を取得
       fetchWatchlistPrices(list);
     }
 
@@ -3191,96 +3234,150 @@
         await Promise.all(batch.map((item) => fetchSingleStockPrice(item)));
       }
 
-      // 配当データも取得（配当月フィルタ用）
-      for (let i = 0; i < list.length; i += BATCH_SIZE) {
-        const batch = list.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map((item) => fetchWatchlistDividend(item.symbol)));
-      }
-      _divDataLoaded = true;
-
-      // 配当月フィルタが選択されていれば適用
-      applyDivMonthFilter();
+      // フラグフィルタが選択されていれば適用
+      applyFlagFilter();
     }
 
-    // 配当月データの保存用（symbol → exDividendDate文字列）
-    const _divDateCache = {};
+    // ==========================================
+    // カラーフラグ機能
+    // ==========================================
+    const FLAG_COLORS = {
+      green: "#4caf50",
+      blue: "#42a5f5",
+      pink: "#f48fb1",
+      orange: "#ffa726",
+      red: "#ef5350",
+    };
+    const FLAG_STORAGE_KEY = "stockview_flags";
+    let _activeFilterFlag = ""; // 現在のフィルタ色（空=すべて表示）
 
-    /**
-     * ウォッチリストの個別銘柄の配当利回りを取得する
-     */
-    async function fetchWatchlistDividend(symbol) {
-      try {
-        const url = `/api/dividend/${encodeURIComponent(symbol)}`;
-        const response = await fetch(url);
-        if (!response.ok) return;
-        const data = await response.json();
-
-        // 配当落ち日を保存（フィルタ用）
-        if (data.exDividendDate) {
-          _divDateCache[symbol] = data.exDividendDate;
-        }
-
-        if (data.error || !data.dividendYield || data.dividendYield <= 0) return;
-
-        const safeId = symbol.replace(".", "_");
-        const divEl = document.getElementById(`wl-div-${safeId}`);
-        if (divEl) {
-          divEl.textContent = `${data.dividendYield.toFixed(1)}%`;
-          divEl.className = `watchlist-item-dividend ${data.source}`;
-          const sourceLabel = data.source === "forward" ? "予想" : "実績";
-          divEl.title = `${sourceLabel}配当利回り`;
-        }
-      } catch {
-        // 配当データ取得失敗は無視
+    function loadFlags() {
+      try { return JSON.parse(localStorage.getItem(FLAG_STORAGE_KEY) || "{}"); }
+      catch { return {}; }
+    }
+    function saveFlags(flags) {
+      localStorage.setItem(FLAG_STORAGE_KEY, JSON.stringify(flags));
+    }
+    function getFlag(symbol) {
+      return loadFlags()[symbol] || "";
+    }
+    function setFlag(symbol, color) {
+      const flags = loadFlags();
+      if (color) {
+        flags[symbol] = color;
+      } else {
+        delete flags[symbol];
       }
+      saveFlags(flags);
     }
 
     /**
-     * 配当月フィルタを適用する
+     * フラグ色選択メニューを表示する
      */
-    let _divDataLoaded = false; // 配当データ取得完了フラグ
+    function showFlagMenu(symbol, anchorEl) {
+      // 既存メニューを削除
+      document.querySelectorAll(".flag-menu").forEach(m => m.remove());
 
-    function applyDivMonthFilter() {
-      const filterMonth = document.getElementById("divMonthFilter").value;
+      const menu = document.createElement("div");
+      menu.className = "flag-menu";
+      menu.style.cssText = "position:absolute;z-index:9999;background:#333;border:1px solid #555;border-radius:6px;padding:6px;display:flex;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,0.5);";
+
+      const currentFlag = getFlag(symbol);
+
+      // 「なし」ボタン
+      const noneBtn = document.createElement("span");
+      noneBtn.title = "フラグなし";
+      noneBtn.style.cssText = `width:18px;height:18px;border-radius:50%;border:2px solid ${!currentFlag ? '#fff' : '#666'};cursor:pointer;display:inline-block;background:transparent;`;
+      noneBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setFlag(symbol, "");
+        menu.remove();
+        renderWatchlist();
+      });
+      menu.appendChild(noneBtn);
+
+      // 各色ボタン
+      for (const [name, hex] of Object.entries(FLAG_COLORS)) {
+        const dot = document.createElement("span");
+        dot.title = name;
+        dot.style.cssText = `width:18px;height:18px;border-radius:50%;cursor:pointer;display:inline-block;background:${hex};border:2px solid ${currentFlag === name ? '#fff' : 'transparent'};`;
+        dot.addEventListener("click", (e) => {
+          e.stopPropagation();
+          setFlag(symbol, name);
+          menu.remove();
+          renderWatchlist();
+        });
+        menu.appendChild(dot);
+      }
+
+      // 位置決め
+      const rect = anchorEl.getBoundingClientRect();
+      menu.style.left = rect.left + "px";
+      menu.style.top = (rect.bottom + 4) + "px";
+      menu.style.position = "fixed";
+      document.body.appendChild(menu);
+
+      // 外側クリックで閉じる
+      setTimeout(() => {
+        const closer = (e) => {
+          if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener("click", closer);
+          }
+        };
+        document.addEventListener("click", closer);
+      }, 0);
+    }
+
+    /**
+     * フラグフィルタを適用する
+     */
+    function applyFlagFilter() {
       const items = document.querySelectorAll("#watchlistItems .watchlist-item");
       let visibleCount = 0;
 
       items.forEach(item => {
         const symbol = item.dataset.symbol;
-        if (!filterMonth) {
+        if (!_activeFilterFlag) {
           item.style.display = "";
           visibleCount++;
-          return;
-        }
-
-        const dateStr = _divDateCache[symbol] || "";
-        // "2026-03-28" や "2026-03（予想）" から月を抽出
-        const match = dateStr.match(/\d{4}-(\d{2})/);
-        if (match) {
-          const month = parseInt(match[1], 10);
-          if (month === parseInt(filterMonth, 10)) {
+        } else {
+          const flag = getFlag(symbol);
+          if (flag === _activeFilterFlag) {
             item.style.display = "";
             visibleCount++;
           } else {
             item.style.display = "none";
           }
-        } else {
-          // 配当データがない場合は非表示
-          item.style.display = "none";
         }
       });
 
-      // フィルタ結果が0件の場合のメッセージ
+      // フィルタ結果が0件の場合
       const emptyMsg = document.getElementById("watchlistEmpty");
-      if (filterMonth && visibleCount === 0) {
+      if (_activeFilterFlag && visibleCount === 0) {
         emptyMsg.style.display = "block";
-        if (!_divDataLoaded) {
-          emptyMsg.innerHTML = `配当データ読込中...`;
-        } else {
-          emptyMsg.innerHTML = `${filterMonth}月配当の銘柄はありません`;
-        }
+        emptyMsg.innerHTML = `この色のフラグがついた銘柄はありません`;
       } else if (visibleCount > 0) {
         emptyMsg.style.display = "none";
+      }
+
+    }
+
+    /**
+     * フラグフィルタボタンの見た目を更新
+     */
+    function updateFlagFilterUI() {
+      const icon = document.getElementById("flagFilterIcon");
+      const label = document.getElementById("flagFilterLabel");
+      if (_activeFilterFlag && FLAG_COLORS[_activeFilterFlag]) {
+        icon.style.background = FLAG_COLORS[_activeFilterFlag];
+        icon.style.border = `2px solid ${FLAG_COLORS[_activeFilterFlag]}`;
+        const names = { green: "緑", blue: "青", pink: "ピンク", orange: "橙", red: "赤" };
+        label.textContent = names[_activeFilterFlag] || "フラグ";
+      } else {
+        icon.style.background = "transparent";
+        icon.style.border = "2px solid #888";
+        label.textContent = "フラグ";
       }
     }
 
@@ -3555,9 +3652,42 @@
         updateSortUI();
       });
 
-      // 配当月フィルタ
-      document.getElementById("divMonthFilter").addEventListener("change", () => {
-        applyDivMonthFilter();
+      // フラグフィルタ（ドロップダウン）
+      const flagBtn = document.getElementById("flagFilterBtn");
+      const flagDropdown = document.getElementById("flagDropdown");
+      flagBtn.addEventListener("click", () => {
+        flagDropdown.style.display = flagDropdown.style.display === "none" ? "block" : "none";
+      });
+      // 外側クリックで閉じる
+      document.addEventListener("click", (e) => {
+        if (!document.getElementById("flagFilter").contains(e.target)) {
+          flagDropdown.style.display = "none";
+        }
+      });
+      // ドロップダウンの各項目
+      document.querySelectorAll(".flag-dropdown-item").forEach(item => {
+        item.addEventListener("mouseover", () => { item.style.background = "#3a3a3a"; });
+        item.addEventListener("mouseout", () => { item.style.background = "transparent"; });
+        item.addEventListener("click", () => {
+          _activeFilterFlag = item.dataset.flag;
+          flagDropdown.style.display = "none";
+          updateFlagFilterUI();
+          applyFlagFilter();
+        });
+      });
+
+      // フラグ全削除ボタン
+      const clearAllFlagsBtn = document.getElementById("clearAllFlagsBtn");
+      clearAllFlagsBtn.addEventListener("mouseover", () => { clearAllFlagsBtn.style.background = "#3a3a3a"; });
+      clearAllFlagsBtn.addEventListener("mouseout", () => { clearAllFlagsBtn.style.background = "transparent"; });
+      clearAllFlagsBtn.addEventListener("click", () => {
+        if (confirm("すべてのフラグを削除しますか？")) {
+          saveFlags({});
+          flagDropdown.style.display = "none";
+          _activeFilterFlag = "";
+          updateFlagFilterUI();
+          renderWatchlist();
+        }
       });
 
       // 「+」ボタン（ウォッチリストタブを追加/復活）

@@ -182,6 +182,7 @@ def mode_irbank(candidates, cache, batch_size=500, interval=3.0, limit=0):
 
     updated = 0
     errors = 0
+    consecutive_302 = 0  # 連続302エラーカウント
     start_time = time.time()
 
     for i, code in enumerate(target_codes):
@@ -204,15 +205,34 @@ def mode_irbank(candidates, cache, batch_size=500, interval=3.0, limit=0):
         # IR BANKアクセス間隔
         time.sleep(interval)
 
+        # 50銘柄ごとに5分休憩（過剰アクセス防止）
+        if i > 0 and i % 50 == 0:
+            save_cache(cache)
+            print(f"\n  --- {i}銘柄処理済み。5分間休憩中... ---\n")
+            time.sleep(300)
+
         # IR BANKからファンダメンタルズ
         try:
             funda = fetch_fundamentals_data(code)
 
             if funda.get("error"):
-                print(f"  {progress} {code}: IR BANKエラー: {funda['error']}")
+                error_msg = funda['error']
+                print(f"  {progress} {code}: IR BANKエラー: {error_msg}")
                 errors += 1
+                # 302エラー連続検知 → 長めの休憩
+                if "302" in str(error_msg):
+                    consecutive_302 += 1
+                    if consecutive_302 >= 5:
+                        save_cache(cache)
+                        wait_min = 10
+                        print(f"\n  ⚠ 302エラーが{consecutive_302}回連続。{wait_min}分間休憩します...\n")
+                        time.sleep(wait_min * 60)
+                        consecutive_302 = 0
+                else:
+                    consecutive_302 = 0
                 continue
 
+            consecutive_302 = 0  # 成功したらリセット
             sections = funda.get("sections", {})
             periods = funda.get("periods", [])
 

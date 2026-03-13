@@ -269,8 +269,7 @@
         const data = await fundResponse.json();
         if (data.error) throw new Error(data.error);
 
-        // 配当利回りを計算: IR BANK配当（予想優先）÷ Yahoo株価 × 100
-        // ※スクリーニング画面と同じ定義に統一
+        // 配当利回り: Yahoo Finance（メイン画面と同じソース）を優先
         if (divResponse && divResponse.ok) {
           try {
             const divData = await divResponse.json();
@@ -278,25 +277,26 @@
             if (!data.valuation) data.valuation = {};
             data.valuation.price = price;
 
-            // IR BANKの最新配当（予想優先）を取得
-            const divSection = data.sections && data.sections.dividend;
-            let latestDiv = null;
-            if (divSection && divSection.values) {
-              for (let i = divSection.values.length - 1; i >= 0; i--) {
-                if (divSection.values[i] != null) {
-                  latestDiv = divSection.values[i];
-                  break;
+            if (divData.dividendYield && divData.dividendYield > 0) {
+              // Yahoo Financeの配当利回りを使用（メイン画面と統一）
+              data.valuation.dividendYield = divData.dividendYield;
+              console.log(`配当利回り: Yahoo Finance = ${divData.dividendYield}%`);
+            } else {
+              // フォールバック: IR BANK配当 ÷ Yahoo株価で計算
+              const divSection = data.sections && data.sections.dividend;
+              let latestDiv = null;
+              if (divSection && divSection.values) {
+                for (let i = divSection.values.length - 1; i >= 0; i--) {
+                  if (divSection.values[i] != null) {
+                    latestDiv = divSection.values[i];
+                    break;
+                  }
                 }
               }
-            }
-
-            if (price > 0 && latestDiv > 0) {
-              data.valuation.dividendYield = Math.round(latestDiv / price * 10000) / 100;
-              console.log(`配当利回り計算: IR BANK配当${latestDiv} ÷ Yahoo株価${price} = ${data.valuation.dividendYield}%`);
-            } else if (divData.dividendYield) {
-              // フォールバック: Yahoo Financeの値
-              data.valuation.dividendYield = divData.dividendYield;
-              console.log(`配当利回りフォールバック: Yahoo Finance = ${divData.dividendYield}%`);
+              if (price > 0 && latestDiv > 0) {
+                data.valuation.dividendYield = Math.round(latestDiv / price * 10000) / 100;
+                console.log(`配当利回りフォールバック: IR BANK配当${latestDiv} ÷ 株価${price} = ${data.valuation.dividendYield}%`);
+              }
             }
           } catch (e) { console.warn("配当データ解析エラー:", e); }
         }
@@ -687,7 +687,7 @@
         cards.push({ label: "PBR", sublabel: "株価純資産倍率", value: v.pbr, unit: "倍" });
       }
       if (v.dividendYield) {
-        cards.push({ label: "配当利回り", sublabel: "実績ベース", value: v.dividendYield, unit: "%" });
+        cards.push({ label: "配当利回り", sublabel: "予想ベース", value: v.dividendYield, unit: "%" });
       }
 
       for (const card of cards) {

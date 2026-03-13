@@ -1,0 +1,1833 @@
+============================================================
+スクリーニングデータ バッチ更新
+開始時刻: 2026-03-08 07:32:18
+============================================================
+候補銘柄: 3115銘柄
+既存キャッシュ: 279銘柄
+モード: yahoo
+
+[起動] StockView サーバーを初期化中...
+  brotliモジュールが見つかりません。インストールします...
+  brotliモジュールのインストール失敗: No module named 'brotli'
+  ファンダメンタルズ機能が制限されます。手動で pip install brotli を実行してください。
+  日本株マスタ: 3124銘柄 読み込み完了
+  米国株マスタ: 146銘柄 読み込み完了
+  ファンダメンタルズキャッシュ: 217銘柄 読み込み完了
+server.py のインポートエラー: cannot import name '_get_latest_value' from 'server' (/Users/ogurahirokazu/claude-code-lab/stock-view/server.py)
+server.py と同じディレクトリで実行してください。
+============================================================
+スクリーニングデータ バッチ更新
+開始時刻: 2026-03-08 07:35:54
+============================================================
+候補銘柄: 3115銘柄
+既存キャッシュ: 279銘柄
+モード: yahoo
+
+[起動] StockView サーバーを初期化中...
+  日本株マスタ: 3124銘柄 読み込み完了
+  米国株マスタ: 146銘柄 読み込み完了
+  ファンダメンタルズキャッシュ: 217銘柄 読み込み完了
+Yahoo Finance 株価更新: 279銘柄（キャッシュ済みのみ）
+  v10 API失敗 (1301.T): HTTP Error 401: Unauthorized
+  chart配当データ (1301.T): 年間配当=130.0, 利回り=2.51%, 配当落ち日=2025-03-28
+  v10 API失敗 (1332.T): HTTP Error 401: Unauthorized
+  chart配当データ (1332.T): 年間配当=30.0, 利回り=2.1%, 配当落ち日=2025-09-29
+  v10 API失敗 (1333.T): HTTP Error 401: Unauthorized
+  chart配当データ (1333.T): 年間配当=36.666668, 利回り=2.43%, 配当落ち日=2025-09-29
+  v10 API失敗 (1375.T): HTTP Error 401: Unauthorized
+  chart配当データ (1375.T): 年間配当=16.0, 利回り=1.49%, 配当落ち日=2025-09-29
+  v10 API失敗 (1376.T): HTTP Error 401: Unauthorized
+  chart配当データ (1376.T): 年間配当=38.0, 利回り=2.6%, 配当落ち日=2025-11-27
+  v10 API失敗 (1377.T): HTTP Error 401: Unauthorized
+  chart配当データ (1377.T): 年間配当=80.0, 利回り=1.89%, 配当落ち日=2025-11-27
+  v10 API失敗 (1379.T): HTTP Error 401: Unauthorized
+  chart配当データ (1379.T): 年間配当=50.0, 利回り=2.53%, 配当落ち日=2025-09-29
+  v10 API失敗 (1380.T): HTTP Error 401: Unauthorized
+  chart配当データ (1380.T): 年間配当=10.0, 利回り=0.94%, 配当落ち日=2025-03-28
+  v10 API失敗 (1381.T): HTTP Error 401: Unauthorized
+  chart配当データ (1381.T): 年間配当=112.5, 利回り=2.98%, 配当落ち日=2025-06-27
+  v10 API失敗 (1382.T): HTTP Error 401: Unauthorized
+  chart配当データ (1382.T): 年間配当=50.0, 利回り=2.7%, 配当落ち日=2025-06-27
+  v10 API失敗 (1383.T): HTTP Error 401: Unauthorized
+  chart配当データ (1383.T): 年間配当=10.0, 利回り=0.31%, 配当落ち日=2025-10-30
+  v10 API失敗 (1384.T): HTTP Error 401: Unauthorized
+  chart配当データ (1384.T): 年間配当=70.0, 利回り=2.27%, 配当落ち日=2025-03-28
+  v10 API失敗 (1407.T): HTTP Error 401: Unauthorized
+  chart配当データ (1407.T): 年間配当=100.0, 利回り=6.15%, 配当落ち日=2026-02-26
+  v10 API失敗 (1414.T): HTTP Error 401: Unauthorized
+  chart配当データ (1414.T): 年間配当=48.375, 利回り=3.44%, 配当落ち日=2025-12-29
+  v10 API失敗 (1417.T): HTTP Error 401: Unauthorized
+  chart配当データ (1417.T): 年間配当=80.0, 利回り=2.15%, 配当落ち日=2025-09-29
+  v10 API失敗 (1418.T): HTTP Error 401: Unauthorized
+  chart配当データ (1418.T): 年間配当=25.0, 利回り=4.55%, 配当落ち日=2026-02-26
+  v10 API失敗 (1419.T): HTTP Error 401: Unauthorized
+  chart配当データ (1419.T): 年間配当=195.0, 利回り=4.97%, 配当落ち日=2025-05-29
+  v10 API失敗 (1420.T): HTTP Error 401: Unauthorized
+  chart配当データ (1420.T): 年間配当=25.0, 利回り=3.52%, 配当落ち日=2025-03-28
+  v10 API失敗 (1429.T): HTTP Error 401: Unauthorized
+  chart配当データ (1429.T): 年間配当=35.0, 利回り=4.37%, 配当落ち日=2025-12-29
+  v10 API失敗 (1430.T): HTTP Error 401: Unauthorized
+  chart配当データ (1430.T): 年間配当=42.0, 利回り=3.93%, 配当落ち日=2025-05-29
+  v10 API失敗 (1433.T): HTTP Error 401: Unauthorized
+  chart配当データ (1433.T): 年間配当=40.0, 利回り=3.12%, 配当落ち日=2026-01-29
+  v10 API失敗 (1434.T): HTTP Error 401: Unauthorized
+  chart配当データ (1434.T): 年間配当=40.0, 利回り=2.02%, 配当落ち日=2025-08-28
+  v10 API失敗 (1435.T): HTTP Error 401: Unauthorized
+  chart配当データ (1435.T): 年間配当=2.0, 利回り=1.0%, 配当落ち日=2025-12-29
+  v10 API失敗 (1438.T): HTTP Error 401: Unauthorized
+  chart配当データ (1438.T): 年間配当=36.0, 利回り=1.97%, 配当落ち日=2025-09-29
+  v10 API失敗 (1443.T): HTTP Error 401: Unauthorized
+  chart配当データ (1443.T): 年間配当=1.1, 利回り=0.35%, 配当落ち日=2025-03-28
+  v10 API失敗 (1446.T): HTTP Error 401: Unauthorized
+  chart配当データ (1446.T): 年間配当=8.0, 利回り=1.37%, 配当落ち日=2025-09-29
+  v10 API失敗 (1450.T): HTTP Error 401: Unauthorized
+  chart配当データ (1450.T): 年間配当=55.0, 利回り=3.44%, 配当落ち日=2025-03-28
+  v10 API失敗 (1491.T): HTTP Error 401: Unauthorized
+  chart配当データ (1491.T): 年間配当=20.0, 利回り=1.87%, 配当落ち日=2025-03-28
+  v10 API失敗 (1514.T): HTTP Error 401: Unauthorized
+  chart配当データ (1514.T): 年間配当=30.0, 利回り=3.1%, 配当落ち日=2025-03-28
+  v10 API失敗 (1515.T): HTTP Error 401: Unauthorized
+  chart配当データ (1515.T): 年間配当=50.2, 利回り=1.55%, 配当落ち日=2025-09-29
+  v10 API失敗 (1518.T): HTTP Error 401: Unauthorized
+  chart配当データ (1518.T): 年間配当=39.0, 利回り=2.74%, 配当落ち日=2025-09-29
+  v10 API失敗 (1605.T): HTTP Error 401: Unauthorized
+  chart配当データ (1605.T): 年間配当=100.0, 利回り=2.44%, 配当落ち日=2025-12-29
+  v10 API失敗 (1662.T): HTTP Error 401: Unauthorized
+  chart配当データ (1662.T): 年間配当=50.0, 利回り=2.07%, 配当落ち日=2025-09-29
+  v10 API失敗 (1663.T): HTTP Error 401: Unauthorized
+  chart配当データ (1663.T): 年間配当=54.0, 利回り=1.06%, 配当落ち日=2025-12-29
+  v10 API失敗 (1711.T): HTTP Error 401: Unauthorized
+  chart配当データ (1711.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (1716.T): HTTP Error 401: Unauthorized
+  chart配当データ (1716.T): 年間配当=40.0, 利回り=2.57%, 配当落ち日=2025-06-27
+  v10 API失敗 (1717.T): HTTP Error 401: Unauthorized
+  chart配当データ (1717.T): 年間配当=42.5, 利回り=3.96%, 配当落ち日=2025-03-28
+  v10 API失敗 (1718.T): HTTP Error 401: Unauthorized
+  chart配当データ (1718.T): 年間配当=350.0, 利回り=4.36%, 配当落ち日=2025-12-29
+  v10 API失敗 (1719.T): HTTP Error 401: Unauthorized
+  chart配当データ (1719.T): 年間配当=80.0, 利回り=4.07%, 配当落ち日=2025-09-29
+  v10 API失敗 (1720.T): HTTP Error 401: Unauthorized
+  chart配当データ (1720.T): 年間配当=38.0, 利回り=2.44%, 配当落ち日=2025-09-29
+  v10 API失敗 (1721.T): HTTP Error 401: Unauthorized
+  chart配当データ (1721.T): 年間配当=120.0, 利回り=2.22%, 配当落ち日=2025-09-29
+  v10 API失敗 (1723.T): HTTP Error 401: Unauthorized
+  chart配当データ (1723.T): 年間配当=142.0, 利回り=1.27%, 配当落ち日=2025-09-29
+  v10 API失敗 (1724.T): HTTP Error 401: Unauthorized
+  chart配当データ (1724.T): 年間配当=28.0, 利回り=3.85%, 配当落ち日=2025-12-29
+  v10 API失敗 (1726.T): HTTP Error 401: Unauthorized
+  chart配当データ (1726.T): 年間配当=15.5, 利回り=2.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (1736.T): HTTP Error 401: Unauthorized
+  chart配当データ (1736.T): 年間配当=85.666664, 利回り=3.48%, 配当落ち日=2025-09-29
+  v10 API失敗 (1758.T): HTTP Error 401: Unauthorized
+  chart配当データ (1758.T): 年間配当=60.0, 利回り=2.3%, 配当落ち日=2026-01-29
+  v10 API失敗 (1762.T): HTTP Error 401: Unauthorized
+  chart配当データ (1762.T): 年間配当=86.0, 利回り=2.28%, 配当落ち日=2025-09-29
+  v10 API失敗 (1764.T): HTTP Error 401: Unauthorized
+  chart配当データ (1764.T): 年間配当=117.0, 利回り=3.55%, 配当落ち日=2025-06-27
+  v10 API失敗 (1766.T): HTTP Error 401: Unauthorized
+  chart配当データ (1766.T): 年間配当=330.0, 利回り=2.25%, 配当落ち日=2025-04-28
+  v10 API失敗 (1768.T): HTTP Error 401: Unauthorized
+  chart配当データ (1768.T): 年間配当=30.0, 利回り=1.96%, 配当落ち日=2025-03-28
+  [50/279] 1768: ¥1534.0 (20秒経過)
+  v10 API失敗 (1770.T): HTTP Error 401: Unauthorized
+  chart配当データ (1770.T): 年間配当=65.0, 利回り=3.41%, 配当落ち日=2025-09-29
+  v10 API失敗 (1776.T): HTTP Error 401: Unauthorized
+  chart配当データ (1776.T): 年間配当=40.0, 利回り=2.45%, 配当落ち日=2025-03-28
+  v10 API失敗 (1780.T): HTTP Error 401: Unauthorized
+  chart配当データ (1780.T): 年間配当=29.5, 利回り=1.84%, 配当落ち日=2025-09-29
+  v10 API失敗 (1783.T): HTTP Error 401: Unauthorized
+  chart配当データ (1783.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (1786.T): HTTP Error 401: Unauthorized
+  chart配当データ (1786.T): 年間配当=14.5, 利回り=3.62%, 配当落ち日=2025-09-29
+  v10 API失敗 (1787.T): HTTP Error 401: Unauthorized
+  chart配当データ (1787.T): 年間配当=300.0, 利回り=4.87%, 配当落ち日=2025-03-28
+  v10 API失敗 (1788.T): HTTP Error 401: Unauthorized
+  chart配当データ (1788.T): 年間配当=100.0, 利回り=1.74%, 配当落ち日=2025-06-27
+  v10 API失敗 (1793.T): HTTP Error 401: Unauthorized
+  chart配当データ (1793.T): 年間配当=41.0, 利回り=2.15%, 配当落ち日=2025-03-28
+  v10 API失敗 (1795.T): HTTP Error 401: Unauthorized
+  chart配当データ (1795.T): 年間配当=160.0, 利回り=3.43%, 配当落ち日=2025-09-29
+  v10 API失敗 (1798.T): HTTP Error 401: Unauthorized
+  chart配当データ (1798.T): 年間配当=100.0, 利回り=1.47%, 配当落ち日=2025-03-28
+  v10 API失敗 (1799.T): HTTP Error 401: Unauthorized
+  chart配当データ (1799.T): 年間配当=130.0, 利回り=3.15%, 配当落ち日=2025-03-28
+  v10 API失敗 (1801.T): HTTP Error 401: Unauthorized
+  chart配当データ (1801.T): 年間配当=270.0, 利回り=1.48%, 配当落ち日=2025-09-29
+  v10 API失敗 (1802.T): HTTP Error 401: Unauthorized
+  chart配当データ (1802.T): 年間配当=82.0, 利回り=2.05%, 配当落ち日=2025-09-29
+  v10 API失敗 (1803.T): HTTP Error 401: Unauthorized
+  chart配当データ (1803.T): 年間配当=42.5, 利回り=1.3%, 配当落ち日=2025-09-29
+  v10 API失敗 (1807.T): HTTP Error 401: Unauthorized
+  chart配当データ (1807.T): 年間配当=80.0, 利回り=3.97%, 配当落ち日=2025-09-29
+  v10 API失敗 (1808.T): HTTP Error 401: Unauthorized
+  chart配当データ (1808.T): 年間配当=90.0, 利回り=2.79%, 配当落ち日=2025-09-29
+  v10 API失敗 (1810.T): HTTP Error 401: Unauthorized
+  chart配当データ (1810.T): 年間配当=59.0, 利回り=3.29%, 配当落ち日=2025-09-29
+  v10 API失敗 (1811.T): HTTP Error 401: Unauthorized
+  chart配当データ (1811.T): 年間配当=120.0, 利回り=1.34%, 配当落ち日=2025-03-28
+  v10 API失敗 (1812.T): HTTP Error 401: Unauthorized
+  chart配当データ (1812.T): 年間配当=115.0, 利回り=1.79%, 配当落ち日=2025-09-29
+  v10 API失敗 (1813.T): HTTP Error 401: Unauthorized
+  chart配当データ (1813.T): 年間配当=60.0, 利回り=1.66%, 配当落ち日=2025-03-28
+  v10 API失敗 (1814.T): HTTP Error 401: Unauthorized
+  chart配当データ (1814.T): 年間配当=141.5, 利回り=3.5%, 配当落ち日=2025-09-29
+  v10 API失敗 (1815.T): HTTP Error 401: Unauthorized
+  chart配当データ (1815.T): 年間配当=122.0, 利回り=2.65%, 配当落ち日=2025-03-28
+  v10 API失敗 (1820.T): HTTP Error 401: Unauthorized
+  chart配当データ (1820.T): 年間配当=220.0, 利回り=3.52%, 配当落ち日=2025-09-29
+  v10 API失敗 (1822.T): HTTP Error 401: Unauthorized
+  chart配当データ (1822.T): 年間配当=29.4, 利回り=3.44%, 配当落ち日=2025-03-28
+  v10 API失敗 (1826.T): HTTP Error 401: Unauthorized
+  chart配当データ (1826.T): 年間配当=60.0, 利回り=4.78%, 配当落ち日=2025-03-28
+  v10 API失敗 (1827.T): HTTP Error 401: Unauthorized
+  chart配当データ (1827.T): 年間配当=22.0, 利回り=1.41%, 配当落ち日=2025-03-28
+  v10 API失敗 (1828.T): HTTP Error 401: Unauthorized
+  chart配当データ (1828.T): 年間配当=87.0, 利回り=3.11%, 配当落ち日=2025-03-28
+  v10 API失敗 (1833.T): HTTP Error 401: Unauthorized
+  chart配当データ (1833.T): 年間配当=213.0, 利回り=3.15%, 配当落ち日=2025-09-29
+  v10 API失敗 (1835.T): HTTP Error 401: Unauthorized
+  chart配当データ (1835.T): 年間配当=155.0, 利回り=2.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (1840.T): HTTP Error 401: Unauthorized
+  chart配当データ (1840.T): 年間配当=10.0, 利回り=4.07%, 配当落ち日=2025-10-30
+  v10 API失敗 (1841.T): HTTP Error 401: Unauthorized
+  chart配当データ (1841.T): 年間配当=30.0, 利回り=1.89%, 配当落ち日=2025-09-29
+  v10 API失敗 (1844.T): HTTP Error 401: Unauthorized
+  chart配当データ (1844.T): 年間配当=11.5, 利回り=2.19%, 配当落ち日=2025-07-30
+  v10 API失敗 (1847.T): HTTP Error 401: Unauthorized
+  chart配当データ (1847.T): 年間配当=155.0, 利回り=2.49%, 配当落ち日=2025-09-29
+  v10 API失敗 (1848.T): HTTP Error 401: Unauthorized
+  chart配当データ (1848.T): 年間配当=13.0, 利回り=2.17%, 配当落ち日=2025-03-28
+  v10 API失敗 (1850.T): HTTP Error 401: Unauthorized
+  chart配当データ (1850.T): 年間配当=6.0, 利回り=1.15%, 配当落ち日=2025-03-28
+  v10 API失敗 (1852.T): HTTP Error 401: Unauthorized
+  chart配当データ (1852.T): 年間配当=42.0, 利回り=3.98%, 配当落ち日=2025-09-29
+  v10 API失敗 (1853.T): HTTP Error 401: Unauthorized
+  chart配当データ (1853.T): 年間配当=14.0, 利回り=4.09%, 配当落ち日=2025-03-28
+  v10 API失敗 (1860.T): HTTP Error 401: Unauthorized
+  chart配当データ (1860.T): 年間配当=35.5, 利回り=2.24%, 配当落ち日=2025-09-29
+  v10 API失敗 (1861.T): HTTP Error 401: Unauthorized
+  chart配当データ (1861.T): 年間配当=52.5, 利回り=3.01%, 配当落ち日=2025-09-29
+  v10 API失敗 (1866.T): HTTP Error 401: Unauthorized
+  chart配当データ (1866.T): 年間配当=27.5, 利回り=1.96%, 配当落ち日=2025-03-28
+  v10 API失敗 (1867.T): HTTP Error 401: Unauthorized
+  chart配当データ (1867.T): 年間配当=90.0, 利回り=2.93%, 配当落ち日=2025-03-28
+  v10 API失敗 (1870.T): HTTP Error 401: Unauthorized
+  chart配当データ (1870.T): 年間配当=85.0, 利回り=3.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (1871.T): HTTP Error 401: Unauthorized
+  chart配当データ (1871.T): 年間配当=90.0, 利回り=2.96%, 配当落ち日=2025-09-29
+  v10 API失敗 (1873.T): HTTP Error 401: Unauthorized
+  chart配当データ (1873.T): 年間配当=11.0, 利回り=3.53%, 配当落ち日=2025-10-30
+  v10 API失敗 (1878.T): HTTP Error 401: Unauthorized
+  chart配当データ (1878.T): 年間配当=153.8, 利回り=4.22%, 配当落ち日=2025-09-29
+  v10 API失敗 (1879.T): HTTP Error 401: Unauthorized
+  chart配当データ (1879.T): 年間配当=60.0, 利回り=2.96%, 配当落ち日=2025-09-29
+  v10 API失敗 (1882.T): HTTP Error 401: Unauthorized
+  chart配当データ (1882.T): 年間配当=135.0, 利回り=7.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (1885.T): HTTP Error 401: Unauthorized
+  chart配当データ (1885.T): 年間配当=114.0, 利回り=3.18%, 配当落ち日=2025-09-29
+  v10 API失敗 (1887.T): HTTP Error 401: Unauthorized
+  chart配当データ (1887.T): 年間配当=22.0, 利回り=3.42%, 配当落ち日=2025-11-27
+  v10 API失敗 (1888.T): HTTP Error 401: Unauthorized
+  chart配当データ (1888.T): 年間配当=126.0, 利回り=2.82%, 配当落ち日=2025-03-28
+  [100/279] 1888: ¥4475.0 (50秒経過)
+  v10 API失敗 (1893.T): HTTP Error 401: Unauthorized
+  chart配当データ (1893.T): 年間配当=29.0, 利回り=1.53%, 配当落ち日=2025-09-29
+  v10 API失敗 (1897.T): HTTP Error 401: Unauthorized
+  chart配当データ (1897.T): 年間配当=50.0, 利回り=1.51%, 配当落ち日=2025-12-29
+  v10 API失敗 (1898.T): HTTP Error 401: Unauthorized
+  chart配当データ (1898.T): 年間配当=80.0, 利回り=4.99%, 配当落ち日=2025-09-29
+  v10 API失敗 (1899.T): HTTP Error 401: Unauthorized
+  chart配当データ (1899.T): 年間配当=260.0, 利回り=3.43%, 配当落ち日=2025-12-29
+  v10 API失敗 (1904.T): HTTP Error 401: Unauthorized
+  chart配当データ (1904.T): 年間配当=153.0, 利回り=2.91%, 配当落ち日=2025-09-29
+  v10 API失敗 (1905.T): HTTP Error 401: Unauthorized
+  chart配当データ (1905.T): 年間配当=55.0, 利回り=3.94%, 配当落ち日=2025-09-29
+  v10 API失敗 (1909.T): HTTP Error 401: Unauthorized
+  chart配当データ (1909.T): 年間配当=90.0, 利回り=0.71%, 配当落ち日=2025-09-29
+  v10 API失敗 (1911.T): HTTP Error 401: Unauthorized
+  chart配当データ (1911.T): 年間配当=53.0, 利回り=3.47%, 配当落ち日=2025-12-29
+  v10 API失敗 (1914.T): HTTP Error 401: Unauthorized
+  chart配当データ (1914.T): 年間配当=24.0, 利回り=3.27%, 配当落ち日=2025-03-28
+  v10 API失敗 (1921.T): HTTP Error 401: Unauthorized
+  chart配当データ (1921.T): 年間配当=24.0, 利回り=1.2%, 配当落ち日=2025-03-28
+  v10 API失敗 (1925.T): HTTP Error 401: Unauthorized
+  chart配当データ (1925.T): 年間配当=155.0, 利回り=2.91%, 配当落ち日=2025-09-29
+  v10 API失敗 (1926.T): HTTP Error 401: Unauthorized
+  chart配当データ (1926.T): 年間配当=110.0, 利回り=2.7%, 配当落ち日=2025-09-29
+  v10 API失敗 (1928.T): HTTP Error 401: Unauthorized
+  chart配当データ (1928.T): 年間配当=144.0, 利回り=4.04%, 配当落ち日=2026-01-29
+  v10 API失敗 (1929.T): HTTP Error 401: Unauthorized
+  chart配当データ (1929.T): 年間配当=48.0, 利回り=3.62%, 配当落ち日=2025-09-29
+  v10 API失敗 (1930.T): HTTP Error 401: Unauthorized
+  chart配当データ (1930.T): 年間配当=46.0, 利回り=2.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (1934.T): HTTP Error 401: Unauthorized
+  chart配当データ (1934.T): 年間配当=81.0, 利回り=2.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (1938.T): HTTP Error 401: Unauthorized
+  chart配当データ (1938.T): 年間配当=77.0, 利回り=2.7%, 配当落ち日=2025-03-28
+  v10 API失敗 (1939.T): HTTP Error 401: Unauthorized
+  chart配当データ (1939.T): 年間配当=67.0, 利回り=3.44%, 配当落ち日=2025-09-29
+  v10 API失敗 (1941.T): HTTP Error 401: Unauthorized
+  chart配当データ (1941.T): 年間配当=125.0, 利回り=2.65%, 配当落ち日=2025-09-29
+  v10 API失敗 (1942.T): HTTP Error 401: Unauthorized
+  chart配当データ (1942.T): 年間配当=101.0, 利回り=1.58%, 配当落ち日=2025-09-29
+  v10 API失敗 (1944.T): HTTP Error 401: Unauthorized
+  chart配当データ (1944.T): 年間配当=110.0, 利回り=1.39%, 配当落ち日=2025-09-29
+  v10 API失敗 (1945.T): HTTP Error 401: Unauthorized
+  chart配当データ (1945.T): 年間配当=54.0, 利回り=2.94%, 配当落ち日=2025-09-29
+  v10 API失敗 (1946.T): HTTP Error 401: Unauthorized
+  chart配当データ (1946.T): 年間配当=58.0, 利回り=2.72%, 配当落ち日=2025-09-29
+  v10 API失敗 (1948.T): HTTP Error 401: Unauthorized
+  chart配当データ (1948.T): 年間配当=96.0, 利回り=1.47%, 配当落ち日=2025-09-29
+  v10 API失敗 (1949.T): HTTP Error 401: Unauthorized
+  chart配当データ (1949.T): 年間配当=171997904.0, 利回り=1.69%, 配当落ち日=2025-09-29
+  v10 API失敗 (1950.T): HTTP Error 401: Unauthorized
+  chart配当データ (1950.T): 年間配当=90.0, 利回り=1.75%, 配当落ち日=2025-03-28
+  v10 API失敗 (1951.T): HTTP Error 401: Unauthorized
+  chart配当データ (1951.T): 年間配当=65.0, 利回り=2.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (1952.T): HTTP Error 401: Unauthorized
+  chart配当データ (1952.T): 年間配当=90.0, 利回り=2.36%, 配当落ち日=2025-09-29
+  v10 API失敗 (1959.T): HTTP Error 401: Unauthorized
+  chart配当データ (1959.T): 年間配当=165.0, 利回り=1.67%, 配当落ち日=2025-09-29
+  v10 API失敗 (1960.T): HTTP Error 401: Unauthorized
+  chart配当データ (1960.T): 年間配当=40.0, 利回り=2.65%, 配当落ち日=2025-03-28
+  v10 API失敗 (1961.T): HTTP Error 401: Unauthorized
+  chart配当データ (1961.T): 年間配当=192.5, 利回り=2.67%, 配当落ち日=2025-09-29
+  v10 API失敗 (1963.T): HTTP Error 401: Unauthorized
+  chart配当データ (1963.T): 年間配当=40.0, 利回り=1.81%, 配当落ち日=2025-03-28
+  v10 API失敗 (1964.T): HTTP Error 401: Unauthorized
+  chart配当データ (1964.T): 年間配当=150.0, 利回り=3.19%, 配当落ち日=2025-03-28
+  v10 API失敗 (1965.T): HTTP Error 401: Unauthorized
+  chart配当データ (1965.T): 年間配当=100.0, 利回り=1.5%, 配当落ち日=2025-09-29
+  v10 API失敗 (1966.T): HTTP Error 401: Unauthorized
+  chart配当データ (1966.T): 年間配当=70.0, 利回り=3.79%, 配当落ち日=2025-03-28
+  v10 API失敗 (1967.T): HTTP Error 401: Unauthorized
+  chart配当データ (1967.T): 年間配当=45.0, 利回り=1.97%, 配当落ち日=2025-03-18
+  v10 API失敗 (1968.T): HTTP Error 401: Unauthorized
+  chart配当データ (1968.T): 年間配当=58.333332, 利回り=2.04%, 配当落ち日=2025-03-28
+  v10 API失敗 (1969.T): HTTP Error 401: Unauthorized
+  chart配当データ (1969.T): 年間配当=94.0, 利回り=1.87%, 配当落ち日=2025-09-29
+  v10 API失敗 (1972.T): HTTP Error 401: Unauthorized
+  chart配当データ (1972.T): 年間配当=110.0, 利回り=7.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (1975.T): HTTP Error 401: Unauthorized
+  chart配当データ (1975.T): 年間配当=145.0, 利回り=3.51%, 配当落ち日=2025-09-29
+  v10 API失敗 (1976.T): HTTP Error 401: Unauthorized
+  chart配当データ (1976.T): 年間配当=59.0, 利回り=3.1%, 配当落ち日=2025-09-29
+  v10 API失敗 (1979.T): HTTP Error 401: Unauthorized
+  chart配当データ (1979.T): 年間配当=82.0, 利回り=2.25%, 配当落ち日=2025-09-29
+  v10 API失敗 (1980.T): HTTP Error 401: Unauthorized
+  chart配当データ (1980.T): 年間配当=64.333332, 利回り=2.01%, 配当落ち日=2025-09-29
+  v10 API失敗 (1981.T): HTTP Error 401: Unauthorized
+  chart配当データ (1981.T): 年間配当=42.0, 利回り=2.63%, 配当落ち日=2025-03-28
+  v10 API失敗 (1982.T): HTTP Error 401: Unauthorized
+  chart配当データ (1982.T): 年間配当=100.0, 利回り=1.61%, 配当落ち日=2025-09-29
+  v10 API失敗 (1992.T): HTTP Error 401: Unauthorized
+  chart配当データ (1992.T): 年間配当=70.0, 利回り=2.46%, 配当落ち日=2025-03-28
+  v10 API失敗 (1994.T): HTTP Error 401: Unauthorized
+  chart配当データ (1994.T): 年間配当=20.0, 利回り=3.46%, 配当落ち日=2025-12-29
+  v10 API失敗 (1997.T): HTTP Error 401: Unauthorized
+  chart配当データ (1997.T): 年間配当=110.0, 利回り=2.75%, 配当落ち日=2025-08-28
+  v10 API失敗 (2001.T): HTTP Error 401: Unauthorized
+  chart配当データ (2001.T): 年間配当=66.0, 利回り=2.39%, 配当落ち日=2025-09-29
+  v10 API失敗 (2002.T): HTTP Error 401: Unauthorized
+  chart配当データ (2002.T): 年間配当=60.0, 利回り=2.84%, 配当落ち日=2025-09-29
+  [150/279] 2002: ¥2110.0 (70秒経過)
+  v10 API失敗 (2003.T): HTTP Error 401: Unauthorized
+  chart配当データ (2003.T): 年間配当=280.0, 利回り=3.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (2004.T): HTTP Error 401: Unauthorized
+  chart配当データ (2004.T): 年間配当=110.0, 利回り=3.3%, 配当落ち日=2025-09-29
+  v10 API失敗 (2009.T): HTTP Error 401: Unauthorized
+  chart配当データ (2009.T): 年間配当=49.0, 利回り=4.47%, 配当落ち日=2025-12-29
+  v10 API失敗 (2053.T): HTTP Error 401: Unauthorized
+  chart配当データ (2053.T): 年間配当=57.0, 利回り=3.07%, 配当落ち日=2025-09-29
+  v10 API失敗 (2055.T): HTTP Error 401: Unauthorized
+  chart配当データ (2055.T): 年間配当=6.0, 利回り=1.55%, 配当落ち日=2025-03-28
+  v10 API失敗 (2060.T): HTTP Error 401: Unauthorized
+  chart配当データ (2060.T): 年間配当=42.0, 利回り=3.32%, 配当落ち日=2025-09-29
+  v10 API失敗 (2108.T): HTTP Error 401: Unauthorized
+  chart配当データ (2108.T): 年間配当=80.0, 利回り=1.87%, 配当落ち日=2025-03-28
+  v10 API失敗 (2109.T): HTTP Error 401: Unauthorized
+  chart配当データ (2109.T): 年間配当=130.0, 利回り=3.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (2112.T): HTTP Error 401: Unauthorized
+  chart配当データ (2112.T): 年間配当=15.0, 利回り=2.6%, 配当落ち日=2025-03-28
+  v10 API失敗 (2114.T): HTTP Error 401: Unauthorized
+  chart配当データ (2114.T): 年間配当=17.0, 利回り=2.56%, 配当落ち日=2025-09-29
+  v10 API失敗 (2117.T): HTTP Error 401: Unauthorized
+  chart配当データ (2117.T): 年間配当=110.0, 利回り=3.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (2120.T): HTTP Error 401: Unauthorized
+  chart配当データ (2120.T): 年間配当=10.41, 利回り=4.91%, 配当落ち日=2025-09-29
+  v10 API失敗 (2121.T): HTTP Error 401: Unauthorized
+  chart配当データ (2121.T): 年間配当=125.0, 利回り=4.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (2122.T): HTTP Error 401: Unauthorized
+  chart配当データ (2122.T): 年間配当=30.0, 利回り=2.29%, 配当落ち日=2025-09-29
+  v10 API失敗 (2124.T): HTTP Error 401: Unauthorized
+  chart配当データ (2124.T): 年間配当=36.0, 利回り=4.09%, 配当落ち日=2025-12-29
+  v10 API失敗 (2127.T): HTTP Error 401: Unauthorized
+  chart配当データ (2127.T): 年間配当=29.0, 利回り=4.4%, 配当落ち日=2025-09-29
+  v10 API失敗 (2130.T): HTTP Error 401: Unauthorized
+  chart配当データ (2130.T): 年間配当=32.0, 利回り=2.84%, 配当落ち日=2025-03-28
+  v10 API失敗 (2134.T): HTTP Error 401: Unauthorized
+  chart配当データ (2134.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2136.T): HTTP Error 401: Unauthorized
+  chart配当データ (2136.T): 年間配当=54.0, 利回り=3.44%, 配当落ち日=2025-03-28
+  v10 API失敗 (2138.T): HTTP Error 401: Unauthorized
+  chart配当データ (2138.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2139.T): HTTP Error 401: Unauthorized
+  chart配当データ (2139.T): 年間配当=12.0, 利回り=2.23%, 配当落ち日=2025-03-28
+  v10 API失敗 (2146.T): HTTP Error 401: Unauthorized
+  chart配当データ (2146.T): 年間配当=13.183999, 利回り=6.31%, 配当落ち日=2025-12-29
+  v10 API失敗 (2148.T): HTTP Error 401: Unauthorized
+  chart配当データ (2148.T): 年間配当=100.0, 利回り=5.3%, 配当落ち日=2025-03-28
+  v10 API失敗 (2152.T): HTTP Error 401: Unauthorized
+  chart配当データ (2152.T): 年間配当=24.0, 利回り=1.66%, 配当落ち日=2025-03-28
+  v10 API失敗 (2153.T): HTTP Error 401: Unauthorized
+  chart配当データ (2153.T): 年間配当=67.0, 利回り=3.66%, 配当落ち日=2025-11-27
+  v10 API失敗 (2154.T): HTTP Error 401: Unauthorized
+  chart配当データ (2154.T): 年間配当=80.0, 利回り=4.33%, 配当落ち日=2025-12-29
+  v10 API失敗 (2156.T): HTTP Error 401: Unauthorized
+  chart配当データ (2156.T): 年間配当=6.0, 利回り=1.92%, 配当落ち日=2025-03-28
+  v10 API失敗 (2157.T): HTTP Error 401: Unauthorized
+  chart配当データ (2157.T): 年間配当=25.0, 利回り=2.29%, 配当落ち日=2026-02-26
+  v10 API失敗 (2162.T): HTTP Error 401: Unauthorized
+  chart配当データ (2162.T): 年間配当=14.0, 利回り=3.03%, 配当落ち日=2025-03-28
+  v10 API失敗 (2163.T): HTTP Error 401: Unauthorized
+  chart配当データ (2163.T): 年間配当=84.0, 利回り=4.17%, 配当落ち日=2026-01-29
+  v10 API失敗 (2168.T): HTTP Error 401: Unauthorized
+  chart配当データ (2168.T): 年間配当=75.0, 利回り=3.78%, 配当落ち日=2025-05-29
+  v10 API失敗 (2169.T): HTTP Error 401: Unauthorized
+  chart配当データ (2169.T): 年間配当=74.0, 利回り=4.03%, 配当落ち日=2025-12-29
+  v10 API失敗 (2170.T): HTTP Error 401: Unauthorized
+  chart配当データ (2170.T): 年間配当=15.999999999999998, 利回り=2.87%, 配当落ち日=2025-12-29
+  v10 API失敗 (2175.T): HTTP Error 401: Unauthorized
+  chart配当データ (2175.T): 年間配当=28.5, 利回り=1.63%, 配当落ち日=2025-03-28
+  v10 API失敗 (2179.T): HTTP Error 401: Unauthorized
+  chart配当データ (2179.T): 年間配当=20.5, 利回り=2.51%, 配当落ち日=2025-09-29
+  v10 API失敗 (2180.T): HTTP Error 401: Unauthorized
+  chart配当データ (2180.T): 年間配当=26.0, 利回り=2.62%, 配当落ち日=2025-12-29
+  v10 API失敗 (2181.T): HTTP Error 401: Unauthorized
+  chart配当データ (2181.T): 年間配当=10.5, 利回り=4.31%, 配当落ち日=2025-09-29
+  v10 API失敗 (2183.T): HTTP Error 401: Unauthorized
+  chart配当データ (2183.T): 年間配当=16.0, 利回り=5.05%, 配当落ち日=2025-03-28
+  v10 API失敗 (2185.T): HTTP Error 401: Unauthorized
+  chart配当データ (2185.T): 年間配当=52.0, 利回り=2.7%, 配当落ち日=2025-09-29
+  v10 API失敗 (2186.T): HTTP Error 401: Unauthorized
+  chart配当データ (2186.T): 年間配当=33.0, 利回り=3.64%, 配当落ち日=2026-02-26
+  v10 API失敗 (2193.T): HTTP Error 401: Unauthorized
+  chart配当データ (2193.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2196.T): HTTP Error 401: Unauthorized
+  chart配当データ (2196.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2198.T): HTTP Error 401: Unauthorized
+  chart配当データ (2198.T): 年間配当=24.0, 利回り=2.94%, 配当落ち日=2025-10-30
+  v10 API失敗 (2201.T): HTTP Error 401: Unauthorized
+  chart配当データ (2201.T): 年間配当=92.5, 利回り=3.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (2204.T): HTTP Error 401: Unauthorized
+  chart配当データ (2204.T): 年間配当=70.0, 利回り=2.12%, 配当落ち日=2025-03-28
+  v10 API失敗 (2206.T): HTTP Error 401: Unauthorized
+  chart配当データ (2206.T): 年間配当=95.0, 利回り=1.59%, 配当落ち日=2025-12-29
+  v10 API失敗 (2207.T): HTTP Error 401: Unauthorized
+  chart配当データ (2207.T): 年間配当=38.0, 利回り=1.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (2209.T): HTTP Error 401: Unauthorized
+  chart配当データ (2209.T): 年間配当=36.0, 利回り=1.45%, 配当落ち日=2025-03-28
+  v10 API失敗 (2211.T): HTTP Error 401: Unauthorized
+  chart配当データ (2211.T): 年間配当=30.0, 利回り=1.23%, 配当落ち日=2025-12-29
+  v10 API失敗 (2212.T): HTTP Error 401: Unauthorized
+  chart配当データ (2212.T): 年間配当=60.0, 利回り=1.78%, 配当落ち日=2025-12-29
+  [200/279] 2212: ¥3364.0 (89秒経過)
+  v10 API失敗 (2215.T): HTTP Error 401: Unauthorized
+  chart配当データ (2215.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2216.T): HTTP Error 401: Unauthorized
+  chart配当データ (2216.T): 年間配当=32.0, 利回り=2.55%, 配当落ち日=2025-12-29
+  v10 API失敗 (2217.T): HTTP Error 401: Unauthorized
+  chart配当データ (2217.T): 年間配当=14.0, 利回り=0.93%, 配当落ち日=2026-01-29
+  v10 API失敗 (2220.T): HTTP Error 401: Unauthorized
+  chart配当データ (2220.T): 年間配当=57.0, 利回り=1.31%, 配当落ち日=2025-09-29
+  v10 API失敗 (2221.T): HTTP Error 401: Unauthorized
+  chart配当データ (2221.T): 年間配当=30.0, 利回り=0.92%, 配当落ち日=2025-03-28
+  v10 API失敗 (2222.T): HTTP Error 401: Unauthorized
+  chart配当データ (2222.T): 年間配当=32.0, 利回り=1.66%, 配当落ち日=2025-03-28
+  v10 API失敗 (2224.T): HTTP Error 401: Unauthorized
+  chart配当データ (2224.T): 年間配当=7.0, 利回り=0.18%, 配当落ち日=2025-03-28
+  v10 API失敗 (2226.T): HTTP Error 401: Unauthorized
+  chart配当データ (2226.T): 年間配当=55.0, 利回り=1.18%, 配当落ち日=2025-03-28
+  v10 API失敗 (2229.T): HTTP Error 401: Unauthorized
+  chart配当データ (2229.T): 年間配当=58.0, 利回り=1.83%, 配当落ち日=2025-03-28
+  v10 API失敗 (2264.T): HTTP Error 401: Unauthorized
+  chart配当データ (2264.T): 年間配当=90.0, 利回り=1.88%, 配当落ち日=2025-09-29
+  v10 API失敗 (2266.T): HTTP Error 401: Unauthorized
+  chart配当データ (2266.T): 年間配当=20.0, 利回り=1.74%, 配当落ち日=2025-12-29
+  v10 API失敗 (2267.T): HTTP Error 401: Unauthorized
+  chart配当データ (2267.T): 年間配当=65.0, 利回り=2.52%, 配当落ち日=2025-09-29
+  v10 API失敗 (2268.T): HTTP Error 401: Unauthorized
+  chart配当データ (2268.T): 年間配当=80.0, 利回り=1.99%, 配当落ち日=2025-12-29
+  v10 API失敗 (2269.T): HTTP Error 401: Unauthorized
+  chart配当データ (2269.T): 年間配当=102.5, 利回り=2.66%, 配当落ち日=2025-09-29
+  v10 API失敗 (2270.T): HTTP Error 401: Unauthorized
+  chart配当データ (2270.T): 年間配当=100.0, 利回り=3.02%, 配当落ち日=2025-03-28
+  v10 API失敗 (2281.T): HTTP Error 401: Unauthorized
+  chart配当データ (2281.T): 年間配当=80.0, 利回り=2.87%, 配当落ち日=2025-09-29
+  v10 API失敗 (2282.T): HTTP Error 401: Unauthorized
+  chart配当データ (2282.T): 年間配当=135.0, 利回り=1.97%, 配当落ち日=2025-03-28
+  v10 API失敗 (2286.T): HTTP Error 401: Unauthorized
+  chart配当データ (2286.T): 年間配当=25.0, 利回り=2.81%, 配当落ち日=2025-03-28
+  v10 API失敗 (2288.T): HTTP Error 401: Unauthorized
+  chart配当データ (2288.T): 年間配当=50.0, 利回り=2.26%, 配当落ち日=2025-03-28
+  v10 API失敗 (2291.T): HTTP Error 401: Unauthorized
+  chart配当データ (2291.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2292.T): HTTP Error 401: Unauthorized
+  chart配当データ (2292.T): 年間配当=104.0, 利回り=3.43%, 配当落ち日=2026-02-26
+  v10 API失敗 (2293.T): HTTP Error 401: Unauthorized
+  chart配当データ (2293.T): 年間配当=0, 利回り=0%, 配当落ち日=2024-03-28
+  v10 API失敗 (2294.T): HTTP Error 401: Unauthorized
+  chart配当データ (2294.T): 年間配当=85.0, 利回り=2.95%, 配当落ち日=2025-04-28
+  v10 API失敗 (2296.T): HTTP Error 401: Unauthorized
+  chart配当データ (2296.T): 年間配当=320.0, 利回り=5.24%, 配当落ち日=2025-12-29
+  v10 API失敗 (2300.T): HTTP Error 401: Unauthorized
+  chart配当データ (2300.T): 年間配当=11.0, 利回り=2.2%, 配当落ち日=2026-02-26
+  v10 API失敗 (2301.T): HTTP Error 401: Unauthorized
+  chart配当データ (2301.T): 年間配当=67.0, 利回り=3.63%, 配当落ち日=2025-10-30
+  v10 API失敗 (2303.T): HTTP Error 401: Unauthorized
+  chart配当データ (2303.T): 年間配当=24.0, 利回り=0.88%, 配当落ち日=2025-05-29
+  v10 API失敗 (2304.T): HTTP Error 401: Unauthorized
+  chart配当データ (2304.T): 年間配当=45.0, 利回り=4.65%, 配当落ち日=2025-09-29
+  v10 API失敗 (2305.T): HTTP Error 401: Unauthorized
+  chart配当データ (2305.T): 年間配当=50.0, 利回り=2.55%, 配当落ち日=2026-02-26
+  v10 API失敗 (2307.T): HTTP Error 401: Unauthorized
+  chart配当データ (2307.T): 年間配当=33.0, 利回り=3.28%, 配当落ち日=2025-03-28
+  v10 API失敗 (2315.T): HTTP Error 401: Unauthorized
+  chart配当データ (2315.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2317.T): HTTP Error 401: Unauthorized
+  chart配当データ (2317.T): 年間配当=12.0, 利回り=2.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (2323.T): HTTP Error 401: Unauthorized
+  chart配当データ (2323.T): 年間配当=1.0, 利回り=0.28%, 配当落ち日=2025-03-28
+  v10 API失敗 (2325.T): HTTP Error 401: Unauthorized
+  chart配当データ (2325.T): 年間配当=105.0, 利回り=2.32%, 配当落ち日=2025-12-29
+  v10 API失敗 (2326.T): HTTP Error 401: Unauthorized
+  chart配当データ (2326.T): 年間配当=90.0, 利回り=1.7%, 配当落ち日=2025-09-29
+  v10 API失敗 (2327.T): HTTP Error 401: Unauthorized
+  chart配当データ (2327.T): 年間配当=77.5, 利回り=1.97%, 配当落ち日=2025-09-29
+  v10 API失敗 (2329.T): HTTP Error 401: Unauthorized
+  chart配当データ (2329.T): 年間配当=27.479999999999997, 利回り=4.23%, 配当落ち日=2025-12-29
+  v10 API失敗 (2330.T): HTTP Error 401: Unauthorized
+  chart配当データ (2330.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2331.T): HTTP Error 401: Unauthorized
+  chart配当データ (2331.T): 年間配当=28.0, 利回り=2.26%, 配当落ち日=2025-09-29
+  v10 API失敗 (2335.T): HTTP Error 401: Unauthorized
+  chart配当データ (2335.T): 年間配当=40.0, 利回り=3.77%, 配当落ち日=2025-09-29
+  v10 API失敗 (2337.T): HTTP Error 401: Unauthorized
+  chart配当データ (2337.T): 年間配当=11.5, 利回り=2.41%, 配当落ち日=2026-02-26
+  v10 API失敗 (2353.T): HTTP Error 401: Unauthorized
+  chart配当データ (2353.T): 年間配当=8.0, 利回り=2.92%, 配当落ち日=2025-07-30
+  v10 API失敗 (2359.T): HTTP Error 401: Unauthorized
+  chart配当データ (2359.T): 年間配当=60.0, 利回り=2.69%, 配当落ち日=2025-09-29
+  v10 API失敗 (2371.T): HTTP Error 401: Unauthorized
+  chart配当データ (2371.T): 年間配当=80.0, 利回り=4.42%, 配当落ち日=2025-09-29
+  v10 API失敗 (2374.T): HTTP Error 401: Unauthorized
+  chart配当データ (2374.T): 年間配当=30.0, 利回り=2.48%, 配当落ち日=2025-03-28
+  v10 API失敗 (2378.T): HTTP Error 401: Unauthorized
+  chart配当データ (2378.T): 年間配当=13.0, 利回り=1.19%, 配当落ち日=2025-09-29
+  v10 API失敗 (2379.T): HTTP Error 401: Unauthorized
+  chart配当データ (2379.T): 年間配当=95.0, 利回り=4.73%, 配当落ち日=2026-02-26
+  v10 API失敗 (2384.T): HTTP Error 401: Unauthorized
+  chart配当データ (2384.T): 年間配当=90.0, 利回り=2.22%, 配当落ち日=2025-12-29
+  v10 API失敗 (2389.T): HTTP Error 401: Unauthorized
+  chart配当データ (2389.T): 年間配当=23.0, 利回り=1.15%, 配当落ち日=2025-06-27
+  v10 API失敗 (2395.T): HTTP Error 401: Unauthorized
+  chart配当データ (2395.T): 年間配当=50.0, 利回り=3.13%, 配当落ち日=2025-09-29
+  [250/279] 2395: ¥1599.0 (108秒経過)
+  v10 API失敗 (2410.T): HTTP Error 401: Unauthorized
+  chart配当データ (2410.T): 年間配当=100.0, 利回り=3.96%, 配当落ち日=2025-09-29
+  v10 API失敗 (2413.T): HTTP Error 401: Unauthorized
+  chart配当データ (2413.T): 年間配当=21.0, 利回り=1.28%, 配当落ち日=2025-03-28
+  v10 API失敗 (2429.T): HTTP Error 401: Unauthorized
+  chart配当データ (2429.T): 年間配当=129.5, 利回り=4.63%, 配当落ち日=2025-12-29
+  v10 API失敗 (2432.T): HTTP Error 401: Unauthorized
+  chart配当データ (2432.T): 年間配当=65.0, 利回り=2.5%, 配当落ち日=2025-03-28
+  v10 API失敗 (2433.T): HTTP Error 401: Unauthorized
+  chart配当データ (2433.T): 年間配当=32.0, 利回り=2.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (2445.T): HTTP Error 401: Unauthorized
+  chart配当データ (2445.T): 年間配当=16.0, 利回り=3.86%, 配当落ち日=2025-09-29
+  v10 API失敗 (2461.T): HTTP Error 401: Unauthorized
+  chart配当データ (2461.T): 年間配当=27.0, 利回り=5.87%, 配当落ち日=2025-12-29
+  v10 API失敗 (2462.T): HTTP Error 401: Unauthorized
+  chart配当データ (2462.T): 年間配当=61.0, 利回り=3.86%, 配当落ち日=2025-11-27
+  v10 API失敗 (2471.T): HTTP Error 401: Unauthorized
+  chart配当データ (2471.T): 年間配当=10.0, 利回り=3.97%, 配当落ち日=2025-11-27
+  v10 API失敗 (2475.T): HTTP Error 401: Unauthorized
+  chart配当データ (2475.T): 年間配当=63.5, 利回り=4.01%, 配当落ち日=2025-09-29
+  v10 API失敗 (2491.T): HTTP Error 401: Unauthorized
+  chart配当データ (2491.T): 年間配当=49.0, 利回り=11.16%, 配当落ち日=2025-12-29
+  v10 API失敗 (2492.T): HTTP Error 401: Unauthorized
+  chart配当データ (2492.T): 年間配当=5.4399999999999995, 利回り=1.3%, 配当落ち日=2025-12-29
+  v10 API失敗 (2501.T): HTTP Error 401: Unauthorized
+  chart配当データ (2501.T): 年間配当=18.0, 利回り=1.08%, 配当落ち日=2025-12-29
+  v10 API失敗 (2502.T): HTTP Error 401: Unauthorized
+  chart配当データ (2502.T): 年間配当=52.0, 利回り=3.16%, 配当落ち日=2025-12-29
+  v10 API失敗 (2503.T): HTTP Error 401: Unauthorized
+  chart配当データ (2503.T): 年間配当=74.0, 利回り=2.86%, 配当落ち日=2025-12-29
+  v10 API失敗 (2531.T): HTTP Error 401: Unauthorized
+  chart配当データ (2531.T): 年間配当=31.0, 利回り=1.93%, 配当落ち日=2025-03-28
+  v10 API失敗 (2533.T): HTTP Error 401: Unauthorized
+  chart配当データ (2533.T): 年間配当=11.0, 利回り=2.49%, 配当落ち日=2025-12-29
+  v10 API失敗 (2540.T): HTTP Error 401: Unauthorized
+  chart配当データ (2540.T): 年間配当=45.0, 利回り=1.11%, 配当落ち日=2025-03-28
+  v10 API失敗 (2579.T): HTTP Error 401: Unauthorized
+  chart配当データ (2579.T): 年間配当=60.0, 利回り=1.43%, 配当落ち日=2025-12-29
+  v10 API失敗 (2585.T): HTTP Error 401: Unauthorized
+  chart配当データ (2585.T): 年間配当=12.0, 利回り=1.09%, 配当落ち日=2025-03-28
+  v10 API失敗 (2587.T): HTTP Error 401: Unauthorized
+  chart配当データ (2587.T): 年間配当=120.0, 利回り=2.56%, 配当落ち日=2025-12-29
+  v10 API失敗 (2590.T): HTTP Error 401: Unauthorized
+  chart配当データ (2590.T): 年間配当=30.0, 利回り=1.07%, 配当落ち日=2026-01-19
+  v10 API失敗 (2593.T): HTTP Error 401: Unauthorized
+  chart配当データ (2593.T): 年間配当=46.0, 利回り=1.57%, 配当落ち日=2025-10-30
+  v10 API失敗 (25935.T): HTTP Error 401: Unauthorized
+  chart配当データ (25935.T): 年間配当=58.0, 利回り=3.21%, 配当落ち日=2025-10-30
+  v10 API失敗 (2594.T): HTTP Error 401: Unauthorized
+  chart配当データ (2594.T): 年間配当=12.0, 利回り=0.6%, 配当落ち日=2025-09-29
+  v10 API失敗 (2602.T): HTTP Error 401: Unauthorized
+  chart配当データ (2602.T): 年間配当=180.0, 利回り=3.05%, 配当落ち日=2025-09-29
+  v10 API失敗 (2607.T): HTTP Error 401: Unauthorized
+  chart配当データ (2607.T): 年間配当=52.0, 利回り=1.5%, 配当落ち日=2025-09-29
+  v10 API失敗 (2613.T): HTTP Error 401: Unauthorized
+  chart配当データ (2613.T): 年間配当=75.0, 利回り=3.67%, 配当落ち日=2025-09-29
+  v10 API失敗 (2914.T): HTTP Error 401: Unauthorized
+  chart配当データ (2914.T): 年間配当=234.0, 利回り=4.1%, 配当落ち日=2025-12-29
+
+Yahoo Finance更新完了: 279銘柄更新, 0エラー (119秒)
+
+============================================================
+最終キャッシュ: 279銘柄
+終了時刻: 2026-03-08 07:37:54
+============================================================
+============================================================
+スクリーニングデータ バッチ更新
+開始時刻: 2026-03-08 07:38:02
+============================================================
+候補銘柄: 3115銘柄
+既存キャッシュ: 279銘柄
+モード: yahoo
+
+[起動] StockView サーバーを初期化中...
+  日本株マスタ: 3124銘柄 読み込み完了
+  米国株マスタ: 146銘柄 読み込み完了
+  ファンダメンタルズキャッシュ: 217銘柄 読み込み完了
+Yahoo Finance 株価更新: 279銘柄（キャッシュ済みのみ）
+  v10 API失敗 (1301.T): HTTP Error 401: Unauthorized
+  chart配当データ (1301.T): 年間配当=130.0, 利回り=2.51%, 配当落ち日=2025-03-28
+  v10 API失敗 (1332.T): HTTP Error 401: Unauthorized
+  chart配当データ (1332.T): 年間配当=30.0, 利回り=2.1%, 配当落ち日=2025-09-29
+  v10 API失敗 (1333.T): HTTP Error 401: Unauthorized
+  chart配当データ (1333.T): 年間配当=36.666668, 利回り=2.43%, 配当落ち日=2025-09-29
+  v10 API失敗 (1375.T): HTTP Error 401: Unauthorized
+  chart配当データ (1375.T): 年間配当=16.0, 利回り=1.49%, 配当落ち日=2025-09-29
+  v10 API失敗 (1376.T): HTTP Error 401: Unauthorized
+  chart配当データ (1376.T): 年間配当=38.0, 利回り=2.6%, 配当落ち日=2025-11-27
+  v10 API失敗 (1377.T): HTTP Error 401: Unauthorized
+  chart配当データ (1377.T): 年間配当=80.0, 利回り=1.89%, 配当落ち日=2025-11-27
+  v10 API失敗 (1379.T): HTTP Error 401: Unauthorized
+  chart配当データ (1379.T): 年間配当=50.0, 利回り=2.53%, 配当落ち日=2025-09-29
+  v10 API失敗 (1380.T): HTTP Error 401: Unauthorized
+  chart配当データ (1380.T): 年間配当=10.0, 利回り=0.94%, 配当落ち日=2025-03-28
+  v10 API失敗 (1381.T): HTTP Error 401: Unauthorized
+  chart配当データ (1381.T): 年間配当=112.5, 利回り=2.98%, 配当落ち日=2025-06-27
+  v10 API失敗 (1382.T): HTTP Error 401: Unauthorized
+  chart配当データ (1382.T): 年間配当=50.0, 利回り=2.7%, 配当落ち日=2025-06-27
+  v10 API失敗 (1383.T): HTTP Error 401: Unauthorized
+  chart配当データ (1383.T): 年間配当=10.0, 利回り=0.31%, 配当落ち日=2025-10-30
+  v10 API失敗 (1384.T): HTTP Error 401: Unauthorized
+  chart配当データ (1384.T): 年間配当=70.0, 利回り=2.27%, 配当落ち日=2025-03-28
+  v10 API失敗 (1407.T): HTTP Error 401: Unauthorized
+  chart配当データ (1407.T): 年間配当=100.0, 利回り=6.15%, 配当落ち日=2026-02-26
+  v10 API失敗 (1414.T): HTTP Error 401: Unauthorized
+  chart配当データ (1414.T): 年間配当=48.375, 利回り=3.44%, 配当落ち日=2025-12-29
+  v10 API失敗 (1417.T): HTTP Error 401: Unauthorized
+  chart配当データ (1417.T): 年間配当=80.0, 利回り=2.15%, 配当落ち日=2025-09-29
+  v10 API失敗 (1418.T): HTTP Error 401: Unauthorized
+  chart配当データ (1418.T): 年間配当=25.0, 利回り=4.55%, 配当落ち日=2026-02-26
+  v10 API失敗 (1419.T): HTTP Error 401: Unauthorized
+  chart配当データ (1419.T): 年間配当=195.0, 利回り=4.97%, 配当落ち日=2025-05-29
+  v10 API失敗 (1420.T): HTTP Error 401: Unauthorized
+  chart配当データ (1420.T): 年間配当=25.0, 利回り=3.52%, 配当落ち日=2025-03-28
+  v10 API失敗 (1429.T): HTTP Error 401: Unauthorized
+  chart配当データ (1429.T): 年間配当=35.0, 利回り=4.37%, 配当落ち日=2025-12-29
+  v10 API失敗 (1430.T): HTTP Error 401: Unauthorized
+  chart配当データ (1430.T): 年間配当=42.0, 利回り=3.93%, 配当落ち日=2025-05-29
+  v10 API失敗 (1433.T): HTTP Error 401: Unauthorized
+  chart配当データ (1433.T): 年間配当=40.0, 利回り=3.12%, 配当落ち日=2026-01-29
+  v10 API失敗 (1434.T): HTTP Error 401: Unauthorized
+  chart配当データ (1434.T): 年間配当=40.0, 利回り=2.02%, 配当落ち日=2025-08-28
+  v10 API失敗 (1435.T): HTTP Error 401: Unauthorized
+  chart配当データ (1435.T): 年間配当=2.0, 利回り=1.0%, 配当落ち日=2025-12-29
+  v10 API失敗 (1438.T): HTTP Error 401: Unauthorized
+  chart配当データ (1438.T): 年間配当=36.0, 利回り=1.97%, 配当落ち日=2025-09-29
+  v10 API失敗 (1443.T): HTTP Error 401: Unauthorized
+  chart配当データ (1443.T): 年間配当=1.1, 利回り=0.35%, 配当落ち日=2025-03-28
+  v10 API失敗 (1446.T): HTTP Error 401: Unauthorized
+  chart配当データ (1446.T): 年間配当=8.0, 利回り=1.37%, 配当落ち日=2025-09-29
+  v10 API失敗 (1450.T): HTTP Error 401: Unauthorized
+  chart配当データ (1450.T): 年間配当=55.0, 利回り=3.44%, 配当落ち日=2025-03-28
+  v10 API失敗 (1491.T): HTTP Error 401: Unauthorized
+  chart配当データ (1491.T): 年間配当=20.0, 利回り=1.87%, 配当落ち日=2025-03-28
+  v10 API失敗 (1514.T): HTTP Error 401: Unauthorized
+  chart配当データ (1514.T): 年間配当=30.0, 利回り=3.1%, 配当落ち日=2025-03-28
+  v10 API失敗 (1515.T): HTTP Error 401: Unauthorized
+  chart配当データ (1515.T): 年間配当=50.2, 利回り=1.55%, 配当落ち日=2025-09-29
+  v10 API失敗 (1518.T): HTTP Error 401: Unauthorized
+  chart配当データ (1518.T): 年間配当=39.0, 利回り=2.74%, 配当落ち日=2025-09-29
+  v10 API失敗 (1605.T): HTTP Error 401: Unauthorized
+  chart配当データ (1605.T): 年間配当=100.0, 利回り=2.44%, 配当落ち日=2025-12-29
+  v10 API失敗 (1662.T): HTTP Error 401: Unauthorized
+  chart配当データ (1662.T): 年間配当=50.0, 利回り=2.07%, 配当落ち日=2025-09-29
+  v10 API失敗 (1663.T): HTTP Error 401: Unauthorized
+  chart配当データ (1663.T): 年間配当=54.0, 利回り=1.06%, 配当落ち日=2025-12-29
+  v10 API失敗 (1711.T): HTTP Error 401: Unauthorized
+  chart配当データ (1711.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (1716.T): HTTP Error 401: Unauthorized
+  chart配当データ (1716.T): 年間配当=40.0, 利回り=2.57%, 配当落ち日=2025-06-27
+  v10 API失敗 (1717.T): HTTP Error 401: Unauthorized
+  chart配当データ (1717.T): 年間配当=42.5, 利回り=3.96%, 配当落ち日=2025-03-28
+  v10 API失敗 (1718.T): HTTP Error 401: Unauthorized
+  chart配当データ (1718.T): 年間配当=350.0, 利回り=4.36%, 配当落ち日=2025-12-29
+  v10 API失敗 (1719.T): HTTP Error 401: Unauthorized
+  chart配当データ (1719.T): 年間配当=80.0, 利回り=4.07%, 配当落ち日=2025-09-29
+  v10 API失敗 (1720.T): HTTP Error 401: Unauthorized
+  chart配当データ (1720.T): 年間配当=38.0, 利回り=2.44%, 配当落ち日=2025-09-29
+  v10 API失敗 (1721.T): HTTP Error 401: Unauthorized
+  chart配当データ (1721.T): 年間配当=120.0, 利回り=2.22%, 配当落ち日=2025-09-29
+  v10 API失敗 (1723.T): HTTP Error 401: Unauthorized
+  chart配当データ (1723.T): 年間配当=142.0, 利回り=1.27%, 配当落ち日=2025-09-29
+  v10 API失敗 (1724.T): HTTP Error 401: Unauthorized
+  chart配当データ (1724.T): 年間配当=28.0, 利回り=3.85%, 配当落ち日=2025-12-29
+  v10 API失敗 (1726.T): HTTP Error 401: Unauthorized
+  chart配当データ (1726.T): 年間配当=15.5, 利回り=2.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (1736.T): HTTP Error 401: Unauthorized
+  chart配当データ (1736.T): 年間配当=85.666664, 利回り=3.48%, 配当落ち日=2025-09-29
+  v10 API失敗 (1758.T): HTTP Error 401: Unauthorized
+  chart配当データ (1758.T): 年間配当=60.0, 利回り=2.3%, 配当落ち日=2026-01-29
+  v10 API失敗 (1762.T): HTTP Error 401: Unauthorized
+  chart配当データ (1762.T): 年間配当=86.0, 利回り=2.28%, 配当落ち日=2025-09-29
+  v10 API失敗 (1764.T): HTTP Error 401: Unauthorized
+  chart配当データ (1764.T): 年間配当=117.0, 利回り=3.55%, 配当落ち日=2025-06-27
+  v10 API失敗 (1766.T): HTTP Error 401: Unauthorized
+  chart配当データ (1766.T): 年間配当=330.0, 利回り=2.25%, 配当落ち日=2025-04-28
+  v10 API失敗 (1768.T): HTTP Error 401: Unauthorized
+  chart配当データ (1768.T): 年間配当=30.0, 利回り=1.96%, 配当落ち日=2025-03-28
+  [50/279] 1768: ¥1534.0 (19秒経過)
+  v10 API失敗 (1770.T): HTTP Error 401: Unauthorized
+  chart配当データ (1770.T): 年間配当=65.0, 利回り=3.41%, 配当落ち日=2025-09-29
+  v10 API失敗 (1776.T): HTTP Error 401: Unauthorized
+  chart配当データ (1776.T): 年間配当=40.0, 利回り=2.45%, 配当落ち日=2025-03-28
+  v10 API失敗 (1780.T): HTTP Error 401: Unauthorized
+  chart配当データ (1780.T): 年間配当=29.5, 利回り=1.84%, 配当落ち日=2025-09-29
+  v10 API失敗 (1783.T): HTTP Error 401: Unauthorized
+  chart配当データ (1783.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (1786.T): HTTP Error 401: Unauthorized
+  chart配当データ (1786.T): 年間配当=14.5, 利回り=3.62%, 配当落ち日=2025-09-29
+  v10 API失敗 (1787.T): HTTP Error 401: Unauthorized
+  chart配当データ (1787.T): 年間配当=300.0, 利回り=4.87%, 配当落ち日=2025-03-28
+  v10 API失敗 (1788.T): HTTP Error 401: Unauthorized
+  chart配当データ (1788.T): 年間配当=100.0, 利回り=1.74%, 配当落ち日=2025-06-27
+  v10 API失敗 (1793.T): HTTP Error 401: Unauthorized
+  chart配当データ (1793.T): 年間配当=41.0, 利回り=2.15%, 配当落ち日=2025-03-28
+  v10 API失敗 (1795.T): HTTP Error 401: Unauthorized
+  chart配当データ (1795.T): 年間配当=160.0, 利回り=3.43%, 配当落ち日=2025-09-29
+  v10 API失敗 (1798.T): HTTP Error 401: Unauthorized
+  chart配当データ (1798.T): 年間配当=100.0, 利回り=1.47%, 配当落ち日=2025-03-28
+  v10 API失敗 (1799.T): HTTP Error 401: Unauthorized
+  chart配当データ (1799.T): 年間配当=130.0, 利回り=3.15%, 配当落ち日=2025-03-28
+  v10 API失敗 (1801.T): HTTP Error 401: Unauthorized
+  chart配当データ (1801.T): 年間配当=270.0, 利回り=1.48%, 配当落ち日=2025-09-29
+  v10 API失敗 (1802.T): HTTP Error 401: Unauthorized
+  chart配当データ (1802.T): 年間配当=82.0, 利回り=2.05%, 配当落ち日=2025-09-29
+  v10 API失敗 (1803.T): HTTP Error 401: Unauthorized
+  chart配当データ (1803.T): 年間配当=42.5, 利回り=1.3%, 配当落ち日=2025-09-29
+  v10 API失敗 (1807.T): HTTP Error 401: Unauthorized
+  chart配当データ (1807.T): 年間配当=80.0, 利回り=3.97%, 配当落ち日=2025-09-29
+  v10 API失敗 (1808.T): HTTP Error 401: Unauthorized
+  chart配当データ (1808.T): 年間配当=90.0, 利回り=2.79%, 配当落ち日=2025-09-29
+  v10 API失敗 (1810.T): HTTP Error 401: Unauthorized
+  chart配当データ (1810.T): 年間配当=59.0, 利回り=3.29%, 配当落ち日=2025-09-29
+  v10 API失敗 (1811.T): HTTP Error 401: Unauthorized
+  chart配当データ (1811.T): 年間配当=120.0, 利回り=1.34%, 配当落ち日=2025-03-28
+  v10 API失敗 (1812.T): HTTP Error 401: Unauthorized
+  chart配当データ (1812.T): 年間配当=115.0, 利回り=1.79%, 配当落ち日=2025-09-29
+  v10 API失敗 (1813.T): HTTP Error 401: Unauthorized
+  chart配当データ (1813.T): 年間配当=60.0, 利回り=1.66%, 配当落ち日=2025-03-28
+  v10 API失敗 (1814.T): HTTP Error 401: Unauthorized
+  chart配当データ (1814.T): 年間配当=141.5, 利回り=3.5%, 配当落ち日=2025-09-29
+  v10 API失敗 (1815.T): HTTP Error 401: Unauthorized
+  chart配当データ (1815.T): 年間配当=122.0, 利回り=2.65%, 配当落ち日=2025-03-28
+  v10 API失敗 (1820.T): HTTP Error 401: Unauthorized
+  chart配当データ (1820.T): 年間配当=220.0, 利回り=3.52%, 配当落ち日=2025-09-29
+  v10 API失敗 (1822.T): HTTP Error 401: Unauthorized
+  chart配当データ (1822.T): 年間配当=29.4, 利回り=3.44%, 配当落ち日=2025-03-28
+  v10 API失敗 (1826.T): HTTP Error 401: Unauthorized
+  chart配当データ (1826.T): 年間配当=60.0, 利回り=4.78%, 配当落ち日=2025-03-28
+  v10 API失敗 (1827.T): HTTP Error 401: Unauthorized
+  chart配当データ (1827.T): 年間配当=22.0, 利回り=1.41%, 配当落ち日=2025-03-28
+  v10 API失敗 (1828.T): HTTP Error 401: Unauthorized
+  chart配当データ (1828.T): 年間配当=87.0, 利回り=3.11%, 配当落ち日=2025-03-28
+  v10 API失敗 (1833.T): HTTP Error 401: Unauthorized
+  chart配当データ (1833.T): 年間配当=213.0, 利回り=3.15%, 配当落ち日=2025-09-29
+  v10 API失敗 (1835.T): HTTP Error 401: Unauthorized
+  chart配当データ (1835.T): 年間配当=155.0, 利回り=2.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (1840.T): HTTP Error 401: Unauthorized
+  chart配当データ (1840.T): 年間配当=10.0, 利回り=4.07%, 配当落ち日=2025-10-30
+  v10 API失敗 (1841.T): HTTP Error 401: Unauthorized
+  chart配当データ (1841.T): 年間配当=30.0, 利回り=1.89%, 配当落ち日=2025-09-29
+  v10 API失敗 (1844.T): HTTP Error 401: Unauthorized
+  chart配当データ (1844.T): 年間配当=11.5, 利回り=2.19%, 配当落ち日=2025-07-30
+  v10 API失敗 (1847.T): HTTP Error 401: Unauthorized
+  chart配当データ (1847.T): 年間配当=155.0, 利回り=2.49%, 配当落ち日=2025-09-29
+  v10 API失敗 (1848.T): HTTP Error 401: Unauthorized
+  chart配当データ (1848.T): 年間配当=13.0, 利回り=2.17%, 配当落ち日=2025-03-28
+  v10 API失敗 (1850.T): HTTP Error 401: Unauthorized
+  chart配当データ (1850.T): 年間配当=6.0, 利回り=1.15%, 配当落ち日=2025-03-28
+  v10 API失敗 (1852.T): HTTP Error 401: Unauthorized
+  chart配当データ (1852.T): 年間配当=42.0, 利回り=3.98%, 配当落ち日=2025-09-29
+  v10 API失敗 (1853.T): HTTP Error 401: Unauthorized
+  chart配当データ (1853.T): 年間配当=14.0, 利回り=4.09%, 配当落ち日=2025-03-28
+  v10 API失敗 (1860.T): HTTP Error 401: Unauthorized
+  chart配当データ (1860.T): 年間配当=35.5, 利回り=2.24%, 配当落ち日=2025-09-29
+  v10 API失敗 (1861.T): HTTP Error 401: Unauthorized
+  chart配当データ (1861.T): 年間配当=52.5, 利回り=3.01%, 配当落ち日=2025-09-29
+  v10 API失敗 (1866.T): HTTP Error 401: Unauthorized
+  chart配当データ (1866.T): 年間配当=27.5, 利回り=1.96%, 配当落ち日=2025-03-28
+  v10 API失敗 (1867.T): HTTP Error 401: Unauthorized
+  chart配当データ (1867.T): 年間配当=90.0, 利回り=2.93%, 配当落ち日=2025-03-28
+  v10 API失敗 (1870.T): HTTP Error 401: Unauthorized
+  chart配当データ (1870.T): 年間配当=85.0, 利回り=3.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (1871.T): HTTP Error 401: Unauthorized
+  chart配当データ (1871.T): 年間配当=90.0, 利回り=2.96%, 配当落ち日=2025-09-29
+  v10 API失敗 (1873.T): HTTP Error 401: Unauthorized
+  chart配当データ (1873.T): 年間配当=11.0, 利回り=3.53%, 配当落ち日=2025-10-30
+  v10 API失敗 (1878.T): HTTP Error 401: Unauthorized
+  chart配当データ (1878.T): 年間配当=153.8, 利回り=4.22%, 配当落ち日=2025-09-29
+  v10 API失敗 (1879.T): HTTP Error 401: Unauthorized
+  chart配当データ (1879.T): 年間配当=60.0, 利回り=2.96%, 配当落ち日=2025-09-29
+  v10 API失敗 (1882.T): HTTP Error 401: Unauthorized
+  chart配当データ (1882.T): 年間配当=135.0, 利回り=7.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (1885.T): HTTP Error 401: Unauthorized
+  chart配当データ (1885.T): 年間配当=114.0, 利回り=3.18%, 配当落ち日=2025-09-29
+  v10 API失敗 (1887.T): HTTP Error 401: Unauthorized
+  chart配当データ (1887.T): 年間配当=22.0, 利回り=3.42%, 配当落ち日=2025-11-27
+  v10 API失敗 (1888.T): HTTP Error 401: Unauthorized
+  chart配当データ (1888.T): 年間配当=126.0, 利回り=2.82%, 配当落ち日=2025-03-28
+  [100/279] 1888: ¥4475.0 (38秒経過)
+  v10 API失敗 (1893.T): HTTP Error 401: Unauthorized
+  chart配当データ (1893.T): 年間配当=29.0, 利回り=1.53%, 配当落ち日=2025-09-29
+  v10 API失敗 (1897.T): HTTP Error 401: Unauthorized
+  chart配当データ (1897.T): 年間配当=50.0, 利回り=1.51%, 配当落ち日=2025-12-29
+  v10 API失敗 (1898.T): HTTP Error 401: Unauthorized
+  chart配当データ (1898.T): 年間配当=80.0, 利回り=4.99%, 配当落ち日=2025-09-29
+  v10 API失敗 (1899.T): HTTP Error 401: Unauthorized
+  chart配当データ (1899.T): 年間配当=260.0, 利回り=3.43%, 配当落ち日=2025-12-29
+  v10 API失敗 (1904.T): HTTP Error 401: Unauthorized
+  chart配当データ (1904.T): 年間配当=153.0, 利回り=2.91%, 配当落ち日=2025-09-29
+  v10 API失敗 (1905.T): HTTP Error 401: Unauthorized
+  chart配当データ (1905.T): 年間配当=55.0, 利回り=3.94%, 配当落ち日=2025-09-29
+  v10 API失敗 (1909.T): HTTP Error 401: Unauthorized
+  chart配当データ (1909.T): 年間配当=90.0, 利回り=0.71%, 配当落ち日=2025-09-29
+  v10 API失敗 (1911.T): HTTP Error 401: Unauthorized
+  chart配当データ (1911.T): 年間配当=53.0, 利回り=3.47%, 配当落ち日=2025-12-29
+  v10 API失敗 (1914.T): HTTP Error 401: Unauthorized
+  chart配当データ (1914.T): 年間配当=24.0, 利回り=3.27%, 配当落ち日=2025-03-28
+  v10 API失敗 (1921.T): HTTP Error 401: Unauthorized
+  chart配当データ (1921.T): 年間配当=24.0, 利回り=1.2%, 配当落ち日=2025-03-28
+  v10 API失敗 (1925.T): HTTP Error 401: Unauthorized
+  chart配当データ (1925.T): 年間配当=155.0, 利回り=2.91%, 配当落ち日=2025-09-29
+  v10 API失敗 (1926.T): HTTP Error 401: Unauthorized
+  chart配当データ (1926.T): 年間配当=110.0, 利回り=2.7%, 配当落ち日=2025-09-29
+  v10 API失敗 (1928.T): HTTP Error 401: Unauthorized
+  chart配当データ (1928.T): 年間配当=144.0, 利回り=4.04%, 配当落ち日=2026-01-29
+  v10 API失敗 (1929.T): HTTP Error 401: Unauthorized
+  chart配当データ (1929.T): 年間配当=48.0, 利回り=3.62%, 配当落ち日=2025-09-29
+  v10 API失敗 (1930.T): HTTP Error 401: Unauthorized
+  chart配当データ (1930.T): 年間配当=46.0, 利回り=2.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (1934.T): HTTP Error 401: Unauthorized
+  chart配当データ (1934.T): 年間配当=81.0, 利回り=2.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (1938.T): HTTP Error 401: Unauthorized
+  chart配当データ (1938.T): 年間配当=77.0, 利回り=2.7%, 配当落ち日=2025-03-28
+  v10 API失敗 (1939.T): HTTP Error 401: Unauthorized
+  chart配当データ (1939.T): 年間配当=67.0, 利回り=3.44%, 配当落ち日=2025-09-29
+  v10 API失敗 (1941.T): HTTP Error 401: Unauthorized
+  chart配当データ (1941.T): 年間配当=125.0, 利回り=2.65%, 配当落ち日=2025-09-29
+  v10 API失敗 (1942.T): HTTP Error 401: Unauthorized
+  chart配当データ (1942.T): 年間配当=101.0, 利回り=1.58%, 配当落ち日=2025-09-29
+  v10 API失敗 (1944.T): HTTP Error 401: Unauthorized
+  chart配当データ (1944.T): 年間配当=110.0, 利回り=1.39%, 配当落ち日=2025-09-29
+  v10 API失敗 (1945.T): HTTP Error 401: Unauthorized
+  chart配当データ (1945.T): 年間配当=54.0, 利回り=2.94%, 配当落ち日=2025-09-29
+  v10 API失敗 (1946.T): HTTP Error 401: Unauthorized
+  chart配当データ (1946.T): 年間配当=58.0, 利回り=2.72%, 配当落ち日=2025-09-29
+  v10 API失敗 (1948.T): HTTP Error 401: Unauthorized
+  chart配当データ (1948.T): 年間配当=96.0, 利回り=1.47%, 配当落ち日=2025-09-29
+  v10 API失敗 (1949.T): HTTP Error 401: Unauthorized
+  chart配当データ (1949.T): 年間配当=171997904.0, 利回り=1.69%, 配当落ち日=2025-09-29
+  v10 API失敗 (1950.T): HTTP Error 401: Unauthorized
+  chart配当データ (1950.T): 年間配当=90.0, 利回り=1.75%, 配当落ち日=2025-03-28
+  v10 API失敗 (1951.T): HTTP Error 401: Unauthorized
+  chart配当データ (1951.T): 年間配当=65.0, 利回り=2.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (1952.T): HTTP Error 401: Unauthorized
+  chart配当データ (1952.T): 年間配当=90.0, 利回り=2.36%, 配当落ち日=2025-09-29
+  v10 API失敗 (1959.T): HTTP Error 401: Unauthorized
+  chart配当データ (1959.T): 年間配当=165.0, 利回り=1.67%, 配当落ち日=2025-09-29
+  v10 API失敗 (1960.T): HTTP Error 401: Unauthorized
+  chart配当データ (1960.T): 年間配当=40.0, 利回り=2.65%, 配当落ち日=2025-03-28
+  v10 API失敗 (1961.T): HTTP Error 401: Unauthorized
+  chart配当データ (1961.T): 年間配当=192.5, 利回り=2.67%, 配当落ち日=2025-09-29
+  v10 API失敗 (1963.T): HTTP Error 401: Unauthorized
+  chart配当データ (1963.T): 年間配当=40.0, 利回り=1.81%, 配当落ち日=2025-03-28
+  v10 API失敗 (1964.T): HTTP Error 401: Unauthorized
+  chart配当データ (1964.T): 年間配当=150.0, 利回り=3.19%, 配当落ち日=2025-03-28
+  v10 API失敗 (1965.T): HTTP Error 401: Unauthorized
+  chart配当データ (1965.T): 年間配当=100.0, 利回り=1.5%, 配当落ち日=2025-09-29
+  v10 API失敗 (1966.T): HTTP Error 401: Unauthorized
+  chart配当データ (1966.T): 年間配当=70.0, 利回り=3.79%, 配当落ち日=2025-03-28
+  v10 API失敗 (1967.T): HTTP Error 401: Unauthorized
+  chart配当データ (1967.T): 年間配当=45.0, 利回り=1.97%, 配当落ち日=2025-03-18
+  v10 API失敗 (1968.T): HTTP Error 401: Unauthorized
+  chart配当データ (1968.T): 年間配当=58.333332, 利回り=2.04%, 配当落ち日=2025-03-28
+  v10 API失敗 (1969.T): HTTP Error 401: Unauthorized
+  chart配当データ (1969.T): 年間配当=94.0, 利回り=1.87%, 配当落ち日=2025-09-29
+  v10 API失敗 (1972.T): HTTP Error 401: Unauthorized
+  chart配当データ (1972.T): 年間配当=110.0, 利回り=7.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (1975.T): HTTP Error 401: Unauthorized
+  chart配当データ (1975.T): 年間配当=145.0, 利回り=3.51%, 配当落ち日=2025-09-29
+  v10 API失敗 (1976.T): HTTP Error 401: Unauthorized
+  chart配当データ (1976.T): 年間配当=59.0, 利回り=3.1%, 配当落ち日=2025-09-29
+  v10 API失敗 (1979.T): HTTP Error 401: Unauthorized
+  chart配当データ (1979.T): 年間配当=82.0, 利回り=2.25%, 配当落ち日=2025-09-29
+  v10 API失敗 (1980.T): HTTP Error 401: Unauthorized
+  chart配当データ (1980.T): 年間配当=64.333332, 利回り=2.01%, 配当落ち日=2025-09-29
+  v10 API失敗 (1981.T): HTTP Error 401: Unauthorized
+  chart配当データ (1981.T): 年間配当=42.0, 利回り=2.63%, 配当落ち日=2025-03-28
+  v10 API失敗 (1982.T): HTTP Error 401: Unauthorized
+  chart配当データ (1982.T): 年間配当=100.0, 利回り=1.61%, 配当落ち日=2025-09-29
+  v10 API失敗 (1992.T): HTTP Error 401: Unauthorized
+  chart配当データ (1992.T): 年間配当=70.0, 利回り=2.46%, 配当落ち日=2025-03-28
+  v10 API失敗 (1994.T): HTTP Error 401: Unauthorized
+  chart配当データ (1994.T): 年間配当=20.0, 利回り=3.46%, 配当落ち日=2025-12-29
+  v10 API失敗 (1997.T): HTTP Error 401: Unauthorized
+  chart配当データ (1997.T): 年間配当=110.0, 利回り=2.75%, 配当落ち日=2025-08-28
+  v10 API失敗 (2001.T): HTTP Error 401: Unauthorized
+  chart配当データ (2001.T): 年間配当=66.0, 利回り=2.39%, 配当落ち日=2025-09-29
+  v10 API失敗 (2002.T): HTTP Error 401: Unauthorized
+  chart配当データ (2002.T): 年間配当=60.0, 利回り=2.84%, 配当落ち日=2025-09-29
+  [150/279] 2002: ¥2110.0 (57秒経過)
+  v10 API失敗 (2003.T): HTTP Error 401: Unauthorized
+  chart配当データ (2003.T): 年間配当=280.0, 利回り=3.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (2004.T): HTTP Error 401: Unauthorized
+  chart配当データ (2004.T): 年間配当=110.0, 利回り=3.3%, 配当落ち日=2025-09-29
+  v10 API失敗 (2009.T): HTTP Error 401: Unauthorized
+  chart配当データ (2009.T): 年間配当=49.0, 利回り=4.47%, 配当落ち日=2025-12-29
+  v10 API失敗 (2053.T): HTTP Error 401: Unauthorized
+  chart配当データ (2053.T): 年間配当=57.0, 利回り=3.07%, 配当落ち日=2025-09-29
+  v10 API失敗 (2055.T): HTTP Error 401: Unauthorized
+  chart配当データ (2055.T): 年間配当=6.0, 利回り=1.55%, 配当落ち日=2025-03-28
+  v10 API失敗 (2060.T): HTTP Error 401: Unauthorized
+  chart配当データ (2060.T): 年間配当=42.0, 利回り=3.32%, 配当落ち日=2025-09-29
+  v10 API失敗 (2108.T): HTTP Error 401: Unauthorized
+  chart配当データ (2108.T): 年間配当=80.0, 利回り=1.87%, 配当落ち日=2025-03-28
+  v10 API失敗 (2109.T): HTTP Error 401: Unauthorized
+  chart配当データ (2109.T): 年間配当=130.0, 利回り=3.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (2112.T): HTTP Error 401: Unauthorized
+  chart配当データ (2112.T): 年間配当=15.0, 利回り=2.6%, 配当落ち日=2025-03-28
+  v10 API失敗 (2114.T): HTTP Error 401: Unauthorized
+  chart配当データ (2114.T): 年間配当=17.0, 利回り=2.56%, 配当落ち日=2025-09-29
+  v10 API失敗 (2117.T): HTTP Error 401: Unauthorized
+  chart配当データ (2117.T): 年間配当=110.0, 利回り=3.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (2120.T): HTTP Error 401: Unauthorized
+  chart配当データ (2120.T): 年間配当=10.41, 利回り=4.91%, 配当落ち日=2025-09-29
+  v10 API失敗 (2121.T): HTTP Error 401: Unauthorized
+  chart配当データ (2121.T): 年間配当=125.0, 利回り=4.76%, 配当落ち日=2025-09-29
+  v10 API失敗 (2122.T): HTTP Error 401: Unauthorized
+  chart配当データ (2122.T): 年間配当=30.0, 利回り=2.29%, 配当落ち日=2025-09-29
+  v10 API失敗 (2124.T): HTTP Error 401: Unauthorized
+  chart配当データ (2124.T): 年間配当=36.0, 利回り=4.09%, 配当落ち日=2025-12-29
+  v10 API失敗 (2127.T): HTTP Error 401: Unauthorized
+  chart配当データ (2127.T): 年間配当=29.0, 利回り=4.4%, 配当落ち日=2025-09-29
+  v10 API失敗 (2130.T): HTTP Error 401: Unauthorized
+  chart配当データ (2130.T): 年間配当=32.0, 利回り=2.84%, 配当落ち日=2025-03-28
+  v10 API失敗 (2134.T): HTTP Error 401: Unauthorized
+  chart配当データ (2134.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2136.T): HTTP Error 401: Unauthorized
+  chart配当データ (2136.T): 年間配当=54.0, 利回り=3.44%, 配当落ち日=2025-03-28
+  v10 API失敗 (2138.T): HTTP Error 401: Unauthorized
+  chart配当データ (2138.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2139.T): HTTP Error 401: Unauthorized
+  chart配当データ (2139.T): 年間配当=12.0, 利回り=2.23%, 配当落ち日=2025-03-28
+  v10 API失敗 (2146.T): HTTP Error 401: Unauthorized
+  chart配当データ (2146.T): 年間配当=13.183999, 利回り=6.31%, 配当落ち日=2025-12-29
+  v10 API失敗 (2148.T): HTTP Error 401: Unauthorized
+  chart配当データ (2148.T): 年間配当=100.0, 利回り=5.3%, 配当落ち日=2025-03-28
+  v10 API失敗 (2152.T): HTTP Error 401: Unauthorized
+  chart配当データ (2152.T): 年間配当=24.0, 利回り=1.66%, 配当落ち日=2025-03-28
+  v10 API失敗 (2153.T): HTTP Error 401: Unauthorized
+  chart配当データ (2153.T): 年間配当=67.0, 利回り=3.66%, 配当落ち日=2025-11-27
+  v10 API失敗 (2154.T): HTTP Error 401: Unauthorized
+  chart配当データ (2154.T): 年間配当=80.0, 利回り=4.33%, 配当落ち日=2025-12-29
+  v10 API失敗 (2156.T): HTTP Error 401: Unauthorized
+  chart配当データ (2156.T): 年間配当=6.0, 利回り=1.92%, 配当落ち日=2025-03-28
+  v10 API失敗 (2157.T): HTTP Error 401: Unauthorized
+  chart配当データ (2157.T): 年間配当=25.0, 利回り=2.29%, 配当落ち日=2026-02-26
+  v10 API失敗 (2162.T): HTTP Error 401: Unauthorized
+  chart配当データ (2162.T): 年間配当=14.0, 利回り=3.03%, 配当落ち日=2025-03-28
+  v10 API失敗 (2163.T): HTTP Error 401: Unauthorized
+  chart配当データ (2163.T): 年間配当=84.0, 利回り=4.17%, 配当落ち日=2026-01-29
+  v10 API失敗 (2168.T): HTTP Error 401: Unauthorized
+  chart配当データ (2168.T): 年間配当=75.0, 利回り=3.78%, 配当落ち日=2025-05-29
+  v10 API失敗 (2169.T): HTTP Error 401: Unauthorized
+  chart配当データ (2169.T): 年間配当=74.0, 利回り=4.03%, 配当落ち日=2025-12-29
+  v10 API失敗 (2170.T): HTTP Error 401: Unauthorized
+  chart配当データ (2170.T): 年間配当=15.999999999999998, 利回り=2.87%, 配当落ち日=2025-12-29
+  v10 API失敗 (2175.T): HTTP Error 401: Unauthorized
+  chart配当データ (2175.T): 年間配当=28.5, 利回り=1.63%, 配当落ち日=2025-03-28
+  v10 API失敗 (2179.T): HTTP Error 401: Unauthorized
+  chart配当データ (2179.T): 年間配当=20.5, 利回り=2.51%, 配当落ち日=2025-09-29
+  v10 API失敗 (2180.T): HTTP Error 401: Unauthorized
+  chart配当データ (2180.T): 年間配当=26.0, 利回り=2.62%, 配当落ち日=2025-12-29
+  v10 API失敗 (2181.T): HTTP Error 401: Unauthorized
+  chart配当データ (2181.T): 年間配当=10.5, 利回り=4.31%, 配当落ち日=2025-09-29
+  v10 API失敗 (2183.T): HTTP Error 401: Unauthorized
+  chart配当データ (2183.T): 年間配当=16.0, 利回り=5.05%, 配当落ち日=2025-03-28
+  v10 API失敗 (2185.T): HTTP Error 401: Unauthorized
+  chart配当データ (2185.T): 年間配当=52.0, 利回り=2.7%, 配当落ち日=2025-09-29
+  v10 API失敗 (2186.T): HTTP Error 401: Unauthorized
+  chart配当データ (2186.T): 年間配当=33.0, 利回り=3.64%, 配当落ち日=2026-02-26
+  v10 API失敗 (2193.T): HTTP Error 401: Unauthorized
+  chart配当データ (2193.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2196.T): HTTP Error 401: Unauthorized
+  chart配当データ (2196.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2198.T): HTTP Error 401: Unauthorized
+  chart配当データ (2198.T): 年間配当=24.0, 利回り=2.94%, 配当落ち日=2025-10-30
+  v10 API失敗 (2201.T): HTTP Error 401: Unauthorized
+  chart配当データ (2201.T): 年間配当=92.5, 利回り=3.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (2204.T): HTTP Error 401: Unauthorized
+  chart配当データ (2204.T): 年間配当=70.0, 利回り=2.12%, 配当落ち日=2025-03-28
+  v10 API失敗 (2206.T): HTTP Error 401: Unauthorized
+  chart配当データ (2206.T): 年間配当=95.0, 利回り=1.59%, 配当落ち日=2025-12-29
+  v10 API失敗 (2207.T): HTTP Error 401: Unauthorized
+  chart配当データ (2207.T): 年間配当=38.0, 利回り=1.33%, 配当落ち日=2025-09-29
+  v10 API失敗 (2209.T): HTTP Error 401: Unauthorized
+  chart配当データ (2209.T): 年間配当=36.0, 利回り=1.45%, 配当落ち日=2025-03-28
+  v10 API失敗 (2211.T): HTTP Error 401: Unauthorized
+  chart配当データ (2211.T): 年間配当=30.0, 利回り=1.23%, 配当落ち日=2025-12-29
+  v10 API失敗 (2212.T): HTTP Error 401: Unauthorized
+  chart配当データ (2212.T): 年間配当=60.0, 利回り=1.78%, 配当落ち日=2025-12-29
+  [200/279] 2212: ¥3364.0 (78秒経過)
+  v10 API失敗 (2215.T): HTTP Error 401: Unauthorized
+  chart配当データ (2215.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2216.T): HTTP Error 401: Unauthorized
+  chart配当データ (2216.T): 年間配当=32.0, 利回り=2.55%, 配当落ち日=2025-12-29
+  v10 API失敗 (2217.T): HTTP Error 401: Unauthorized
+  chart配当データ (2217.T): 年間配当=14.0, 利回り=0.93%, 配当落ち日=2026-01-29
+  v10 API失敗 (2220.T): HTTP Error 401: Unauthorized
+  chart配当データ (2220.T): 年間配当=57.0, 利回り=1.31%, 配当落ち日=2025-09-29
+  v10 API失敗 (2221.T): HTTP Error 401: Unauthorized
+  chart配当データ (2221.T): 年間配当=30.0, 利回り=0.92%, 配当落ち日=2025-03-28
+  v10 API失敗 (2222.T): HTTP Error 401: Unauthorized
+  chart配当データ (2222.T): 年間配当=32.0, 利回り=1.66%, 配当落ち日=2025-03-28
+  v10 API失敗 (2224.T): HTTP Error 401: Unauthorized
+  chart配当データ (2224.T): 年間配当=7.0, 利回り=0.18%, 配当落ち日=2025-03-28
+  v10 API失敗 (2226.T): HTTP Error 401: Unauthorized
+  chart配当データ (2226.T): 年間配当=55.0, 利回り=1.18%, 配当落ち日=2025-03-28
+  v10 API失敗 (2229.T): HTTP Error 401: Unauthorized
+  chart配当データ (2229.T): 年間配当=58.0, 利回り=1.83%, 配当落ち日=2025-03-28
+  v10 API失敗 (2264.T): HTTP Error 401: Unauthorized
+  chart配当データ (2264.T): 年間配当=90.0, 利回り=1.88%, 配当落ち日=2025-09-29
+  v10 API失敗 (2266.T): HTTP Error 401: Unauthorized
+  chart配当データ (2266.T): 年間配当=20.0, 利回り=1.74%, 配当落ち日=2025-12-29
+  v10 API失敗 (2267.T): HTTP Error 401: Unauthorized
+  chart配当データ (2267.T): 年間配当=65.0, 利回り=2.52%, 配当落ち日=2025-09-29
+  v10 API失敗 (2268.T): HTTP Error 401: Unauthorized
+  chart配当データ (2268.T): 年間配当=80.0, 利回り=1.99%, 配当落ち日=2025-12-29
+  v10 API失敗 (2269.T): HTTP Error 401: Unauthorized
+  chart配当データ (2269.T): 年間配当=102.5, 利回り=2.66%, 配当落ち日=2025-09-29
+  v10 API失敗 (2270.T): HTTP Error 401: Unauthorized
+  chart配当データ (2270.T): 年間配当=100.0, 利回り=3.02%, 配当落ち日=2025-03-28
+  v10 API失敗 (2281.T): HTTP Error 401: Unauthorized
+  chart配当データ (2281.T): 年間配当=80.0, 利回り=2.87%, 配当落ち日=2025-09-29
+  v10 API失敗 (2282.T): HTTP Error 401: Unauthorized
+  chart配当データ (2282.T): 年間配当=135.0, 利回り=1.97%, 配当落ち日=2025-03-28
+  v10 API失敗 (2286.T): HTTP Error 401: Unauthorized
+  chart配当データ (2286.T): 年間配当=25.0, 利回り=2.81%, 配当落ち日=2025-03-28
+  v10 API失敗 (2288.T): HTTP Error 401: Unauthorized
+  chart配当データ (2288.T): 年間配当=50.0, 利回り=2.26%, 配当落ち日=2025-03-28
+  v10 API失敗 (2291.T): HTTP Error 401: Unauthorized
+  chart配当データ (2291.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2292.T): HTTP Error 401: Unauthorized
+  chart配当データ (2292.T): 年間配当=104.0, 利回り=3.43%, 配当落ち日=2026-02-26
+  v10 API失敗 (2293.T): HTTP Error 401: Unauthorized
+  chart配当データ (2293.T): 年間配当=0, 利回り=0%, 配当落ち日=2024-03-28
+  v10 API失敗 (2294.T): HTTP Error 401: Unauthorized
+  chart配当データ (2294.T): 年間配当=85.0, 利回り=2.95%, 配当落ち日=2025-04-28
+  v10 API失敗 (2296.T): HTTP Error 401: Unauthorized
+  chart配当データ (2296.T): 年間配当=320.0, 利回り=5.24%, 配当落ち日=2025-12-29
+  v10 API失敗 (2300.T): HTTP Error 401: Unauthorized
+  chart配当データ (2300.T): 年間配当=11.0, 利回り=2.2%, 配当落ち日=2026-02-26
+  v10 API失敗 (2301.T): HTTP Error 401: Unauthorized
+  chart配当データ (2301.T): 年間配当=67.0, 利回り=3.63%, 配当落ち日=2025-10-30
+  v10 API失敗 (2303.T): HTTP Error 401: Unauthorized
+  chart配当データ (2303.T): 年間配当=24.0, 利回り=0.88%, 配当落ち日=2025-05-29
+  v10 API失敗 (2304.T): HTTP Error 401: Unauthorized
+  chart配当データ (2304.T): 年間配当=45.0, 利回り=4.65%, 配当落ち日=2025-09-29
+  v10 API失敗 (2305.T): HTTP Error 401: Unauthorized
+  chart配当データ (2305.T): 年間配当=50.0, 利回り=2.55%, 配当落ち日=2026-02-26
+  v10 API失敗 (2307.T): HTTP Error 401: Unauthorized
+  chart配当データ (2307.T): 年間配当=33.0, 利回り=3.28%, 配当落ち日=2025-03-28
+  v10 API失敗 (2315.T): HTTP Error 401: Unauthorized
+  chart配当データ (2315.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2317.T): HTTP Error 401: Unauthorized
+  chart配当データ (2317.T): 年間配当=12.0, 利回り=2.8%, 配当落ち日=2025-09-29
+  v10 API失敗 (2323.T): HTTP Error 401: Unauthorized
+  chart配当データ (2323.T): 年間配当=1.0, 利回り=0.28%, 配当落ち日=2025-03-28
+  v10 API失敗 (2325.T): HTTP Error 401: Unauthorized
+  chart配当データ (2325.T): 年間配当=105.0, 利回り=2.32%, 配当落ち日=2025-12-29
+  v10 API失敗 (2326.T): HTTP Error 401: Unauthorized
+  chart配当データ (2326.T): 年間配当=90.0, 利回り=1.7%, 配当落ち日=2025-09-29
+  v10 API失敗 (2327.T): HTTP Error 401: Unauthorized
+  chart配当データ (2327.T): 年間配当=77.5, 利回り=1.97%, 配当落ち日=2025-09-29
+  v10 API失敗 (2329.T): HTTP Error 401: Unauthorized
+  chart配当データ (2329.T): 年間配当=27.479999999999997, 利回り=4.23%, 配当落ち日=2025-12-29
+  v10 API失敗 (2330.T): HTTP Error 401: Unauthorized
+  chart配当データ (2330.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2331.T): HTTP Error 401: Unauthorized
+  chart配当データ (2331.T): 年間配当=28.0, 利回り=2.26%, 配当落ち日=2025-09-29
+  v10 API失敗 (2335.T): HTTP Error 401: Unauthorized
+  chart配当データ (2335.T): 年間配当=40.0, 利回り=3.77%, 配当落ち日=2025-09-29
+  v10 API失敗 (2337.T): HTTP Error 401: Unauthorized
+  chart配当データ (2337.T): 年間配当=11.5, 利回り=2.41%, 配当落ち日=2026-02-26
+  v10 API失敗 (2353.T): HTTP Error 401: Unauthorized
+  chart配当データ (2353.T): 年間配当=8.0, 利回り=2.92%, 配当落ち日=2025-07-30
+  v10 API失敗 (2359.T): HTTP Error 401: Unauthorized
+  chart配当データ (2359.T): 年間配当=60.0, 利回り=2.69%, 配当落ち日=2025-09-29
+  v10 API失敗 (2371.T): HTTP Error 401: Unauthorized
+  chart配当データ (2371.T): 年間配当=80.0, 利回り=4.42%, 配当落ち日=2025-09-29
+  v10 API失敗 (2374.T): HTTP Error 401: Unauthorized
+  chart配当データ (2374.T): 年間配当=30.0, 利回り=2.48%, 配当落ち日=2025-03-28
+  v10 API失敗 (2378.T): HTTP Error 401: Unauthorized
+  chart配当データ (2378.T): 年間配当=13.0, 利回り=1.19%, 配当落ち日=2025-09-29
+  v10 API失敗 (2379.T): HTTP Error 401: Unauthorized
+  chart配当データ (2379.T): 年間配当=95.0, 利回り=4.73%, 配当落ち日=2026-02-26
+  v10 API失敗 (2384.T): HTTP Error 401: Unauthorized
+  chart配当データ (2384.T): 年間配当=90.0, 利回り=2.22%, 配当落ち日=2025-12-29
+  v10 API失敗 (2389.T): HTTP Error 401: Unauthorized
+  chart配当データ (2389.T): 年間配当=23.0, 利回り=1.15%, 配当落ち日=2025-06-27
+  v10 API失敗 (2395.T): HTTP Error 401: Unauthorized
+  chart配当データ (2395.T): 年間配当=50.0, 利回り=3.13%, 配当落ち日=2025-09-29
+  [250/279] 2395: ¥1599.0 (106秒経過)
+  v10 API失敗 (2410.T): HTTP Error 401: Unauthorized
+  chart配当データ (2410.T): 年間配当=100.0, 利回り=3.96%, 配当落ち日=2025-09-29
+  v10 API失敗 (2413.T): HTTP Error 401: Unauthorized
+  chart配当データ (2413.T): 年間配当=21.0, 利回り=1.28%, 配当落ち日=2025-03-28
+  v10 API失敗 (2429.T): HTTP Error 401: Unauthorized
+  chart配当データ (2429.T): 年間配当=129.5, 利回り=4.63%, 配当落ち日=2025-12-29
+  v10 API失敗 (2432.T): HTTP Error 401: Unauthorized
+  chart配当データ (2432.T): 年間配当=65.0, 利回り=2.5%, 配当落ち日=2025-03-28
+  v10 API失敗 (2433.T): HTTP Error 401: Unauthorized
+  chart配当データ (2433.T): 年間配当=32.0, 利回り=2.93%, 配当落ち日=2025-09-29
+  v10 API失敗 (2445.T): HTTP Error 401: Unauthorized
+  chart配当データ (2445.T): 年間配当=16.0, 利回り=3.86%, 配当落ち日=2025-09-29
+  v10 API失敗 (2461.T): HTTP Error 401: Unauthorized
+  chart配当データ (2461.T): 年間配当=27.0, 利回り=5.87%, 配当落ち日=2025-12-29
+  v10 API失敗 (2462.T): HTTP Error 401: Unauthorized
+  chart配当データ (2462.T): 年間配当=61.0, 利回り=3.86%, 配当落ち日=2025-11-27
+  v10 API失敗 (2471.T): HTTP Error 401: Unauthorized
+  chart配当データ (2471.T): 年間配当=10.0, 利回り=3.97%, 配当落ち日=2025-11-27
+  v10 API失敗 (2475.T): HTTP Error 401: Unauthorized
+  chart配当データ (2475.T): 年間配当=63.5, 利回り=4.01%, 配当落ち日=2025-09-29
+  v10 API失敗 (2491.T): HTTP Error 401: Unauthorized
+  chart配当データ (2491.T): 年間配当=49.0, 利回り=11.16%, 配当落ち日=2025-12-29
+  v10 API失敗 (2492.T): HTTP Error 401: Unauthorized
+  chart配当データ (2492.T): 年間配当=5.4399999999999995, 利回り=1.3%, 配当落ち日=2025-12-29
+  v10 API失敗 (2501.T): HTTP Error 401: Unauthorized
+  chart配当データ (2501.T): 年間配当=18.0, 利回り=1.08%, 配当落ち日=2025-12-29
+  v10 API失敗 (2502.T): HTTP Error 401: Unauthorized
+  chart配当データ (2502.T): 年間配当=52.0, 利回り=3.16%, 配当落ち日=2025-12-29
+  v10 API失敗 (2503.T): HTTP Error 401: Unauthorized
+  chart配当データ (2503.T): 年間配当=74.0, 利回り=2.86%, 配当落ち日=2025-12-29
+  v10 API失敗 (2531.T): HTTP Error 401: Unauthorized
+  chart配当データ (2531.T): 年間配当=31.0, 利回り=1.93%, 配当落ち日=2025-03-28
+  v10 API失敗 (2533.T): HTTP Error 401: Unauthorized
+  chart配当データ (2533.T): 年間配当=11.0, 利回り=2.49%, 配当落ち日=2025-12-29
+  v10 API失敗 (2540.T): HTTP Error 401: Unauthorized
+  chart配当データ (2540.T): 年間配当=45.0, 利回り=1.11%, 配当落ち日=2025-03-28
+  v10 API失敗 (2579.T): HTTP Error 401: Unauthorized
+  chart配当データ (2579.T): 年間配当=60.0, 利回り=1.43%, 配当落ち日=2025-12-29
+  v10 API失敗 (2585.T): HTTP Error 401: Unauthorized
+  chart配当データ (2585.T): 年間配当=12.0, 利回り=1.09%, 配当落ち日=2025-03-28
+  v10 API失敗 (2587.T): HTTP Error 401: Unauthorized
+  chart配当データ (2587.T): 年間配当=120.0, 利回り=2.56%, 配当落ち日=2025-12-29
+  v10 API失敗 (2590.T): HTTP Error 401: Unauthorized
+  chart配当データ (2590.T): 年間配当=30.0, 利回り=1.07%, 配当落ち日=2026-01-19
+  v10 API失敗 (2593.T): HTTP Error 401: Unauthorized
+  chart配当データ (2593.T): 年間配当=46.0, 利回り=1.57%, 配当落ち日=2025-10-30
+  v10 API失敗 (25935.T): HTTP Error 401: Unauthorized
+  chart配当データ (25935.T): 年間配当=58.0, 利回り=3.21%, 配当落ち日=2025-10-30
+  v10 API失敗 (2594.T): HTTP Error 401: Unauthorized
+  chart配当データ (2594.T): 年間配当=12.0, 利回り=0.6%, 配当落ち日=2025-09-29
+  v10 API失敗 (2602.T): HTTP Error 401: Unauthorized
+  chart配当データ (2602.T): 年間配当=180.0, 利回り=3.05%, 配当落ち日=2025-09-29
+  v10 API失敗 (2607.T): HTTP Error 401: Unauthorized
+  chart配当データ (2607.T): 年間配当=52.0, 利回り=1.5%, 配当落ち日=2025-09-29
+  v10 API失敗 (2613.T): HTTP Error 401: Unauthorized
+  chart配当データ (2613.T): 年間配当=75.0, 利回り=3.67%, 配当落ち日=2025-09-29
+  v10 API失敗 (2914.T): HTTP Error 401: Unauthorized
+  chart配当データ (2914.T): 年間配当=234.0, 利回り=4.1%, 配当落ち日=2025-12-29
+
+Yahoo Finance更新完了: 279銘柄更新, 0エラー (117秒)
+
+============================================================
+最終キャッシュ: 279銘柄
+終了時刻: 2026-03-08 07:40:00
+============================================================
+============================================================
+スクリーニングデータ バッチ更新
+開始時刻: 2026-03-14 05:00:06
+============================================================
+候補銘柄: 3115銘柄
+既存キャッシュ: 312銘柄
+モード: yahoo
+
+[起動] StockView サーバーを初期化中...
+  日本株マスタ: 3124銘柄 読み込み完了
+  米国株マスタ: 146銘柄 読み込み完了
+  ファンダメンタルズキャッシュ: 260銘柄 読み込み完了
+Yahoo Finance 株価更新: 312銘柄（キャッシュ済みのみ）
+  v10 API失敗 (1301.T): HTTP Error 401: Unauthorized
+  chart配当データ (1301.T): 年間配当=130.0, 利回り=2.55%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1332.T): HTTP Error 401: Unauthorized
+  chart配当データ (1332.T): 年間配当=30.0, 利回り=2.22%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1333.T): HTTP Error 401: Unauthorized
+  chart配当データ (1333.T): 年間配当=36.666668, 利回り=2.55%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1375.T): HTTP Error 401: Unauthorized
+  chart配当データ (1375.T): 年間配当=16.0, 利回り=1.5%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1376.T): HTTP Error 401: Unauthorized
+  chart配当データ (1376.T): 年間配当=38.0, 利回り=2.66%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (1377.T): HTTP Error 401: Unauthorized
+  chart配当データ (1377.T): 年間配当=80.0, 利回り=1.89%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (1379.T): HTTP Error 401: Unauthorized
+  chart配当データ (1379.T): 年間配当=50.0, 利回り=2.6%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1380.T): HTTP Error 401: Unauthorized
+  chart配当データ (1380.T): 年間配当=10.0, 利回り=0.94%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1381.T): HTTP Error 401: Unauthorized
+  chart配当データ (1381.T): 年間配当=112.5, 利回り=3.16%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1382.T): HTTP Error 401: Unauthorized
+  chart配当データ (1382.T): 年間配当=50.0, 利回り=2.79%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1383.T): HTTP Error 401: Unauthorized
+  chart配当データ (1383.T): 年間配当=10.0, 利回り=0.31%, 配当落ち日=2026-10（予想）
+  v10 API失敗 (1384.T): HTTP Error 401: Unauthorized
+  chart配当データ (1384.T): 年間配当=70.0, 利回り=2.31%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1407.T): HTTP Error 401: Unauthorized
+  chart配当データ (1407.T): 年間配当=100.0, 利回り=5.34%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (1414.T): HTTP Error 401: Unauthorized
+  chart配当データ (1414.T): 年間配当=48.375, 利回り=3.45%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1417.T): HTTP Error 401: Unauthorized
+  chart配当データ (1417.T): 年間配当=80.0, 利回り=2.2%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1418.T): HTTP Error 401: Unauthorized
+  chart配当データ (1418.T): 年間配当=25.0, 利回り=4.73%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (1419.T): HTTP Error 401: Unauthorized
+  chart配当データ (1419.T): 年間配当=195.0, 利回り=4.96%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (1420.T): HTTP Error 401: Unauthorized
+  chart配当データ (1420.T): 年間配当=25.0, 利回り=3.48%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1429.T): HTTP Error 401: Unauthorized
+  chart配当データ (1429.T): 年間配当=35.0, 利回り=4.55%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (1430.T): HTTP Error 401: Unauthorized
+  chart配当データ (1430.T): 年間配当=42.0, 利回り=4.06%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (1433.T): HTTP Error 401: Unauthorized
+  chart配当データ (1433.T): 年間配当=40.0, 利回り=3.42%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (1434.T): HTTP Error 401: Unauthorized
+  chart配当データ (1434.T): 年間配当=40.0, 利回り=2.06%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (1435.T): HTTP Error 401: Unauthorized
+  chart配当データ (1435.T): 年間配当=2.0, 利回り=1.08%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1438.T): HTTP Error 401: Unauthorized
+  chart配当データ (1438.T): 年間配当=36.0, 利回り=1.95%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1443.T): HTTP Error 401: Unauthorized
+  chart配当データ (1443.T): 年間配当=1.1, 利回り=0.34%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1446.T): HTTP Error 401: Unauthorized
+  chart配当データ (1446.T): 年間配当=8.0, 利回り=1.36%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1450.T): HTTP Error 401: Unauthorized
+  chart配当データ (1450.T): 年間配当=55.0, 利回り=3.55%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1491.T): HTTP Error 401: Unauthorized
+  chart配当データ (1491.T): 年間配当=20.0, 利回り=1.74%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1514.T): HTTP Error 401: Unauthorized
+  chart配当データ (1514.T): 年間配当=30.0, 利回り=2.64%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1515.T): HTTP Error 401: Unauthorized
+  chart配当データ (1515.T): 年間配当=50.2, 利回り=1.68%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1518.T): HTTP Error 401: Unauthorized
+  chart配当データ (1518.T): 年間配当=39.0, 利回り=2.77%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1605.T): HTTP Error 401: Unauthorized
+  chart配当データ (1605.T): 年間配当=100.0, 利回り=2.28%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1662.T): HTTP Error 401: Unauthorized
+  chart配当データ (1662.T): 年間配当=50.0, 利回り=1.94%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1663.T): HTTP Error 401: Unauthorized
+  chart配当データ (1663.T): 年間配当=54.0, 利回り=0.98%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1711.T): HTTP Error 401: Unauthorized
+  chart配当データ (1711.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (1716.T): HTTP Error 401: Unauthorized
+  chart配当データ (1716.T): 年間配当=40.0, 利回り=2.61%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1717.T): HTTP Error 401: Unauthorized
+  chart配当データ (1717.T): 年間配当=42.5, 利回り=4.04%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1718.T): HTTP Error 401: Unauthorized
+  chart配当データ (1718.T): 年間配当=350.0, 利回り=4.41%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1719.T): HTTP Error 401: Unauthorized
+  chart配当データ (1719.T): 年間配当=80.0, 利回り=4.15%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1720.T): HTTP Error 401: Unauthorized
+  chart配当データ (1720.T): 年間配当=38.0, 利回り=2.6%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1721.T): HTTP Error 401: Unauthorized
+  chart配当データ (1721.T): 年間配当=120.0, 利回り=2.24%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1723.T): HTTP Error 401: Unauthorized
+  chart配当データ (1723.T): 年間配当=142.0, 利回り=1.37%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1724.T): HTTP Error 401: Unauthorized
+  chart配当データ (1724.T): 年間配当=28.0, 利回り=3.88%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1726.T): HTTP Error 401: Unauthorized
+  chart配当データ (1726.T): 年間配当=15.5, 利回り=2.93%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1736.T): HTTP Error 401: Unauthorized
+  chart配当データ (1736.T): 年間配当=85.666664, 利回り=3.49%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1758.T): HTTP Error 401: Unauthorized
+  chart配当データ (1758.T): 年間配当=60.0, 利回り=2.19%, 配当落ち日=2027-01（予想）
+  v10 API失敗 (1762.T): HTTP Error 401: Unauthorized
+  chart配当データ (1762.T): 年間配当=86.0, 利回り=2.35%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1764.T): HTTP Error 401: Unauthorized
+  chart配当データ (1764.T): 年間配当=117.0, 利回り=3.71%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1766.T): HTTP Error 401: Unauthorized
+  chart配当データ (1766.T): 年間配当=330.0, 利回り=2.3%, 配当落ち日=2026-04（予想）
+  v10 API失敗 (1768.T): HTTP Error 401: Unauthorized
+  chart配当データ (1768.T): 年間配当=30.0, 利回り=1.94%, 配当落ち日=2027-03（予想）
+  [50/312] 1768: ¥1547.0 (47秒経過)
+  v10 API失敗 (1770.T): HTTP Error 401: Unauthorized
+  chart配当データ (1770.T): 年間配当=65.0, 利回り=3.75%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1776.T): HTTP Error 401: Unauthorized
+  chart配当データ (1776.T): 年間配当=40.0, 利回り=2.0%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1780.T): HTTP Error 401: Unauthorized
+  chart配当データ (1780.T): 年間配当=29.5, 利回り=1.82%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1783.T): HTTP Error 401: Unauthorized
+  chart配当データ (1783.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (1786.T): HTTP Error 401: Unauthorized
+  chart配当データ (1786.T): 年間配当=14.5, 利回り=3.71%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1787.T): HTTP Error 401: Unauthorized
+  chart配当データ (1787.T): 年間配当=300.0, 利回り=4.64%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1788.T): HTTP Error 401: Unauthorized
+  chart配当データ (1788.T): 年間配当=100.0, 利回り=1.89%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1793.T): HTTP Error 401: Unauthorized
+  chart配当データ (1793.T): 年間配当=41.0, 利回り=2.23%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1795.T): HTTP Error 401: Unauthorized
+  chart配当データ (1795.T): 年間配当=160.0, 利回り=3.49%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1798.T): HTTP Error 401: Unauthorized
+  chart配当データ (1798.T): 年間配当=100.0, 利回り=1.46%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1799.T): HTTP Error 401: Unauthorized
+  chart配当データ (1799.T): 年間配当=130.0, 利回り=3.19%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1801.T): HTTP Error 401: Unauthorized
+  chart配当データ (1801.T): 年間配当=270.0, 利回り=1.56%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1802.T): HTTP Error 401: Unauthorized
+  chart配当データ (1802.T): 年間配当=82.0, 利回り=2.12%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1803.T): HTTP Error 401: Unauthorized
+  chart配当データ (1803.T): 年間配当=42.5, 利回り=1.36%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1807.T): HTTP Error 401: Unauthorized
+  chart配当データ (1807.T): 年間配当=80.0, 利回り=3.94%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1808.T): HTTP Error 401: Unauthorized
+  chart配当データ (1808.T): 年間配当=90.0, 利回り=2.97%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1810.T): HTTP Error 401: Unauthorized
+  chart配当データ (1810.T): 年間配当=59.0, 利回り=3.41%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1811.T): HTTP Error 401: Unauthorized
+  chart配当データ (1811.T): 年間配当=120.0, 利回り=1.42%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1812.T): HTTP Error 401: Unauthorized
+  chart配当データ (1812.T): 年間配当=115.0, 利回り=1.86%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1813.T): HTTP Error 401: Unauthorized
+  chart配当データ (1813.T): 年間配当=60.0, 利回り=1.8%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1814.T): HTTP Error 401: Unauthorized
+  chart配当データ (1814.T): 年間配当=141.5, 利回り=3.66%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1815.T): HTTP Error 401: Unauthorized
+  chart配当データ (1815.T): 年間配当=122.0, 利回り=2.75%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1820.T): HTTP Error 401: Unauthorized
+  chart配当データ (1820.T): 年間配当=220.0, 利回り=3.64%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1822.T): HTTP Error 401: Unauthorized
+  chart配当データ (1822.T): 年間配当=29.4, 利回り=3.53%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1826.T): HTTP Error 401: Unauthorized
+  chart配当データ (1826.T): 年間配当=60.0, 利回り=4.91%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1827.T): HTTP Error 401: Unauthorized
+  chart配当データ (1827.T): 年間配当=22.0, 利回り=1.49%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1828.T): HTTP Error 401: Unauthorized
+  chart配当データ (1828.T): 年間配当=87.0, 利回り=3.16%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1833.T): HTTP Error 401: Unauthorized
+  chart配当データ (1833.T): 年間配当=213.0, 利回り=3.24%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1835.T): HTTP Error 401: Unauthorized
+  chart配当データ (1835.T): 年間配当=155.0, 利回り=2.91%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1840.T): HTTP Error 401: Unauthorized
+  chart配当データ (1840.T): 年間配当=10.0, 利回り=4.12%, 配当落ち日=2026-10（予想）
+  v10 API失敗 (1841.T): HTTP Error 401: Unauthorized
+  chart配当データ (1841.T): 年間配当=30.0, 利回り=1.89%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1844.T): HTTP Error 401: Unauthorized
+  chart配当データ (1844.T): 年間配当=11.5, 利回り=1.83%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (1847.T): HTTP Error 401: Unauthorized
+  chart配当データ (1847.T): 年間配当=155.0, 利回り=2.59%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1848.T): HTTP Error 401: Unauthorized
+  chart配当データ (1848.T): 年間配当=13.0, 利回り=2.22%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1850.T): HTTP Error 401: Unauthorized
+  chart配当データ (1850.T): 年間配当=6.0, 利回り=1.17%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1852.T): HTTP Error 401: Unauthorized
+  chart配当データ (1852.T): 年間配当=42.0, 利回り=4.11%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1853.T): HTTP Error 401: Unauthorized
+  chart配当データ (1853.T): 年間配当=14.0, 利回り=4.17%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1860.T): HTTP Error 401: Unauthorized
+  chart配当データ (1860.T): 年間配当=35.5, 利回り=2.35%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1861.T): HTTP Error 401: Unauthorized
+  chart配当データ (1861.T): 年間配当=52.5, 利回り=3.17%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1866.T): HTTP Error 401: Unauthorized
+  chart配当データ (1866.T): 年間配当=27.5, 利回り=2.01%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1867.T): HTTP Error 401: Unauthorized
+  chart配当データ (1867.T): 年間配当=90.0, 利回り=3.0%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1870.T): HTTP Error 401: Unauthorized
+  chart配当データ (1870.T): 年間配当=85.0, 利回り=3.93%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1871.T): HTTP Error 401: Unauthorized
+  chart配当データ (1871.T): 年間配当=90.0, 利回り=3.14%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1873.T): HTTP Error 401: Unauthorized
+  chart配当データ (1873.T): 年間配当=11.0, 利回り=3.57%, 配当落ち日=2026-04（予想）
+  v10 API失敗 (1878.T): HTTP Error 401: Unauthorized
+  chart配当データ (1878.T): 年間配当=153.8, 利回り=4.26%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1879.T): HTTP Error 401: Unauthorized
+  chart配当データ (1879.T): 年間配当=60.0, 利回り=3.01%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1882.T): HTTP Error 401: Unauthorized
+  chart配当データ (1882.T): 年間配当=135.0, 利回り=7.56%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1885.T): HTTP Error 401: Unauthorized
+  chart配当データ (1885.T): 年間配当=114.0, 利回り=3.42%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1887.T): HTTP Error 401: Unauthorized
+  chart配当データ (1887.T): 年間配当=22.0, 利回り=3.55%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (1888.T): HTTP Error 401: Unauthorized
+  chart配当データ (1888.T): 年間配当=126.0, 利回り=2.91%, 配当落ち日=2027-03（予想）
+  [100/312] 1888: ¥4335.0 (86秒経過)
+  v10 API失敗 (1893.T): HTTP Error 401: Unauthorized
+  chart配当データ (1893.T): 年間配当=29.0, 利回り=1.6%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1897.T): HTTP Error 401: Unauthorized
+  chart配当データ (1897.T): 年間配当=50.0, 利回り=1.52%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (1898.T): HTTP Error 401: Unauthorized
+  chart配当データ (1898.T): 年間配当=80.0, 利回り=5.1%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1899.T): HTTP Error 401: Unauthorized
+  chart配当データ (1899.T): 年間配当=260.0, 利回り=3.43%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (1904.T): HTTP Error 401: Unauthorized
+  chart配当データ (1904.T): 年間配当=153.0, 利回り=2.98%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1905.T): HTTP Error 401: Unauthorized
+  chart配当データ (1905.T): 年間配当=55.0, 利回り=3.76%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1909.T): HTTP Error 401: Unauthorized
+  chart配当データ (1909.T): 年間配当=90.0, 利回り=0.73%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1911.T): HTTP Error 401: Unauthorized
+  chart配当データ (1911.T): 年間配当=53.0, 利回り=3.62%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1914.T): HTTP Error 401: Unauthorized
+  chart配当データ (1914.T): 年間配当=24.0, 利回り=3.38%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1921.T): HTTP Error 401: Unauthorized
+  chart配当データ (1921.T): 年間配当=24.0, 利回り=1.18%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1925.T): HTTP Error 401: Unauthorized
+  chart配当データ (1925.T): 年間配当=155.0, 利回り=2.98%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1926.T): HTTP Error 401: Unauthorized
+  chart配当データ (1926.T): 年間配当=110.0, 利回り=2.71%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1928.T): HTTP Error 401: Unauthorized
+  chart配当データ (1928.T): 年間配当=144.0, 利回り=4.06%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (1929.T): HTTP Error 401: Unauthorized
+  chart配当データ (1929.T): 年間配当=48.0, 利回り=3.8%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1930.T): HTTP Error 401: Unauthorized
+  chart配当データ (1930.T): 年間配当=46.0, 利回り=2.91%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1934.T): HTTP Error 401: Unauthorized
+  chart配当データ (1934.T): 年間配当=81.0, 利回り=3.05%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1938.T): HTTP Error 401: Unauthorized
+  chart配当データ (1938.T): 年間配当=77.0, 利回り=2.91%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1939.T): HTTP Error 401: Unauthorized
+  chart配当データ (1939.T): 年間配当=67.0, 利回り=3.42%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1941.T): HTTP Error 401: Unauthorized
+  chart配当データ (1941.T): 年間配当=125.0, 利回り=2.71%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1942.T): HTTP Error 401: Unauthorized
+  chart配当データ (1942.T): 年間配当=101.0, 利回り=1.65%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1944.T): HTTP Error 401: Unauthorized
+  chart配当データ (1944.T): 年間配当=110.0, 利回り=1.46%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1945.T): HTTP Error 401: Unauthorized
+  chart配当データ (1945.T): 年間配当=54.0, 利回り=3.03%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1946.T): HTTP Error 401: Unauthorized
+  chart配当データ (1946.T): 年間配当=58.0, 利回り=2.86%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1948.T): HTTP Error 401: Unauthorized
+  chart配当データ (1948.T): 年間配当=96.0, 利回り=1.46%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1949.T): HTTP Error 401: Unauthorized
+  chart配当データ (1949.T): 年間配当=171997904.0, 利回り=1.69%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1950.T): HTTP Error 401: Unauthorized
+  chart配当データ (1950.T): 年間配当=90.0, 利回り=1.83%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1951.T): HTTP Error 401: Unauthorized
+  chart配当データ (1951.T): 年間配当=65.0, 利回り=2.4%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1952.T): HTTP Error 401: Unauthorized
+  chart配当データ (1952.T): 年間配当=90.0, 利回り=2.41%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1959.T): HTTP Error 401: Unauthorized
+  chart配当データ (1959.T): 年間配当=165.0, 利回り=1.72%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1960.T): HTTP Error 401: Unauthorized
+  chart配当データ (1960.T): 年間配当=40.0, 利回り=2.76%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1961.T): HTTP Error 401: Unauthorized
+  chart配当データ (1961.T): 年間配当=192.5, 利回り=2.87%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1963.T): HTTP Error 401: Unauthorized
+  chart配当データ (1963.T): 年間配当=40.0, 利回り=1.91%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1964.T): HTTP Error 401: Unauthorized
+  chart配当データ (1964.T): 年間配当=150.0, 利回り=3.31%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1965.T): HTTP Error 401: Unauthorized
+  chart配当データ (1965.T): 年間配当=100.0, 利回り=1.51%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1966.T): HTTP Error 401: Unauthorized
+  chart配当データ (1966.T): 年間配当=70.0, 利回り=3.88%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1967.T): HTTP Error 401: Unauthorized
+  chart配当データ (1967.T): 年間配当=45.0, 利回り=1.92%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1968.T): HTTP Error 401: Unauthorized
+  chart配当データ (1968.T): 年間配当=58.333332, 利回り=2.01%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1969.T): HTTP Error 401: Unauthorized
+  chart配当データ (1969.T): 年間配当=94.0, 利回り=1.98%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1972.T): HTTP Error 401: Unauthorized
+  chart配当データ (1972.T): 年間配当=110.0, 利回り=7.99%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1975.T): HTTP Error 401: Unauthorized
+  chart配当データ (1975.T): 年間配当=145.0, 利回り=3.87%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1976.T): HTTP Error 401: Unauthorized
+  chart配当データ (1976.T): 年間配当=59.0, 利回り=3.21%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1979.T): HTTP Error 401: Unauthorized
+  chart配当データ (1979.T): 年間配当=82.0, 利回り=2.36%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1980.T): HTTP Error 401: Unauthorized
+  chart配当データ (1980.T): 年間配当=64.333332, 利回り=2.13%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1981.T): HTTP Error 401: Unauthorized
+  chart配当データ (1981.T): 年間配当=42.0, 利回り=2.69%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1982.T): HTTP Error 401: Unauthorized
+  chart配当データ (1982.T): 年間配当=100.0, 利回り=1.71%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (1992.T): HTTP Error 401: Unauthorized
+  chart配当データ (1992.T): 年間配当=70.0, 利回り=2.46%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (1994.T): HTTP Error 401: Unauthorized
+  chart配当データ (1994.T): 年間配当=20.0, 利回り=3.55%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (1997.T): HTTP Error 401: Unauthorized
+  chart配当データ (1997.T): 年間配当=110.0, 利回り=2.67%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2001.T): HTTP Error 401: Unauthorized
+  chart配当データ (2001.T): 年間配当=66.0, 利回り=2.43%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2002.T): HTTP Error 401: Unauthorized
+  chart配当データ (2002.T): 年間配当=60.0, 利回り=2.94%, 配当落ち日=2026-09（予想）
+  [150/312] 2002: ¥2039.5 (123秒経過)
+  v10 API失敗 (2003.T): HTTP Error 401: Unauthorized
+  chart配当データ (2003.T): 年間配当=280.0, 利回り=3.92%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2004.T): HTTP Error 401: Unauthorized
+  chart配当データ (2004.T): 年間配当=110.0, 利回り=3.38%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2009.T): HTTP Error 401: Unauthorized
+  chart配当データ (2009.T): 年間配当=49.0, 利回り=4.53%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2053.T): HTTP Error 401: Unauthorized
+  chart配当データ (2053.T): 年間配当=57.0, 利回り=3.19%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2055.T): HTTP Error 401: Unauthorized
+  chart配当データ (2055.T): 年間配当=6.0, 利回り=1.58%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2060.T): HTTP Error 401: Unauthorized
+  chart配当データ (2060.T): 年間配当=42.0, 利回り=3.49%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2108.T): HTTP Error 401: Unauthorized
+  chart配当データ (2108.T): 年間配当=80.0, 利回り=1.94%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2109.T): HTTP Error 401: Unauthorized
+  chart配当データ (2109.T): 年間配当=130.0, 利回り=3.85%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2112.T): HTTP Error 401: Unauthorized
+  chart配当データ (2112.T): 年間配当=15.0, 利回り=2.72%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2114.T): HTTP Error 401: Unauthorized
+  chart配当データ (2114.T): 年間配当=17.0, 利回り=2.6%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2117.T): HTTP Error 401: Unauthorized
+  chart配当データ (2117.T): 年間配当=110.0, 利回り=3.86%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2120.T): HTTP Error 401: Unauthorized
+  chart配当データ (2120.T): 年間配当=10.41, 利回り=5.15%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2121.T): HTTP Error 401: Unauthorized
+  chart配当データ (2121.T): 年間配当=125.0, 利回り=4.72%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2122.T): HTTP Error 401: Unauthorized
+  chart配当データ (2122.T): 年間配当=30.0, 利回り=2.27%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2124.T): HTTP Error 401: Unauthorized
+  chart配当データ (2124.T): 年間配当=36.0, 利回り=4.15%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2127.T): HTTP Error 401: Unauthorized
+  chart配当データ (2127.T): 年間配当=29.0, 利回り=4.54%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2130.T): HTTP Error 401: Unauthorized
+  chart配当データ (2130.T): 年間配当=32.0, 利回り=2.99%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2134.T): HTTP Error 401: Unauthorized
+  chart配当データ (2134.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2136.T): HTTP Error 401: Unauthorized
+  chart配当データ (2136.T): 年間配当=54.0, 利回り=3.47%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2138.T): HTTP Error 401: Unauthorized
+  chart配当データ (2138.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2139.T): HTTP Error 401: Unauthorized
+  chart配当データ (2139.T): 年間配当=12.0, 利回り=2.29%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2146.T): HTTP Error 401: Unauthorized
+  chart配当データ (2146.T): 年間配当=13.183999, 利回り=6.76%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2148.T): HTTP Error 401: Unauthorized
+  chart配当データ (2148.T): 年間配当=100.0, 利回り=5.24%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2152.T): HTTP Error 401: Unauthorized
+  chart配当データ (2152.T): 年間配当=24.0, 利回り=1.64%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2153.T): HTTP Error 401: Unauthorized
+  chart配当データ (2153.T): 年間配当=67.0, 利回り=3.76%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (2154.T): HTTP Error 401: Unauthorized
+  chart配当データ (2154.T): 年間配当=80.0, 利回り=4.55%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2156.T): HTTP Error 401: Unauthorized
+  chart配当データ (2156.T): 年間配当=6.0, 利回り=1.94%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2157.T): HTTP Error 401: Unauthorized
+  chart配当データ (2157.T): 年間配当=25.0, 利回り=2.33%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2162.T): HTTP Error 401: Unauthorized
+  chart配当データ (2162.T): 年間配当=14.0, 利回り=3.11%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2163.T): HTTP Error 401: Unauthorized
+  chart配当データ (2163.T): 年間配当=84.0, 利回り=4.31%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (2168.T): HTTP Error 401: Unauthorized
+  chart配当データ (2168.T): 年間配当=75.0, 利回り=3.88%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (2169.T): HTTP Error 401: Unauthorized
+  chart配当データ (2169.T): 年間配当=74.0, 利回り=4.04%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2170.T): HTTP Error 401: Unauthorized
+  chart配当データ (2170.T): 年間配当=15.999999999999998, 利回り=2.88%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2175.T): HTTP Error 401: Unauthorized
+  chart配当データ (2175.T): 年間配当=28.5, 利回り=1.72%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2179.T): HTTP Error 401: Unauthorized
+  chart配当データ (2179.T): 年間配当=20.5, 利回り=2.52%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2180.T): HTTP Error 401: Unauthorized
+  chart配当データ (2180.T): 年間配当=26.0, 利回り=2.69%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2181.T): HTTP Error 401: Unauthorized
+  chart配当データ (2181.T): 年間配当=10.5, 利回り=4.48%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2183.T): HTTP Error 401: Unauthorized
+  chart配当データ (2183.T): 年間配当=16.0, 利回り=5.16%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2185.T): HTTP Error 401: Unauthorized
+  chart配当データ (2185.T): 年間配当=52.0, 利回り=2.77%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2186.T): HTTP Error 401: Unauthorized
+  chart配当データ (2186.T): 年間配当=33.0, 利回り=3.65%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2193.T): HTTP Error 401: Unauthorized
+  chart配当データ (2193.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2196.T): HTTP Error 401: Unauthorized
+  chart配当データ (2196.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2198.T): HTTP Error 401: Unauthorized
+  chart配当データ (2198.T): 年間配当=24.0, 利回り=2.97%, 配当落ち日=2026-10（予想）
+  v10 API失敗 (2201.T): HTTP Error 401: Unauthorized
+  chart配当データ (2201.T): 年間配当=92.5, 利回り=3.49%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2204.T): HTTP Error 401: Unauthorized
+  chart配当データ (2204.T): 年間配当=70.0, 利回り=2.11%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2206.T): HTTP Error 401: Unauthorized
+  chart配当データ (2206.T): 年間配当=95.0, 利回り=1.54%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2207.T): HTTP Error 401: Unauthorized
+  chart配当データ (2207.T): 年間配当=38.0, 利回り=1.32%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2209.T): HTTP Error 401: Unauthorized
+  chart配当データ (2209.T): 年間配当=36.0, 利回り=1.48%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2211.T): HTTP Error 401: Unauthorized
+  chart配当データ (2211.T): 年間配当=30.0, 利回り=1.25%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2212.T): HTTP Error 401: Unauthorized
+  chart配当データ (2212.T): 年間配当=60.0, 利回り=1.89%, 配当落ち日=2026-12（予想）
+  [200/312] 2212: ¥3171.0 (153秒経過)
+  v10 API失敗 (2215.T): HTTP Error 401: Unauthorized
+  chart配当データ (2215.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2216.T): HTTP Error 401: Unauthorized
+  chart配当データ (2216.T): 年間配当=32.0, 利回り=2.66%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2217.T): HTTP Error 401: Unauthorized
+  chart配当データ (2217.T): 年間配当=14.0, 利回り=0.93%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (2220.T): HTTP Error 401: Unauthorized
+  chart配当データ (2220.T): 年間配当=57.0, 利回り=1.33%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2221.T): HTTP Error 401: Unauthorized
+  chart配当データ (2221.T): 年間配当=30.0, 利回り=0.91%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2222.T): HTTP Error 401: Unauthorized
+  chart配当データ (2222.T): 年間配当=32.0, 利回り=1.66%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2224.T): HTTP Error 401: Unauthorized
+  chart配当データ (2224.T): 年間配当=7.0, 利回り=0.18%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2226.T): HTTP Error 401: Unauthorized
+  chart配当データ (2226.T): 年間配当=55.0, 利回り=1.18%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2229.T): HTTP Error 401: Unauthorized
+  chart配当データ (2229.T): 年間配当=58.0, 利回り=1.89%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2264.T): HTTP Error 401: Unauthorized
+  chart配当データ (2264.T): 年間配当=90.0, 利回り=1.93%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2266.T): HTTP Error 401: Unauthorized
+  chart配当データ (2266.T): 年間配当=20.0, 利回り=1.76%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2267.T): HTTP Error 401: Unauthorized
+  chart配当データ (2267.T): 年間配当=65.0, 利回り=2.54%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2268.T): HTTP Error 401: Unauthorized
+  chart配当データ (2268.T): 年間配当=80.0, 利回り=1.99%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2269.T): HTTP Error 401: Unauthorized
+  chart配当データ (2269.T): 年間配当=102.5, 利回り=2.61%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2270.T): HTTP Error 401: Unauthorized
+  chart配当データ (2270.T): 年間配当=100.0, 利回り=3.09%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2281.T): HTTP Error 401: Unauthorized
+  chart配当データ (2281.T): 年間配当=80.0, 利回り=2.95%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2282.T): HTTP Error 401: Unauthorized
+  chart配当データ (2282.T): 年間配当=135.0, 利回り=2.06%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2286.T): HTTP Error 401: Unauthorized
+  chart配当データ (2286.T): 年間配当=25.0, 利回り=2.82%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2288.T): HTTP Error 401: Unauthorized
+  chart配当データ (2288.T): 年間配当=50.0, 利回り=2.24%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2291.T): HTTP Error 401: Unauthorized
+  chart配当データ (2291.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2292.T): HTTP Error 401: Unauthorized
+  chart配当データ (2292.T): 年間配当=104.0, 利回り=3.58%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2293.T): HTTP Error 401: Unauthorized
+  chart配当データ (2293.T): 年間配当=0, 利回り=0%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2294.T): HTTP Error 401: Unauthorized
+  chart配当データ (2294.T): 年間配当=85.0, 利回り=3.0%, 配当落ち日=2026-04（予想）
+  v10 API失敗 (2296.T): HTTP Error 401: Unauthorized
+  chart配当データ (2296.T): 年間配当=320.0, 利回り=5.4%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2300.T): HTTP Error 401: Unauthorized
+  chart配当データ (2300.T): 年間配当=11.0, 利回り=2.19%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2301.T): HTTP Error 401: Unauthorized
+  chart配当データ (2301.T): 年間配当=67.0, 利回り=3.97%, 配当落ち日=2026-04（予想）
+  v10 API失敗 (2303.T): HTTP Error 401: Unauthorized
+  chart配当データ (2303.T): 年間配当=24.0, 利回り=0.9%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (2304.T): HTTP Error 401: Unauthorized
+  chart配当データ (2304.T): 年間配当=45.0, 利回り=4.59%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2305.T): HTTP Error 401: Unauthorized
+  chart配当データ (2305.T): 年間配当=50.0, 利回り=2.53%, 配当落ち日=2027-02（予想）
+  v10 API失敗 (2307.T): HTTP Error 401: Unauthorized
+  chart配当データ (2307.T): 年間配当=33.0, 利回り=3.34%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2311.T): HTTP Error 401: Unauthorized
+  chart配当データ (2311.T): 年間配当=35.0, 利回り=4.37%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2315.T): HTTP Error 401: Unauthorized
+  chart配当データ (2315.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2317.T): HTTP Error 401: Unauthorized
+  chart配当データ (2317.T): 年間配当=12.0, 利回り=2.86%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2323.T): HTTP Error 401: Unauthorized
+  chart配当データ (2323.T): 年間配当=1.0, 利回り=0.28%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2325.T): HTTP Error 401: Unauthorized
+  chart配当データ (2325.T): 年間配当=105.0, 利回り=2.31%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2326.T): HTTP Error 401: Unauthorized
+  chart配当データ (2326.T): 年間配当=90.0, 利回り=1.69%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2327.T): HTTP Error 401: Unauthorized
+  chart配当データ (2327.T): 年間配当=77.5, 利回り=2.11%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2329.T): HTTP Error 401: Unauthorized
+  chart配当データ (2329.T): 年間配当=27.479999999999997, 利回り=4.23%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2330.T): HTTP Error 401: Unauthorized
+  chart配当データ (2330.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2331.T): HTTP Error 401: Unauthorized
+  chart配当データ (2331.T): 年間配当=28.0, 利回り=2.28%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2332.T): HTTP Error 401: Unauthorized
+  chart配当データ (2332.T): 年間配当=58.0, 利回り=3.69%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2335.T): HTTP Error 401: Unauthorized
+  chart配当データ (2335.T): 年間配当=40.0, 利回り=3.84%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2337.T): HTTP Error 401: Unauthorized
+  chart配当データ (2337.T): 年間配当=11.5, 利回り=2.35%, 配当落ち日=2027-02（予想）
+  v10 API失敗 (2338.T): HTTP Error 401: Unauthorized
+  chart配当データ (2338.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2340.T): HTTP Error 401: Unauthorized
+  chart配当データ (2340.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2341.T): HTTP Error 401: Unauthorized
+  chart配当データ (2341.T): 年間配当=5.0, 利回り=2.69%, 配当落ち日=2027-02（予想）
+  v10 API失敗 (2342.T): HTTP Error 401: Unauthorized
+  chart配当データ (2342.T): 年間配当=0, 利回り=0%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2344.T): HTTP Error 401: Unauthorized
+  chart配当データ (2344.T): 年間配当=36.0, 利回り=2.42%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2345.T): HTTP Error 401: Unauthorized
+  chart配当データ (2345.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2349.T): HTTP Error 401: Unauthorized
+  chart配当データ (2349.T): 年間配当=28.0, 利回り=1.13%, 配当落ち日=2027-03（予想）
+  [250/312] 2349: ¥2480.0 (187秒経過)
+  v10 API失敗 (2351.T): HTTP Error 401: Unauthorized
+  chart配当データ (2351.T): 年間配当=3.0, 利回り=0.82%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2353.T): HTTP Error 401: Unauthorized
+  chart配当データ (2353.T): 年間配当=8.0, 利回り=3.0%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (2354.T): HTTP Error 401: Unauthorized
+  chart配当データ (2354.T): 年間配当=20.0, 利回り=2.57%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2359.T): HTTP Error 401: Unauthorized
+  chart配当データ (2359.T): 年間配当=60.0, 利回り=2.75%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2371.T): HTTP Error 401: Unauthorized
+  chart配当データ (2371.T): 年間配当=80.0, 利回り=4.22%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2373.T): HTTP Error 401: Unauthorized
+  chart配当データ (2373.T): 年間配当=17.0, 利回り=3.94%, 配当落ち日=2026-04（予想）
+  v10 API失敗 (2374.T): HTTP Error 401: Unauthorized
+  chart配当データ (2374.T): 年間配当=30.0, 利回り=0.0%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2375.T): HTTP Error 401: Unauthorized
+  chart配当データ (2375.T): 年間配当=2.0, 利回り=0.91%, 配当落ち日=2026-10（予想）
+  v10 API失敗 (2376.T): HTTP Error 401: Unauthorized
+  chart配当データ (2376.T): 年間配当=15.0, 利回り=2.07%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2378.T): HTTP Error 401: Unauthorized
+  chart配当データ (2378.T): 年間配当=13.0, 利回り=1.2%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2379.T): HTTP Error 401: Unauthorized
+  chart配当データ (2379.T): 年間配当=95.0, 利回り=4.75%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2384.T): HTTP Error 401: Unauthorized
+  chart配当データ (2384.T): 年間配当=90.0, 利回り=2.28%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2389.T): HTTP Error 401: Unauthorized
+  chart配当データ (2389.T): 年間配当=23.0, 利回り=1.15%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2391.T): HTTP Error 401: Unauthorized
+  chart配当データ (2391.T): 年間配当=44.0, 利回り=3.52%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (2393.T): HTTP Error 401: Unauthorized
+  chart配当データ (2393.T): 年間配当=70.0, 利回り=2.93%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2395.T): HTTP Error 401: Unauthorized
+  chart配当データ (2395.T): 年間配当=50.0, 利回り=3.22%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2404.T): HTTP Error 401: Unauthorized
+  chart配当データ (2404.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2408.T): HTTP Error 401: Unauthorized
+  chart配当データ (2408.T): 年間配当=36.0, 利回り=5.08%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2410.T): HTTP Error 401: Unauthorized
+  chart配当データ (2410.T): 年間配当=100.0, 利回り=4.07%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2411.T): HTTP Error 401: Unauthorized
+  chart配当データ (2411.T): 年間配当=22.0, 利回り=4.63%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2413.T): HTTP Error 401: Unauthorized
+  chart配当データ (2413.T): 年間配当=21.0, 利回り=1.26%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2415.T): HTTP Error 401: Unauthorized
+  chart配当データ (2415.T): 年間配当=75.5, 利回り=4.22%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2418.T): HTTP Error 401: Unauthorized
+  chart配当データ (2418.T): 年間配当=12.0, 利回り=1.83%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2424.T): HTTP Error 401: Unauthorized
+  chart配当データ (2424.T): 年間配当=8.0, 利回り=1.32%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (2425.T): HTTP Error 401: Unauthorized
+  chart配当データ (2425.T): 年間配当=20.0, 利回り=2.53%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2428.T): HTTP Error 401: Unauthorized
+  chart配当データ (2428.T): 年間配当=41.0, 利回り=6.26%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2429.T): HTTP Error 401: Unauthorized
+  chart配当データ (2429.T): 年間配当=129.5, 利回り=4.84%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2432.T): HTTP Error 401: Unauthorized
+  chart配当データ (2432.T): 年間配当=65.0, 利回り=2.56%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2433.T): HTTP Error 401: Unauthorized
+  chart配当データ (2433.T): 年間配当=32.0, 利回り=3.09%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2435.T): HTTP Error 401: Unauthorized
+  chart配当データ (2435.T): 年間配当=10.0, 利回り=4.35%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2436.T): HTTP Error 401: Unauthorized
+  chart配当データ (2436.T): 年間配当=14.0, 利回り=1.39%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2437.T): HTTP Error 401: Unauthorized
+  chart配当データ (2437.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2440.T): HTTP Error 401: Unauthorized
+  chart配当データ (2440.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2445.T): HTTP Error 401: Unauthorized
+  chart配当データ (2445.T): 年間配当=16.0, 利回り=3.91%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2449.T): HTTP Error 401: Unauthorized
+  chart配当データ (2449.T): 年間配当=41.0, 利回り=3.86%, 配当落ち日=2026-08（予想）
+  v10 API失敗 (2454.T): HTTP Error 401: Unauthorized
+  chart配当データ (2454.T): 年間配当=3.0, 利回り=0.75%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2459.T): HTTP Error 401: Unauthorized
+  chart配当データ (2459.T): 年間配当=0, 利回り=0%, 配当落ち日=
+  v10 API失敗 (2461.T): HTTP Error 401: Unauthorized
+  chart配当データ (2461.T): 年間配当=27.0, 利回り=5.96%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2462.T): HTTP Error 401: Unauthorized
+  chart配当データ (2462.T): 年間配当=61.0, 利回り=3.92%, 配当落ち日=2026-05（予想）
+  v10 API失敗 (2464.T): HTTP Error 401: Unauthorized
+  chart配当データ (2464.T): 年間配当=11.0, 利回り=3.15%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2469.T): HTTP Error 401: Unauthorized
+  chart配当データ (2469.T): 年間配当=70.0, 利回り=1.65%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2471.T): HTTP Error 401: Unauthorized
+  chart配当データ (2471.T): 年間配当=10.0, 利回り=4.07%, 配当落ち日=2026-11（予想）
+  v10 API失敗 (2475.T): HTTP Error 401: Unauthorized
+  chart配当データ (2475.T): 年間配当=63.5, 利回り=4.12%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2491.T): HTTP Error 401: Unauthorized
+  chart配当データ (2491.T): 年間配当=49.0, 利回り=11.29%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2492.T): HTTP Error 401: Unauthorized
+  chart配当データ (2492.T): 年間配当=5.4399999999999995, 利回り=1.36%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2501.T): HTTP Error 401: Unauthorized
+  chart配当データ (2501.T): 年間配当=18.0, 利回り=1.12%, 配当落ち日=2026-12（予想）
+  v10 API失敗 (2502.T): HTTP Error 401: Unauthorized
+  chart配当データ (2502.T): 年間配当=52.0, 利回り=3.25%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2503.T): HTTP Error 401: Unauthorized
+  chart配当データ (2503.T): 年間配当=74.0, 利回り=2.84%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2531.T): HTTP Error 401: Unauthorized
+  chart配当データ (2531.T): 年間配当=31.0, 利回り=2.21%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2533.T): HTTP Error 401: Unauthorized
+  chart配当データ (2533.T): 年間配当=11.0, 利回り=2.58%, 配当落ち日=2026-12（予想）
+  [300/312] 2533: ¥426.0 (217秒経過)
+  v10 API失敗 (2540.T): HTTP Error 401: Unauthorized
+  chart配当データ (2540.T): 年間配当=45.0, 利回り=1.11%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2579.T): HTTP Error 401: Unauthorized
+  chart配当データ (2579.T): 年間配当=60.0, 利回り=1.48%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2585.T): HTTP Error 401: Unauthorized
+  chart配当データ (2585.T): 年間配当=12.0, 利回り=1.24%, 配当落ち日=2027-03（予想）
+  v10 API失敗 (2587.T): HTTP Error 401: Unauthorized
+  chart配当データ (2587.T): 年間配当=120.0, 利回り=2.61%, 配当落ち日=2026-06（予想）
+  v10 API失敗 (2590.T): HTTP Error 401: Unauthorized
+  chart配当データ (2590.T): 年間配当=30.0, 利回り=1.11%, 配当落ち日=2026-07（予想）
+  v10 API失敗 (2593.T): HTTP Error 401: Unauthorized
+  chart配当データ (2593.T): 年間配当=46.0, 利回り=1.62%, 配当落ち日=2026-04（予想）
+  v10 API失敗 (25935.T): HTTP Error 401: Unauthorized
+  chart配当データ (25935.T): 年間配当=58.0, 利回り=3.19%, 配当落ち日=2026-04（予想）
+  v10 API失敗 (2594.T): HTTP Error 401: Unauthorized
+  chart配当データ (2594.T): 年間配当=12.0, 利回り=0.6%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2602.T): HTTP Error 401: Unauthorized
+  chart配当データ (2602.T): 年間配当=180.0, 利回り=3.15%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2607.T): HTTP Error 401: Unauthorized
+  chart配当データ (2607.T): 年間配当=52.0, 利回り=1.65%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2613.T): HTTP Error 401: Unauthorized
+  chart配当データ (2613.T): 年間配当=75.0, 利回り=3.77%, 配当落ち日=2026-09（予想）
+  v10 API失敗 (2914.T): HTTP Error 401: Unauthorized
+  chart配当データ (2914.T): 年間配当=234.0, 利回り=4.1%, 配当落ち日=2026-06（予想）
+
+Yahoo Finance更新完了: 312銘柄更新, 0エラー (224秒)
+
+============================================================
+最終キャッシュ: 312銘柄
+終了時刻: 2026-03-14 05:03:50
+============================================================
