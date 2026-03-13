@@ -3451,13 +3451,37 @@
         }
         document.getElementById("detailCurrency").textContent = data.currency || "JPY";
 
-        // 変動
+        // 変動（APIのchangeが0の場合はチャートデータから計算）
         if (data.change !== undefined && data.change !== 0) {
           const sign = data.change >= 0 ? "+" : "";
           const changePct = data.changePercent || 0;
           const changeEl = document.getElementById("detailChange");
           changeEl.textContent = `${sign}${data.change} (${sign}${changePct.toFixed(2)}%)`;
           changeEl.className = `stock-detail-change ${data.change >= 0 ? "positive" : "negative"}`;
+        } else {
+          // 土日・祝日: チャートAPIから直接取得して変動率を計算
+          try {
+            const chartUrl = `/api/stock/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
+            const chartResp = await fetch(chartUrl);
+            if (chartResp.ok) {
+              const chartData = await chartResp.json();
+              if (chartData.data && chartData.data.length >= 2) {
+                const latest = chartData.data[chartData.data.length - 1];
+                let prev = null;
+                for (let i = chartData.data.length - 2; i >= 0; i--) {
+                  if (chartData.data[i].date !== latest.date) { prev = chartData.data[i]; break; }
+                }
+                if (prev) {
+                  const chg = latest.close - prev.close;
+                  const chgPct = (chg / prev.close) * 100;
+                  const s = chg >= 0 ? "+" : "";
+                  const ce = document.getElementById("detailChange");
+                  ce.textContent = `${s}${chg.toFixed(data.currency === "JPY" ? 0 : 2)} (${s}${chgPct.toFixed(2)}%)`;
+                  ce.className = `stock-detail-change ${chg >= 0 ? "positive" : "negative"}`;
+                }
+              }
+            }
+          } catch { /* チャートAPI取得失敗時はそのまま */ }
         }
 
         // 配当情報
@@ -3508,7 +3532,15 @@
 
       const candles = data.data;
       const latest = candles[candles.length - 1];
-      const previous = candles[candles.length - 2];
+      // 同じ日付の重複データを除外して、異なる日付の前日データを取得
+      let previous = null;
+      for (let i = candles.length - 2; i >= 0; i--) {
+        if (candles[i].date !== latest.date) {
+          previous = candles[i];
+          break;
+        }
+      }
+      if (!previous) previous = candles[candles.length - 2];
       const curr = data.currency === "JPY" ? "¥" : "$";
 
       // 株価
