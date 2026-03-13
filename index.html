@@ -1559,6 +1559,13 @@
     <div class="watchlist-sort-bar">
       <button class="watchlist-sort-btn active" id="sortCodeBtn" title="コード順">コード <span id="sortCodeArrow">▲</span></button>
       <button class="watchlist-sort-btn" id="sortChangeBtn" title="変動率順">変動率 <span id="sortChangeArrow">-</span></button>
+      <select id="divMonthFilter" title="配当月フィルタ" style="font-size:11px;padding:2px 4px;border:1px solid #555;border-radius:4px;background:#2a2a2a;color:#ccc;cursor:pointer;">
+        <option value="">配当月</option>
+        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      </select>
     </div>
 
     <div class="watchlist-items" id="watchlistItems">
@@ -3045,7 +3052,8 @@
       // 名前が更新されたら保存
       if (needsSave) saveWatchlist(list);
 
-      // 各銘柄の価格・変動率を取得
+      // 各銘柄の価格・変動率・配当データを取得
+      _divDataLoaded = false;
       fetchWatchlistPrices(list);
     }
 
@@ -3180,7 +3188,20 @@
         const batch = list.slice(i, i + BATCH_SIZE);
         await Promise.all(batch.map((item) => fetchSingleStockPrice(item)));
       }
+
+      // 配当データも取得（配当月フィルタ用）
+      for (let i = 0; i < list.length; i += BATCH_SIZE) {
+        const batch = list.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map((item) => fetchWatchlistDividend(item.symbol)));
+      }
+      _divDataLoaded = true;
+
+      // 配当月フィルタが選択されていれば適用
+      applyDivMonthFilter();
     }
+
+    // 配当月データの保存用（symbol → exDividendDate文字列）
+    const _divDateCache = {};
 
     /**
      * ウォッチリストの個別銘柄の配当利回りを取得する
@@ -3191,6 +3212,12 @@
         const response = await fetch(url);
         if (!response.ok) return;
         const data = await response.json();
+
+        // 配当落ち日を保存（フィルタ用）
+        if (data.exDividendDate) {
+          _divDateCache[symbol] = data.exDividendDate;
+        }
+
         if (data.error || !data.dividendYield || data.dividendYield <= 0) return;
 
         const safeId = symbol.replace(".", "_");
@@ -3203,6 +3230,55 @@
         }
       } catch {
         // 配当データ取得失敗は無視
+      }
+    }
+
+    /**
+     * 配当月フィルタを適用する
+     */
+    let _divDataLoaded = false; // 配当データ取得完了フラグ
+
+    function applyDivMonthFilter() {
+      const filterMonth = document.getElementById("divMonthFilter").value;
+      const items = document.querySelectorAll("#watchlistItems .watchlist-item");
+      let visibleCount = 0;
+
+      items.forEach(item => {
+        const symbol = item.dataset.symbol;
+        if (!filterMonth) {
+          item.style.display = "";
+          visibleCount++;
+          return;
+        }
+
+        const dateStr = _divDateCache[symbol] || "";
+        // "2026-03-28" や "2026-03（予想）" から月を抽出
+        const match = dateStr.match(/\d{4}-(\d{2})/);
+        if (match) {
+          const month = parseInt(match[1], 10);
+          if (month === parseInt(filterMonth, 10)) {
+            item.style.display = "";
+            visibleCount++;
+          } else {
+            item.style.display = "none";
+          }
+        } else {
+          // 配当データがない場合は非表示
+          item.style.display = "none";
+        }
+      });
+
+      // フィルタ結果が0件の場合のメッセージ
+      const emptyMsg = document.getElementById("watchlistEmpty");
+      if (filterMonth && visibleCount === 0) {
+        emptyMsg.style.display = "block";
+        if (!_divDataLoaded) {
+          emptyMsg.innerHTML = `配当データ読込中...`;
+        } else {
+          emptyMsg.innerHTML = `${filterMonth}月配当の銘柄はありません`;
+        }
+      } else if (visibleCount > 0) {
+        emptyMsg.style.display = "none";
       }
     }
 
@@ -3475,6 +3551,11 @@
           sortWatchlistByChange(false);
         }
         updateSortUI();
+      });
+
+      // 配当月フィルタ
+      document.getElementById("divMonthFilter").addEventListener("change", () => {
+        applyDivMonthFilter();
       });
 
       // 「+」ボタン（ウォッチリストタブを追加/復活）

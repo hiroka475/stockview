@@ -153,6 +153,11 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             self.handle_screening_cache_get()
         elif path == "/api/env":
             self.handle_env_api()
+        elif path == "/" and os.environ.get("DEFAULT_PAGE") == "screening":
+            # スクリーニング専用モード: / → screening.html にリダイレクト
+            self.send_response(302)
+            self.send_header("Location", "/screening.html")
+            self.end_headers()
         else:
             # 静的ファイル（HTML/CSS/JS）を配信
             super().do_GET()
@@ -695,10 +700,12 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             cmd += ["--batch-size", "800"]
 
         try:
+            log_dir = os.path.join(_base_dir, "logs")
+            os.makedirs(log_dir, exist_ok=True)
             subprocess.Popen(
                 cmd,
                 cwd=_base_dir,
-                stdout=open(os.path.join(_base_dir, "logs", "webhook-update.log"), "a"),
+                stdout=open(os.path.join(log_dir, "webhook-update.log"), "a"),
                 stderr=subprocess.STDOUT,
             )
             print(f"[Webhook] {mode}モードの更新を開始しました")
@@ -1002,12 +1009,24 @@ def _fetch_dividend_v10(symbol: str) -> dict:
     short_name = price_data.get("shortName", symbol)
     exchange = price_data.get("exchangeName", "")
 
-    # 配当落ち日（次回）
+    # 配当落ち日（次回 - 今日以降のみ表示、過去なら予測）
     ex_div_date_raw = summary.get("exDividendDate", {}).get("raw", 0)
     ex_div_date = ""
     if ex_div_date_raw:
         try:
-            ex_div_date = datetime.utcfromtimestamp(ex_div_date_raw).strftime("%Y-%m-%d")
+            ex_date = datetime.utcfromtimestamp(ex_div_date_raw)
+            if ex_date.date() >= datetime.now().date():
+                ex_div_date = ex_date.strftime("%Y-%m-%d")
+            else:
+                # 過去の日付の場合、その月を基に次回を予測
+                ex_month = ex_date.month
+                today = datetime.now()
+                # 同月で今年or来年の予測
+                if today.month <= ex_month:
+                    pred_year = today.year
+                else:
+                    pred_year = today.year + 1
+                ex_div_date = f"{pred_year}-{ex_month:02d}（予想）"
         except Exception:
             pass
 
@@ -1044,6 +1063,45 @@ def _fetch_dividend_v10(symbol: str) -> dict:
         "currency": currency,
         "exDividendDate": ex_div_date,
     }
+
+
+def _predict_next_ex_div_date(dividends: dict) -> str:
+    """過去の配当イベントから次回の配当落ち日を予測する
+
+    過去の配当月パターンを分析し、今日以降で最も近い月の25日頃を返す。
+    例: 過去に3月と9月に配当がある場合、次の3月または9月を予測。
+    """
+    if not dividends:
+        return ""
+
+    # 過去の配当月を収集
+    months = []
+    for ts_key in dividends.keys():
+        try:
+            dt = datetime.utcfromtimestamp(int(ts_key))
+            months.append(dt.month)
+        except Exception:
+            continue
+
+    if not months:
+        return ""
+
+    # 配当月のパターンを特定（重複を除いてソート）
+    unique_months = sorted(set(months))
+
+    # 今日の日付から次の配当月を探す
+    today = datetime.now()
+    current_month = today.month
+    current_year = today.year
+
+    for offset in range(1, 13):  # 最大12ヶ月先まで探す
+        check_month = ((current_month - 1 + offset) % 12) + 1
+        check_year = current_year + ((current_month - 1 + offset) // 12)
+        if check_month in unique_months:
+            # その月の下旬（25日頃）を予測日とする
+            return f"{check_year}-{check_month:02d}"
+
+    return ""
 
 
 def _fetch_dividend_from_chart(symbol: str) -> dict:
@@ -1106,18 +1164,31 @@ def _fetch_dividend_from_chart(symbol: str) -> dict:
     if dividends:
         # 直近1年分の配当を合計
         one_year_ago = time.time() - (365 * 24 * 60 * 60)
+        now_ts = time.time()
+        future_div_ts = 0  # 未来の配当落ち日を別途追跡
         for ts_key, div_info in dividends.items():
             div_ts = int(ts_key)
             div_amount = div_info.get("amount", 0)
             if div_ts >= one_year_ago:
                 annual_dividend += div_amount
-            # 最新の配当落ち日を記録
+            # 最新の配当落ち日を記録（過去の最新）
             if div_ts > latest_div_ts:
                 latest_div_ts = div_ts
-                try:
-                    ex_div_date = datetime.utcfromtimestamp(div_ts).strftime("%Y-%m-%d")
-                except Exception:
-                    pass
+            # 未来の配当落ち日（今日以降で最も近い日付）
+            if div_ts >= now_ts and (future_div_ts == 0 or div_ts < future_div_ts):
+                future_div_ts = div_ts
+
+        # 未来の配当落ち日があればそれを表示、なければ過去データから予測
+        if future_div_ts > 0:
+            try:
+                ex_div_date = datetime.utcfromtimestamp(future_div_ts).strftime("%Y-%m-%d")
+            except Exception:
+                pass
+        else:
+            # 過去の配当月パターンから次回を予測
+            predicted = _predict_next_ex_div_date(dividends)
+            if predicted:
+                ex_div_date = predicted + "（予想）"
 
     # 配当利回りを計算
     dividend_yield = 0
@@ -1582,6 +1653,25 @@ def fetch_fundamentals_data(code: str) -> dict:
     # PER, PBR, 配当利回り
     # =============================================
     result["valuation"] = fetch_valuation_metrics(code)
+
+    # 末尾の全セクションがNoneの期間を除去（まだ決算データがない年度）
+    while result["periods"]:
+        last_idx = len(result["periods"]) - 1
+        all_none = True
+        for sec in result["sections"].values():
+            vals = sec.get("values", [])
+            if last_idx < len(vals) and vals[last_idx] is not None:
+                all_none = False
+                break
+        if all_none:
+            removed = result["periods"].pop()
+            for sec in result["sections"].values():
+                vals = sec.get("values", [])
+                if vals:
+                    vals.pop()
+            print(f"  IR BANK ({code}): 末尾の空期間を除去: {removed}")
+        else:
+            break
 
     # ファンダメンタルズ専用キャッシュに保存（メモリ+ファイル）
     if not result.get("error"):
