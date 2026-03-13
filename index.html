@@ -3201,8 +3201,17 @@
 
         if (!data.data || data.data.length < 2) return;
 
+        // 同じ日付の重複データを除外して、異なる日付の最後2日分を取得
         const latest = data.data[data.data.length - 1];
-        const previous = data.data[data.data.length - 2];
+        let previous = null;
+        for (let i = data.data.length - 2; i >= 0; i--) {
+          if (data.data[i].date !== latest.date) {
+            previous = data.data[i];
+            break;
+          }
+        }
+        if (!previous) return;
+
         const change = latest.close - previous.close;
         const changePct = (change / previous.close) * 100;
 
