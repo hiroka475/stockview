@@ -557,13 +557,41 @@
     }
 
     /* 銘柄詳細パネル */
+    /* ウォッチリストと詳細パネルの間のリサイズハンドル */
+    .watchlist-resize-handle {
+      display: none;
+      height: 6px;
+      background: #e0e0e0;
+      cursor: ns-resize;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .watchlist-resize-handle:hover,
+    .watchlist-resize-handle.dragging {
+      background: #42a5f5;
+    }
+    .watchlist-resize-handle::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px;
+      height: 2px;
+      background: #999;
+      border-radius: 1px;
+    }
+    .watchlist-resize-handle.visible {
+      display: block;
+    }
+
     .stock-detail-panel {
       display: none;
       padding: 8px 12px;
-      border-top: 2px solid #e0e0e0;
+      border-top: none;
       background-color: #fafbfc;
       overflow-y: auto;
-      max-height: 50vh;
+      flex-shrink: 0;
     }
 
     .stock-detail-panel.visible {
@@ -1604,6 +1632,9 @@
         検索から銘柄を追加できます
       </div>
     </div>
+
+    <!-- リサイズハンドル（ウォッチリストと詳細パネルの間） -->
+    <div class="watchlist-resize-handle" id="watchlistResizeHandle"></div>
 
     <!-- 銘柄詳細パネル（ウォッチリスト選択時に表示） -->
     <div class="stock-detail-panel" id="stockDetailPanel">
@@ -2905,8 +2936,9 @@
       localStorage.setItem(ACTIVE_TAB_KEY, tabId);
       renderWatchlistTabs();
       renderWatchlist();
-      // 詳細パネルを一旦非表示
+      // 詳細パネルとリサイズハンドルを一旦非表示
       document.getElementById("stockDetailPanel").classList.remove("visible");
+      document.getElementById("watchlistResizeHandle").classList.remove("visible");
     }
 
     /** ソート状態: "code-asc" | "code-desc" | "change-asc" | "change-desc" */
@@ -3397,6 +3429,7 @@
     async function updateStockDetailPanel(symbol) {
       const panel = document.getElementById("stockDetailPanel");
       panel.classList.add("visible");
+      document.getElementById("watchlistResizeHandle").classList.add("visible");
 
       const displaySymbol = symbol.replace(".T", "");
       const rawSymbol = symbol.replace(".T", "");
@@ -3731,6 +3764,63 @@
         }
       });
 
+      // ==========================================
+      // ウォッチリスト/詳細パネル リサイズハンドル
+      // ==========================================
+      (() => {
+        const handle = document.getElementById("watchlistResizeHandle");
+        const watchlistItems = document.getElementById("watchlistItems");
+        const detailPanel = document.getElementById("stockDetailPanel");
+        const watchlistPanel = document.getElementById("watchlistPanel");
+        let isDragging = false;
+        let startY = 0;
+        let startItemsH = 0;
+
+        handle.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          startY = e.clientY;
+          startItemsH = watchlistItems.getBoundingClientRect().height;
+          handle.classList.add("dragging");
+          document.body.style.cursor = "ns-resize";
+          document.body.style.userSelect = "none";
+          e.preventDefault();
+        });
+
+        handle.addEventListener("touchstart", (e) => {
+          isDragging = true;
+          startY = e.touches[0].clientY;
+          startItemsH = watchlistItems.getBoundingClientRect().height;
+          handle.classList.add("dragging");
+          e.preventDefault();
+        }, { passive: false });
+
+        const onMove = (clientY) => {
+          if (!isDragging) return;
+          const diff = clientY - startY;
+          const panelH = watchlistPanel.getBoundingClientRect().height;
+          const newItemsH = Math.max(60, Math.min(panelH - 100, startItemsH + diff));
+          watchlistItems.style.flex = "none";
+          watchlistItems.style.height = newItemsH + "px";
+          detailPanel.style.maxHeight = "none";
+          detailPanel.style.flex = "1";
+        };
+
+        document.addEventListener("mousemove", (e) => onMove(e.clientY));
+        document.addEventListener("touchmove", (e) => {
+          if (isDragging) onMove(e.touches[0].clientY);
+        }, { passive: true });
+
+        const onEnd = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          handle.classList.remove("dragging");
+          document.body.style.cursor = "";
+          document.body.style.userSelect = "";
+        };
+        document.addEventListener("mouseup", onEnd);
+        document.addEventListener("touchend", onEnd);
+      })();
+
       // 「+」ボタン（ウォッチリストタブを追加/復活）
       document.getElementById("watchlistAddTabBtn").addEventListener("click", () => {
         const hidden = loadHiddenTabs();
@@ -3822,6 +3912,7 @@
           localStorage.setItem(key, JSON.stringify([]));
         }
         document.getElementById("stockDetailPanel").classList.remove("visible");
+        document.getElementById("watchlistResizeHandle").classList.remove("visible");
         renderWatchlist();
       });
 
