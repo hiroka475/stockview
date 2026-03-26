@@ -7,14 +7,18 @@ import gzip
 import io
 import json
 import os
+import re
 import ssl
 import subprocess
 import sys
 import urllib.request
 import urllib.parse
 import urllib.error
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from datetime import datetime, timedelta
 
 # Render等のクラウド環境ではstdoutバッファリングを無効化（ログ即時表示のため）
@@ -50,9 +54,11 @@ ssl_context = ssl.create_default_context()
 try:
     import certifi
     ssl_context.load_verify_locations(certifi.where())
+    print(f"    SSL: certifi使用 ({certifi.where()})")
 except ImportError:
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
+    print("    SSL: certifi未インストール → 証明書検証なし")
 
 # 銘柄マスタを読み込む（サーバー起動時に1回だけ）
 _base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -72,29 +78,257 @@ if os.path.exists(_us_stocks_path):
     print(f"  米国株マスタ: {len(US_STOCKS)}銘柄 読み込み完了")
 
 
-# ファンダメンタルズ専用キャッシュ（長期保持: 30日間 + ファイル永続化）
-# IR BANKのデータは決算発表時（年4回）しか変わらないため30日キャッシュで十分。
+# ファンダメンタルズ専用キャッシュ（Stale-While-Revalidate方式）
+# - SOFT TTL（7日）: これを超えたら裏で最新データを取得（表示はキャッシュを即返し）
+# - HARD TTL（30日）: これを超えたら必ず新規取得
+# IR BANKのデータは決算発表時（年4回）しか変わらないため、普段はキャッシュで高速表示。
 _fundamentals_cache = {}
-_FUNDAMENTALS_CACHE_TTL = 2592000  # 30日間（秒）
+_FUNDAMENTALS_CACHE_SOFT_TTL = 604800   # 7日間（秒）- この期間を過ぎたら裏で更新
+_FUNDAMENTALS_CACHE_TTL = 2592000       # 30日間（秒）- この期間を過ぎたら必ず再取得
+_fundamentals_revalidating = set()      # 現在バックグラウンド更新中のコード
 _FUNDAMENTALS_CACHE_FILE = os.path.join(_base_dir, "fundamentals-cache.json")
 
 # IR BANKへのアクセス間隔制御（過剰アクセス防止）
 _last_irbank_access = 0
 _IRBANK_ACCESS_INTERVAL = 3  # 最低3秒間隔
+_irbank_lock = threading.Lock()  # スレッドセーフなレート制限用ロック
 
 # 起動時にファンダメンタルズキャッシュファイルがあれば読み込む
 if os.path.exists(_FUNDAMENTALS_CACHE_FILE):
     try:
         with open(_FUNDAMENTALS_CACHE_FILE, "r", encoding="utf-8") as f:
             _saved_funda = json.load(f)
+        _skipped = 0
         for code, entry in _saved_funda.items():
+            data = entry.get("data", entry)
+            # キャッシュ品質チェック: 不十分なデータはスキップして再取得させる
+            sections = data.get("sections", {})
+            cached_periods = len(data.get("periods", []))
+            # 1. 期間数が少ない
+            if cached_periods < 13:
+                _skipped += 1
+                continue
+            # 2. 配当データがあるのに配当利回りがない
+            div_vals = sections.get("dividend", {}).get("values", [])
+            div_valid = [v for v in div_vals if v is not None]
+            dy_vals = sections.get("dividendYield", {}).get("values", [])
+            dy_valid = [v for v in dy_vals if v is not None]
+            if len(div_valid) >= 3 and len(dy_valid) == 0:
+                _skipped += 1
+                continue
+            # 3. 配当データが期間数に対して大幅に欠落している（期間の30%未満）
+            if cached_periods >= 10 and len(div_valid) < cached_periods * 0.3:
+                _skipped += 1
+                continue
             _fundamentals_cache[f"fundamentals|{code}"] = {
-                "data": entry.get("data", entry),
+                "data": data,
                 "timestamp": entry.get("timestamp", time.time()),
             }
-        print(f"  ファンダメンタルズキャッシュ: {len(_saved_funda)}銘柄 読み込み完了")
+        _loaded = len(_saved_funda) - _skipped
+        if _skipped > 0:
+            print(f"  ファンダメンタルズキャッシュ: {_loaded}銘柄 読み込み完了（データ不足{_skipped}銘柄をスキップ）")
+        else:
+            print(f"  ファンダメンタルズキャッシュ: {_loaded}銘柄 読み込み完了")
     except Exception as e:
         print(f"  ファンダメンタルズキャッシュ読み込みエラー: {e}")
+
+
+# ==========================================
+# Mac通知設定（価格アラート用）
+# macOSのosascriptを使ってネイティブ通知を表示する。
+# 設定ファイル不要・パスワード不要で動作する。
+# alert-config.json で通知間隔をカスタマイズ可能（任意）:
+# { "alert_check_interval": 3600 }
+# ==========================================
+_ALERT_CONFIG_FILE = os.path.join(_base_dir, "alert-config.json")
+_alert_config = {}
+if os.path.exists(_ALERT_CONFIG_FILE):
+    try:
+        with open(_ALERT_CONFIG_FILE, "r", encoding="utf-8") as f:
+            _alert_config = json.load(f)
+        print(f"  アラート設定: 読み込み完了（チェック間隔: {_alert_config.get('alert_check_interval', 3600)}秒）")
+    except Exception as e:
+        print(f"  アラート設定: 読み込みエラー: {e}")
+
+# アラート通知の重複防止（同じアラートを何度も通知しない）
+_ALERT_NOTIFIED_FILE = os.path.join(_base_dir, "alert-notified.json")
+_alert_notified = {}
+if os.path.exists(_ALERT_NOTIFIED_FILE):
+    try:
+        with open(_ALERT_NOTIFIED_FILE, "r", encoding="utf-8") as f:
+            _alert_notified = json.load(f)
+    except Exception:
+        pass
+
+
+def _save_alert_notified():
+    """通知済みアラートの状態を保存"""
+    try:
+        with open(_ALERT_NOTIFIED_FILE, "w", encoding="utf-8") as f:
+            json.dump(_alert_notified, f, ensure_ascii=False)
+    except Exception as e:
+        print(f"  [AlertNotify] 通知状態保存エラー: {e}")
+
+
+def send_mac_notification(triggered_list):
+    """
+    macOSのネイティブ通知でアラートを表示する。
+    osascriptを使うので設定不要で動作する。
+
+    Args:
+        triggered_list: [{"symbol": "7203.T", "name": "トヨタ", "alertPrice": 2000, "currentPrice": 1980}, ...]
+    """
+    if not triggered_list:
+        return False
+
+    for item in triggered_list:
+        code = item["symbol"].replace(".T", "")
+        name = item.get("name", code)
+        alert_price = item["alertPrice"]
+        current_price = item["currentPrice"]
+
+        title = f"StockView 価格アラート"
+        message = f"{code} {name}\\n設定: ¥{alert_price:,.0f} → 現在: ¥{current_price:,.0f}"
+        subtitle = f"{code} {name} が設定価格に到達"
+
+        # macOS通知（osascript）
+        script = (
+            f'display notification "{message}" '
+            f'with title "{title}" '
+            f'subtitle "{subtitle}" '
+            f'sound name "Glass"'
+        )
+        try:
+            subprocess.run(
+                ["osascript", "-e", script],
+                capture_output=True, timeout=5
+            )
+            print(f"  [AlertNotify] Mac通知送信: {code} {name} (¥{current_price:,.0f})")
+        except FileNotFoundError:
+            # macOS以外の環境（Linux等）ではosascriptがないのでターミナル出力のみ
+            print(f"  [AlertNotify] ⚠ {code} {name}: 設定¥{alert_price:,.0f} → 現在¥{current_price:,.0f}")
+        except Exception as e:
+            print(f"  [AlertNotify] 通知エラー ({code}): {e}")
+
+    return True
+
+
+def _run_alert_check():
+    """
+    アラートの価格チェックを実行し、条件に該当すればメール通知を送る。
+    同じアラートに対して再通知しない（価格が一度上がって再度下がったらリセット）。
+    """
+    alerts_path = os.path.join(_base_dir, "alerts.json")
+    if not os.path.exists(alerts_path):
+        return
+
+    try:
+        with open(alerts_path, "r", encoding="utf-8") as f:
+            alerts = json.load(f)
+    except Exception:
+        return
+
+    if not alerts:
+        return
+
+    now_str = datetime.now().strftime("%H:%M")
+    print(f"  [AlertCheck] {now_str} 定期チェック開始 ({len(alerts)}銘柄)")
+
+    newly_triggered = []
+    for symbol, alert_info in alerts.items():
+        if not alert_info.get("enabled", False):
+            continue
+
+        alert_price = alert_info.get("price", 0)
+        direction = alert_info.get("direction", "below")
+
+        try:
+            yahoo_symbol = symbol
+            code = symbol.replace(".T", "")
+            if code.isdigit() and len(code) == 4:
+                yahoo_symbol = f"{code}.T"
+
+            data = fetch_yahoo_finance(yahoo_symbol, "1d", "5d")
+            candles = data.get("data", [])
+            if not candles:
+                continue
+
+            # 最新のローソク足から終値を取得
+            current_price = candles[-1].get("close") if candles else None
+
+            if current_price is None:
+                continue
+
+            # アラート条件チェック
+            is_triggered = False
+            if direction == "below" and current_price <= alert_price:
+                is_triggered = True
+
+            if is_triggered:
+                # 重複通知チェック: 前回通知済みで価格がまだ条件内なら再送しない
+                notified_key = f"{symbol}|{alert_price}"
+                if notified_key not in _alert_notified:
+                    newly_triggered.append({
+                        "symbol": symbol,
+                        "name": alert_info.get("name", code),
+                        "alertPrice": alert_price,
+                        "currentPrice": current_price,
+                        "direction": direction,
+                    })
+                    _alert_notified[notified_key] = time.time()
+            else:
+                # 価格が条件外に戻ったら通知済みフラグをリセット（再度下がったら再通知）
+                notified_key = f"{symbol}|{alert_price}"
+                if notified_key in _alert_notified:
+                    del _alert_notified[notified_key]
+
+        except Exception as e:
+            print(f"  [AlertCheck] {symbol} エラー: {e}")
+            continue
+
+    if newly_triggered:
+        print(f"  [AlertCheck] {len(newly_triggered)}銘柄がアラート条件に該当 → Mac通知")
+        send_mac_notification(newly_triggered)
+        _save_alert_notified()
+    else:
+        print(f"  [AlertCheck] 該当銘柄なし")
+
+
+def _start_alert_scheduler():
+    """
+    バックグラウンドで1時間ごとにアラートチェックを実行するスケジューラを起動する。
+    取引時間（平日 9:00〜15:00 JST）のみチェックする。
+    """
+    interval = _alert_config.get("alert_check_interval", 3600)  # デフォルト1時間
+
+    def _scheduler_loop():
+        # 起動直後は少し待ってから、時間帯に関係なく1回チェック実行
+        time.sleep(30)
+        print(f"  [AlertScheduler] 起動時チェック実行")
+        try:
+            _run_alert_check()
+        except Exception as e:
+            print(f"  [AlertScheduler] 起動時チェックエラー: {e}")
+
+        while True:
+            try:
+                now = datetime.now()
+                weekday = now.weekday()  # 0=月, 6=日
+                hour = now.hour
+
+                # 平日の取引時間帯（9:00〜15:30）のみチェック
+                if weekday < 5 and 9 <= hour <= 15:
+                    _run_alert_check()
+                else:
+                    print(f"  [AlertScheduler] 取引時間外のためスキップ ({now.strftime('%A %H:%M')})")
+            except Exception as e:
+                print(f"  [AlertScheduler] エラー: {e}")
+
+            time.sleep(interval)
+
+    thread = threading.Thread(target=_scheduler_loop, daemon=True)
+    thread.start()
+    print(f"  アラート定期チェック: {interval // 60}分間隔で起動（平日9:00〜15:30のみ）")
 
 
 # ==========================================
@@ -103,8 +337,19 @@ if os.path.exists(_FUNDAMENTALS_CACHE_FILE):
 # 同じ銘柄・パラメータの2回目以降のリクエストを高速化する
 # ==========================================
 _api_cache = {}
-_API_CACHE_TTL = 180  # 3分間有効（秒）
+_API_CACHE_TTL_DEFAULT = 300  # デフォルト: 5分
+_API_CACHE_TTL_MAP = {
+    "stock":        300,   # 株価チャート: 5分（市場データは頻繁に変わる）
+    "dividend":     3600,  # 配当データ: 1時間（日中はほぼ変わらない）
+    "fundamentals": 43200, # ファンダメンタルズ: 12時間（決算期のみ更新）
+}
 _API_CACHE_MAX = 200  # 最大200エントリ
+
+
+def _get_cache_ttl(key):
+    """キャッシュキーからデータ種別を判定してTTLを返す"""
+    prefix = key.split("|")[0] if "|" in key else ""
+    return _API_CACHE_TTL_MAP.get(prefix, _API_CACHE_TTL_DEFAULT)
 
 
 def get_api_cache(key):
@@ -112,7 +357,7 @@ def get_api_cache(key):
     entry = _api_cache.get(key)
     if entry is None:
         return None
-    if time.time() - entry["timestamp"] > _API_CACHE_TTL:
+    if time.time() - entry["timestamp"] > _get_cache_ttl(key):
         del _api_cache[key]
         return None
     return entry["data"]
@@ -507,16 +752,12 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
                         yahoo_symbol = f"{code}.T"
 
                     data = fetch_yahoo_finance(yahoo_symbol, "1d", "5d")
-                    closes = data.get("closes", [])
-                    if not closes:
+                    candles = data.get("data", [])
+                    if not candles:
                         continue
 
-                    # 最新の有効な終値を取得
-                    current_price = None
-                    for c in reversed(closes):
-                        if c is not None:
-                            current_price = c
-                            break
+                    # 最新のローソク足から終値を取得
+                    current_price = candles[-1].get("close") if candles else None
 
                     if current_price is None:
                         continue
@@ -622,16 +863,47 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             return
 
         try:
-            # ファンダメンタルズ専用キャッシュを確認（7日間TTL）
             cache_key = f"fundamentals|{code}"
             cached_entry = _fundamentals_cache.get(cache_key)
-            if cached_entry and (time.time() - cached_entry["timestamp"] < _FUNDAMENTALS_CACHE_TTL):
-                print(f"  IR BANK ({code}): キャッシュヒット（残り{int((_FUNDAMENTALS_CACHE_TTL - (time.time() - cached_entry['timestamp'])) / 3600)}時間）")
-                self.send_json_response(cached_entry["data"])
-                return
 
+            if cached_entry:
+                cache_age = time.time() - cached_entry["timestamp"]
+
+                if cache_age < _FUNDAMENTALS_CACHE_SOFT_TTL:
+                    # SOFT TTL以内: キャッシュをそのまま返す（完全に新鮮）
+                    remaining_h = int((_FUNDAMENTALS_CACHE_SOFT_TTL - cache_age) / 3600)
+                    print(f"  IR BANK ({code}): キャッシュヒット・新鮮（SOFT TTL残り{remaining_h}時間）")
+                    self.send_json_response(cached_entry["data"])
+                    return
+
+                elif cache_age < _FUNDAMENTALS_CACHE_TTL:
+                    # SOFT TTL〜HARD TTL: キャッシュを即返し＋裏で更新（Stale-While-Revalidate）
+                    remaining_d = int((_FUNDAMENTALS_CACHE_TTL - cache_age) / 86400)
+                    print(f"  IR BANK ({code}): キャッシュヒット・やや古い（HARD TTL残り{remaining_d}日）→ 裏で更新開始")
+                    self.send_json_response(cached_entry["data"])
+
+                    # バックグラウンドで最新データを取得（同じコードの重複更新を防止）
+                    if code not in _fundamentals_revalidating:
+                        _fundamentals_revalidating.add(code)
+                        def _bg_revalidate(c):
+                            try:
+                                data = fetch_fundamentals_data(c)
+                                if not data.get("error"):
+                                    _fundamentals_cache[f"fundamentals|{c}"] = {"data": data, "timestamp": time.time()}
+                                    _save_fundamentals_cache()
+                                    print(f"  IR BANK ({c}): バックグラウンド更新完了")
+                                else:
+                                    print(f"  IR BANK ({c}): バックグラウンド更新失敗（エラー: {data.get('error')}）")
+                            except Exception as bg_err:
+                                print(f"  IR BANK ({c}): バックグラウンド更新エラー: {bg_err}")
+                            finally:
+                                _fundamentals_revalidating.discard(c)
+                        threading.Thread(target=_bg_revalidate, args=(code,), daemon=True).start()
+                    return
+
+            # HARD TTL超過 or キャッシュなし: 同期的に新規取得
+            print(f"  IR BANK ({code}): キャッシュなし or 期限切れ → 新規取得")
             data = fetch_fundamentals_data(code)
-            # エラーがなければキャッシュ（メモリ+ファイル）
             if not data.get("error"):
                 _fundamentals_cache[cache_key] = {"data": data, "timestamp": time.time()}
                 _save_fundamentals_cache()
@@ -660,12 +932,25 @@ class StockAPIHandler(SimpleHTTPRequestHandler):
             self.send_json_error(f"検索エラー: {str(e)}", 500)
 
     def send_json_response(self, data, status=200):
-        """JSON形式でレスポンスを返す"""
+        """JSON形式でレスポンスを返す（1KB以上はgzip圧縮）"""
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Access-Control-Allow-Origin", "*")
+
+        # リクエストがgzipを受け入れ、かつ1KB以上ならgzip圧縮
+        accept_encoding = self.headers.get("Accept-Encoding", "")
+        if "gzip" in accept_encoding and len(body) > 1024:
+            buf = io.BytesIO()
+            with gzip.GzipFile(fileobj=buf, mode="wb") as gz:
+                gz.write(body)
+            body = buf.getvalue()
+            self.send_header("Content-Encoding", "gzip")
+
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Vary", "Accept-Encoding")
         self.end_headers()
-        self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+        self.wfile.write(body)
 
     def send_json_error(self, message, status=500):
         """エラーをJSON形式で返す"""
@@ -771,8 +1056,14 @@ def _fetch_yahoo_valuation_safe(code):
         return {}
 
 
-def _save_fundamentals_cache():
-    """ファンダメンタルズキャッシュをファイルに保存"""
+_fundamentals_cache_dirty = False
+_fundamentals_cache_timer = None
+_fundamentals_cache_lock = threading.Lock()
+
+
+def _save_fundamentals_cache_now():
+    """ファンダメンタルズキャッシュを即座にファイルに保存"""
+    global _fundamentals_cache_dirty, _fundamentals_cache_timer
     try:
         cache_data = {}
         for key, entry in _fundamentals_cache.items():
@@ -787,17 +1078,299 @@ def _save_fundamentals_cache():
         print(f"  [Cache] fundamentals-cache.json 保存完了 ({len(cache_data)}銘柄)")
     except Exception as e:
         print(f"  [Cache] ファンダメンタルズキャッシュ保存エラー: {e}")
+    finally:
+        _fundamentals_cache_dirty = False
+        _fundamentals_cache_timer = None
+
+
+def _save_fundamentals_cache():
+    """ファンダメンタルズキャッシュの保存をデバウンス（10秒以内の連続書き込みをまとめる）"""
+    global _fundamentals_cache_dirty, _fundamentals_cache_timer
+    with _fundamentals_cache_lock:
+        _fundamentals_cache_dirty = True
+        if _fundamentals_cache_timer is None:
+            _fundamentals_cache_timer = threading.Timer(10.0, _save_fundamentals_cache_now)
+            _fundamentals_cache_timer.daemon = True
+            _fundamentals_cache_timer.start()
 
 
 def _wait_irbank_rate_limit():
-    """IR BANKへのアクセス間隔を制御する"""
+    """IR BANKへのアクセス間隔を制御する（スレッドセーフ）
+
+    ロックを取得してから待機するため、他のリクエストハンドラをブロックしない。
+    同時リクエストはロック待ちになるが、time.sleepでスレッド全体を止めるより
+    きちんとシリアライズされる。
+    """
     global _last_irbank_access
-    elapsed = time.time() - _last_irbank_access
-    if elapsed < _IRBANK_ACCESS_INTERVAL:
-        wait_time = _IRBANK_ACCESS_INTERVAL - elapsed
-        print(f"  IR BANK: レート制限待機 {wait_time:.1f}秒...")
-        time.sleep(wait_time)
-    _last_irbank_access = time.time()
+    with _irbank_lock:
+        elapsed = time.time() - _last_irbank_access
+        if elapsed < _IRBANK_ACCESS_INTERVAL:
+            wait_time = _IRBANK_ACCESS_INTERVAL - elapsed
+            print(f"  IR BANK: レート制限待機 {wait_time:.1f}秒...")
+            time.sleep(wait_time)
+        _last_irbank_access = time.time()
+
+
+def _normalize_period(period: str) -> str:
+    """期間文字列を正規化する（例: '2024/1' → '2024/01', '2024/03予' → '2024/03予'）"""
+    period = period.strip()
+    if "/" in period:
+        parts = period.split("/")
+        year = parts[0].strip()
+        rest = parts[1].strip()
+        # 月部分から数字だけ取り出す（予想マークは保持）
+        month_digits = ""
+        suffix = ""
+        for ch in rest:
+            if ch.isdigit():
+                month_digits += ch
+            else:
+                suffix += ch
+        if month_digits:
+            month_digits = month_digits.zfill(2)  # "1" → "01"
+        return f"{year}/{month_digits}{suffix}"
+    return period
+
+
+def _parse_irbank_value(text):
+    """IR BANKのHTML表示値を数値に変換する（例: '478億' → 47800, '217.91' → 217.91, '-' → None）"""
+    text = text.strip().replace(",", "")
+    if not text or text == "-" or text == "－":
+        return None
+    try:
+        if text.endswith("億"):
+            return round(float(text[:-1]) * 100)  # 億 → 百万円
+        if text.endswith("万"):
+            return round(float(text[:-1]) / 100, 2)
+        return float(text)
+    except (ValueError, OverflowError):
+        return None
+
+
+def _scrape_irbank_html(code, page, opener, ir_headers):
+    """
+    IR BANKのHTMLページからテーブルデータをスクレイピングする
+
+    Args:
+        code: 銘柄コード
+        page: ページ名（"results" or "dividend"）
+        opener: urllib opener（Cookie付き）
+        ir_headers: リクエストヘッダー
+
+    Returns:
+        list of dict: [{"header": [...], "rows": [[...], ...]}, ...]
+    """
+    _wait_irbank_rate_limit()
+    url = f"https://irbank.net/{code}/{page}"
+    req = urllib.request.Request(url, headers={
+        **ir_headers,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    })
+    try:
+        with opener.open(req, timeout=15) as resp:
+            raw = resp.read()
+            encoding = resp.headers.get("Content-Encoding", "")
+            if encoding == "gzip" or raw[:2] == b'\x1f\x8b':
+                raw = gzip.decompress(raw)
+            elif encoding == "br" and _HAS_BROTLI:
+                raw = brotli.decompress(raw)
+            html = raw.decode("utf-8", errors="replace")
+    except Exception as e:
+        print(f"  IR BANK ({code}): HTML取得エラー ({page}): {e}")
+        return []
+
+    # <table>を正規表現で抽出（軽量パース）
+    tables = []
+    for table_match in re.finditer(r'<table[^>]*>(.*?)</table>', html, re.DOTALL):
+        table_html = table_match.group(1)
+        rows = []
+        for tr_match in re.finditer(r'<tr[^>]*>(.*?)</tr>', table_html, re.DOTALL):
+            tr_html = tr_match.group(1)
+            cells = []
+            for td_match in re.finditer(r'<t[hd][^>]*>(.*?)</t[hd]>', tr_html, re.DOTALL):
+                # HTMLタグを除去してテキストのみ取得
+                cell_text = re.sub(r'<[^>]+>', '', td_match.group(1)).strip()
+                # 改行・空白を正規化
+                cell_text = re.sub(r'\s+', ' ', cell_text).strip()
+                cells.append(cell_text)
+            if cells:
+                rows.append(cells)
+        if rows:
+            tables.append(rows)
+
+    print(f"  IR BANK ({code}): HTML ({page}) テーブル数={len(tables)}, HTML長={len(html)}")
+    if not tables and len(html) > 100:
+        # デバッグ: テーブルが見つからない場合、HTMLの一部を出力
+        table_count = html.lower().count('<table')
+        tr_count = html.lower().count('<tr')
+        print(f"  IR BANK ({code}): HTML ({page}) <table>タグ数={table_count}, <tr>タグ数={tr_count}")
+        # テーブル部分の一部を出力
+        idx = html.lower().find('<table')
+        if idx >= 0:
+            print(f"  IR BANK ({code}): HTML ({page}) テーブル開始位置={idx}, サンプル: {html[idx:idx+200]}")
+    for i, t in enumerate(tables):
+        print(f"  IR BANK ({code}): HTML ({page}) Table[{i}]: {len(t)}行, 先頭={t[0][:4] if t else '空'}")
+    return tables
+
+
+def _supplement_from_html(code, result, opener, ir_headers):
+    """
+    JSON APIで取得できなかったデータをHTMLスクレイピングで補完する
+
+    Args:
+        code: 銘柄コード
+        result: fetch_fundamentals_dataの結果dict（変更される）
+        opener: urllib opener
+        ir_headers: リクエストヘッダー
+    """
+    sections = result.get("sections", {})
+
+    # どのデータが不足しているかチェック
+    def is_mostly_null(key):
+        sec = sections.get(key, {})
+        vals = sec.get("values", [])
+        non_null = [v for v in vals if v is not None]
+        return len(non_null) < 2
+
+    # JSON APIの期間数が少ない場合もHTMLスクレイピングで拡張を試みる
+    periods_too_few = len(result.get("periods", [])) < 13
+    needs_results = is_mostly_null("eps") or is_mostly_null("roe")
+    needs_dividend = is_mostly_null("dividend")
+
+    if not needs_results and not needs_dividend and not periods_too_few:
+        print(f"  IR BANK ({code}): HTMLスクレイピング不要（データ十分）")
+        return
+
+    if periods_too_few:
+        print(f"  IR BANK ({code}): 期間数が少ない({len(result.get('periods', []))}件) → HTMLスクレイピングで拡張を試みます")
+        needs_results = True
+        needs_dividend = True
+
+    # === 決算まとめページ ===
+    tables = []
+    if needs_results or needs_dividend:
+        print(f"  IR BANK ({code}): 決算まとめHTMLからデータを補完")
+        tables = _scrape_irbank_html(code, "results", opener, ir_headers)
+
+    if needs_results or needs_dividend:
+
+        if tables:
+            # 全テーブルからデータを抽出
+            # 列名 → セクションキーのマッピング
+            col_to_section = {
+                "EPS": ("eps", "EPS", "円"),
+                "ROE": ("roe", "ROE", "%"),
+                "ROA": ("roa", "ROA", "%"),
+                "売上": ("revenue", "売上高", "百万円"),
+                "売上高": ("revenue", "売上高", "百万円"),
+                "営利": ("operatingProfit", "営業利益", "百万円"),
+                "営業利益": ("operatingProfit", "営業利益", "百万円"),
+                "営利率": ("operatingMargin", "営業利益率", "%"),
+                "営業利益率": ("operatingMargin", "営業利益率", "%"),
+                "自己資本比率": ("equityRatio", "自己資本比率", "%"),
+                "BPS": ("bps", "BPS", "円"),
+                "一株配当": ("dividend", "一株配当", "円"),
+                "配当": ("dividend", "一株配当", "円"),
+                "配当性向": ("payoutRatio", "配当性向", "%"),
+                "配当利回り": ("dividendYield", "配当利回り", "%"),
+            }
+
+            html_data = {}  # sec_key -> {period: value}
+            html_periods = []
+
+            for t_idx, table_rows in enumerate(tables):
+                header_row = None
+                data_rows = []
+                for row in table_rows:
+                    if any("年度" in cell for cell in row):
+                        header_row = row
+                    elif len(row) >= 3 and "/" in row[0]:
+                        data_rows.append(row)
+
+                if not header_row or not data_rows:
+                    continue
+
+                # このテーブルの列マッピングを構築（完全一致 → 部分一致の順で試行）
+                table_col_map = {}
+                for i, h in enumerate(header_row):
+                    h_clean = h.strip()
+                    # 完全一致
+                    if h_clean in col_to_section:
+                        sec_key = col_to_section[h_clean][0]
+                        table_col_map[sec_key] = i
+                    else:
+                        # 部分一致（列名がcol_to_sectionのキーを含む場合）
+                        for col_name, sec_info in col_to_section.items():
+                            if len(col_name) >= 2 and col_name in h_clean and sec_info[0] not in table_col_map:
+                                table_col_map[sec_info[0]] = i
+                                break
+
+                if not table_col_map:
+                    print(f"  IR BANK ({code}): HTML Table[{t_idx}] マッチなし header={header_row}")
+                    continue
+
+                print(f"  IR BANK ({code}): HTML Table[{t_idx}] 列マップ={table_col_map}, {len(data_rows)}行, header={header_row}")
+
+                # 期間リストの更新（最初のテーブルから）
+                if t_idx == 0 or not html_periods:
+                    for row in data_rows:
+                        period = _normalize_period(row[0])
+                        if "/" in period and period not in html_periods:
+                            html_periods.append(period)
+
+                # データ抽出
+                for row in data_rows:
+                    period = _normalize_period(row[0])
+                    if "/" not in period:
+                        continue
+                    for sec_key, col_idx in table_col_map.items():
+                        if col_idx < len(row):
+                            val = _parse_irbank_value(row[col_idx])
+                            if sec_key not in html_data:
+                                html_data[sec_key] = {}
+                            if val is not None:
+                                html_data[sec_key][period] = val
+
+            # HTMLデータの件数をログ出力
+            for key, data_dict in html_data.items():
+                print(f"  IR BANK ({code}): HTML抽出 {key}: {len(data_dict)}件")
+
+            # 期間リストを更新（HTMLの方が多い場合）
+            if len(html_periods) > len(result["periods"]):
+                if len(html_periods) > 15:
+                    html_periods = html_periods[-15:]
+                result["periods"] = html_periods
+                print(f"  IR BANK ({code}): 期間をHTMLデータで更新 ({len(html_periods)}件)")
+
+            all_periods = result["periods"]
+
+            # 各セクションをHTMLデータで更新（データが多い場合のみ）
+            for sec_key, sec_info in col_to_section.items():
+                key = sec_info[0]
+                if key not in html_data:
+                    continue
+                new_values = [html_data[key].get(p) for p in all_periods]
+                non_null_new = [v for v in new_values if v is not None]
+                old_non_null = [v for v in result["sections"].get(key, {}).get("values", []) if v is not None]
+                if len(non_null_new) > len(old_non_null):
+                    result["sections"][key] = {
+                        "label": sec_info[1],
+                        "unit": sec_info[2],
+                        "values": new_values,
+                    }
+                    print(f"  IR BANK ({code}): {key} HTMLから補完 ({len(non_null_new)}件有効)")
+
+            # 他のセクションも期間に合わせてリサイズ
+            for key in list(result["sections"].keys()):
+                vals = result["sections"][key].get("values", [])
+                if len(vals) < len(all_periods):
+                    padding = [None] * (len(all_periods) - len(vals))
+                    result["sections"][key]["values"] = padding + vals
+                elif len(vals) > len(all_periods):
+                    result["sections"][key]["values"] = vals[-len(all_periods):]
+
+    # 配当データの補完は上の全テーブルスキャンで完了済み
+    # （決算まとめの配当テーブルから一株配当・配当性向・配当利回りを取得）
 
 
 def _get_latest_value_with_type(section):
@@ -913,51 +1486,101 @@ def fetch_dividend_data(symbol: str) -> dict:
     Yahoo Finance から配当情報を取得する
     複数のAPIエンドポイントを試行し、最初に成功したものを使用する
 
+    日本株の場合:
+      - まずUS版API (v10/chart) で株価・配当情報を取得
+      - その後Yahoo Finance Japan（会社予想ベース）で配当利回りを上書き
+      - 理由: US版の配当利回りはTrailing/Forward独自計算で、日本の会社予想と異なるため
+
     Args:
         symbol: 銘柄シンボル（例: "AAPL", "7203.T"）
 
     Returns:
         dict: 配当情報
     """
-    # 方法1: v10 quoteSummary API（最も詳細）
-    try:
-        return _fetch_dividend_v10(symbol)
-    except Exception as e:
-        print(f"  v10 API失敗 ({symbol}): {e}")
+    data = None
+    is_jp = ".T" in symbol
 
-    # 方法2: v8 chart API のメタデータから取得（フォールバック）
-    try:
-        return _fetch_dividend_from_chart(symbol)
-    except Exception as e:
-        print(f"  chart API fallback失敗 ({symbol}): {e}")
+    # 日本株の場合: v10とYahoo JP配当取得を並列実行
+    if is_jp:
+        code = symbol.replace(".T", "")
+        jp_data = None
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_v10 = executor.submit(_fetch_dividend_v10, symbol)
+            future_jp = executor.submit(_fetch_dividend_yahoo_jp, code)
+
+            try:
+                data = future_v10.result(timeout=15)
+            except Exception as e:
+                print(f"  v10 API失敗 ({symbol}): {e}")
+
+            try:
+                jp_data = future_jp.result(timeout=20)
+            except Exception:
+                pass
+
+        # v10が失敗した場合のフォールバック
+        if data is None:
+            try:
+                data = _fetch_dividend_from_chart(symbol)
+            except Exception as e:
+                print(f"  chart API fallback失敗 ({symbol}): {e}")
+
+        # Yahoo JP配当データで上書き
+        if data and jp_data and "forwardDividend" in jp_data:
+            forward_div = jp_data["forwardDividend"]
+            current_price = data.get("price", 0)
+            data["forwardDividend"] = forward_div
+            data["dividendRate"] = forward_div
+
+            if current_price > 0:
+                old_yield = data.get("dividendYield", 0)
+                new_yield = round(forward_div / current_price * 100, 2)
+                data["dividendYield"] = new_yield
+                data["source"] = "yahoo_jp"
+                print(f"  配当利回り上書き ({symbol}): US版={old_yield}% → 会社予想={forward_div}円÷株価{current_price}円={new_yield}%")
+    else:
+        # US株: 従来通り逐次実行
+        try:
+            data = _fetch_dividend_v10(symbol)
+        except Exception as e:
+            print(f"  v10 API失敗 ({symbol}): {e}")
+
+        if data is None:
+            try:
+                data = _fetch_dividend_from_chart(symbol)
+            except Exception as e:
+                print(f"  chart API fallback失敗 ({symbol}): {e}")
 
     # すべて失敗した場合
-    return {
-        "symbol": symbol,
-        "name": symbol,
-        "exchange": "",
-        "sector": "",
-        "industry": "",
-        "forwardDividend": 0,
-        "forwardYield": 0,
-        "trailingDividend": 0,
-        "trailingYield": 0,
-        "dividendRate": 0,
-        "dividendYield": 0,
-        "source": "none",
-        "price": 0,
-        "change": 0,
-        "changePercent": 0,
-        "currency": "JPY" if ".T" in symbol else "USD",
-        "exDividendDate": "",
-    }
+    if data is None:
+        data = {
+            "symbol": symbol,
+            "name": symbol,
+            "exchange": "",
+            "sector": "",
+            "industry": "",
+            "forwardDividend": 0,
+            "forwardYield": 0,
+            "trailingDividend": 0,
+            "trailingYield": 0,
+            "dividendRate": 0,
+            "dividendYield": 0,
+            "source": "none",
+            "price": 0,
+            "change": 0,
+            "changePercent": 0,
+            "currency": "JPY" if is_jp else "USD",
+            "exDividendDate": "",
+        }
+
+    return data
 
 
 def _fetch_dividend_v10(symbol: str) -> dict:
     """v10 quoteSummary APIから配当情報を取得"""
     base_url = "https://query1.finance.yahoo.com/v10/finance/quoteSummary/"
-    # ETFの場合assetProfileがないことがあるので、基本モジュールだけで試す
-    modules = "summaryDetail,price,calendarEvents"
+    # assetProfileも含めて1回のリクエストで取得（ETFではassetProfileが空になるが問題なし）
+    modules = "summaryDetail,price,calendarEvents,assetProfile"
     params = urllib.parse.urlencode({"modules": modules})
     url = f"{base_url}{urllib.parse.quote(symbol)}?{params}"
 
@@ -972,22 +1595,10 @@ def _fetch_dividend_v10(symbol: str) -> dict:
     summary = result.get("summaryDetail", {})
     price_data = result.get("price", {})
 
-    # assetProfile は追加リクエストで取得を試みる
-    sector = ""
-    industry = ""
-    try:
-        params2 = urllib.parse.urlencode({"modules": "assetProfile"})
-        url2 = f"{base_url}{urllib.parse.quote(symbol)}?{params2}"
-        req2 = urllib.request.Request(url2, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        })
-        with urllib.request.urlopen(req2, timeout=5, context=ssl_context) as resp2:
-            raw2 = json.loads(resp2.read().decode("utf-8"))
-        profile = raw2["quoteSummary"]["result"][0].get("assetProfile", {})
-        sector = profile.get("sector", "")
-        industry = profile.get("industry", "")
-    except Exception:
-        pass
+    # assetProfile は同じレスポンスから取得（ETFの場合は空dictになる）
+    profile = result.get("assetProfile", {})
+    sector = profile.get("sector", "")
+    industry = profile.get("industry", "")
 
     # Forward（予想）配当
     forward_rate = summary.get("dividendRate", {}).get("raw", 0)
@@ -1220,6 +1831,51 @@ def _fetch_dividend_from_chart(symbol: str) -> dict:
     }
 
 
+def _fetch_dividend_yahoo_jp(code: str) -> dict:
+    """
+    Yahoo Finance Japan（finance.yahoo.co.jp）から配当情報を取得する（日本株専用）
+
+    会社予想ベースの配当利回りを取得する。
+    US版Yahoo Financeとは異なり、会社が公式に発表した予想年間配当を使用する。
+
+    Args:
+        code: 4桁の証券コード（例: "7164"）
+
+    Returns:
+        dict: {"dividendYield": float, "forwardDividend": float, "source": "yahoo_jp"} or None
+    """
+    try:
+        url = f"https://finance.yahoo.co.jp/quote/{code}.T/dividend"
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        })
+        with urllib.request.urlopen(req, timeout=10, context=ssl_context) as r:
+            html = r.read().decode("utf-8")
+
+        result = {}
+        data_start = html.find("1株当たり配当金")
+        if data_start < 0:
+            data_start = 0
+        data_section = html[data_start:]
+
+        div_match = re.search(r">[\d,.]+</span>\s*<span[^>]*>\s*円\s*</span>", data_section)
+        if div_match:
+            num_match = re.search(r">([\d,.]+)</span>", div_match.group(0))
+            if num_match:
+                result["forwardDividend"] = float(num_match.group(1).replace(",", ""))
+
+        if result:
+            result["source"] = "yahoo_jp"
+            print(f"  Yahoo Finance Japan ({code}): 予想配当={result.get('forwardDividend', 'N/A')}円")
+            return result
+        else:
+            print(f"  Yahoo Finance Japan ({code}): 配当データが見つかりません")
+            return None
+    except Exception as e:
+        print(f"  Yahoo Finance Japan ({code}): 取得エラー: {type(e).__name__}: {e}")
+        return None
+
+
 def fetch_fundamentals_data(code: str) -> dict:
     """
     IR BANKからファンダメンタルズデータを取得する
@@ -1233,11 +1889,28 @@ def fetch_fundamentals_data(code: str) -> dict:
     url = f"https://f.irbank.net/files/{code}/fy-data-all.json"
 
     # ファンダメンタルズ専用キャッシュを確認（スクリーニング等からの呼び出しにも対応）
+    # SOFT TTL以内なら新鮮なのでキャッシュを返す（バックグラウンド更新時はSOFT超過しているのでスキップされる）
     cache_key = f"fundamentals|{code}"
     cached_entry = _fundamentals_cache.get(cache_key)
-    if cached_entry and (time.time() - cached_entry["timestamp"] < _FUNDAMENTALS_CACHE_TTL):
-        print(f"  IR BANK ({code}): ファンダメンタルズキャッシュヒット（残り{int((_FUNDAMENTALS_CACHE_TTL - (time.time() - cached_entry['timestamp'])) / 3600)}時間）")
-        return cached_entry["data"]
+    if cached_entry and (time.time() - cached_entry["timestamp"] < _FUNDAMENTALS_CACHE_SOFT_TTL):
+        # キャッシュ品質チェック
+        cached_data = cached_entry["data"]
+        cached_sections = cached_data.get("sections", {})
+        cached_periods = len(cached_data.get("periods", []))
+        # 期間数が少ない場合は再取得
+        if cached_periods < 13:
+            print(f"  IR BANK ({code}): キャッシュの期間数が少ない({cached_periods}件) → 再取得します")
+        # 配当データがあるのに配当利回りがない場合は再取得
+        elif (len([v for v in cached_sections.get("dividend", {}).get("values", []) if v is not None]) >= 3
+              and len([v for v in cached_sections.get("dividendYield", {}).get("values", []) if v is not None]) == 0):
+            print(f"  IR BANK ({code}): 配当利回りデータが欠落 → 再取得します")
+        # 配当データが期間数に対して大幅に欠落している場合は再取得
+        elif (cached_periods >= 10
+              and len([v for v in cached_sections.get("dividend", {}).get("values", []) if v is not None]) < cached_periods * 0.3):
+            print(f"  IR BANK ({code}): 配当データが大幅に欠落 → 再取得します")
+        else:
+            print(f"  IR BANK ({code}): ファンダメンタルズキャッシュヒット・新鮮（SOFT TTL以内）")
+            return cached_entry["data"]
 
     if not _HAS_BROTLI:
         return {"code": code, "error": "brotliモジュールが必要です。ターミナルで pip install brotli を実行してください。", "sections": {}}
@@ -1286,15 +1959,75 @@ def fetch_fundamentals_data(code: str) -> dict:
             print(f"  IR BANK ({code}): Content-Encoding={content_encoding}, size={len(raw_bytes)}bytes")
 
         # 圧縮形式に応じて解凍
-        if content_encoding == "br" or (raw_bytes and raw_bytes[0:1] not in (b'[', b'{')):
-            raw_bytes = brotli.decompress(raw_bytes)
-        elif content_encoding == "gzip" or raw_bytes[:2] == b'\x1f\x8b':
+        if content_encoding == "gzip" or raw_bytes[:2] == b'\x1f\x8b':
             raw_bytes = gzip.decompress(raw_bytes)
+        elif content_encoding == "br":
+            try:
+                raw_bytes = brotli.decompress(raw_bytes)
+            except Exception as br_err:
+                print(f"  IR BANK ({code}): brotli解凍失敗: {br_err}, Accept-Encodingからbrを除外して再取得します")
+                # brotli解凍に失敗した場合、brなしで再リクエスト
+                json_req2 = urllib.request.Request(url, headers={
+                    **ir_headers,
+                    "Accept": "application/json, text/plain, */*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Referer": f"https://irbank.net/{code}",
+                    "Origin": "https://irbank.net",
+                })
+                with opener.open(json_req2, timeout=15) as response2:
+                    raw_bytes = response2.read()
+                    content_encoding2 = response2.headers.get("Content-Encoding", "")
+                    print(f"  IR BANK ({code}): 再取得 Content-Encoding={content_encoding2}, size={len(raw_bytes)}bytes")
+                if content_encoding2 == "gzip" or raw_bytes[:2] == b'\x1f\x8b':
+                    raw_bytes = gzip.decompress(raw_bytes)
+        elif raw_bytes and raw_bytes[0:1] not in (b'[', b'{'):
+            # Content-Encodingヘッダーなしだが、JSONでもない場合
+            try:
+                raw_bytes = brotli.decompress(raw_bytes)
+            except Exception:
+                try:
+                    raw_bytes = gzip.decompress(raw_bytes)
+                except Exception:
+                    pass  # そのまま試す
 
         raw_data = json.loads(raw_bytes.decode("utf-8"))
     except Exception as e:
-        print(f"  IR BANK取得エラー ({code}): {e}")
-        return {"code": code, "error": f"IR BANKからデータを取得できません: {str(e)}", "sections": {}}
+        print(f"  IR BANK JSON API取得エラー ({code}): {e}")
+        print(f"  IR BANK ({code}): HTMLスクレイピングにフォールバックします")
+        # JSON APIが失敗した場合、HTMLスクレイピングで全データを取得
+        raw_data = None
+
+    if raw_data is None:
+        # マスタデータから銘柄名・業種を取得
+        stock_name = code
+        stock_sector = ""
+        for stock in JP_STOCKS:
+            if stock["code"] == code:
+                stock_name = stock["name"]
+                stock_sector = stock.get("sector", "")
+                break
+        result = {
+            "code": code,
+            "stockName": stock_name,
+            "sector": stock_sector,
+            "periods": [],
+            "sections": {}
+        }
+        try:
+            _supplement_from_html(code, result, opener, ir_headers)
+        except Exception as html_err:
+            print(f"  IR BANK ({code}): HTMLフォールバックも失敗: {html_err}")
+        if not result["periods"]:
+            return {"code": code, "error": f"IR BANKからデータを取得できません（JSON API・HTML両方失敗）", "sections": {}}
+        print(f"  IR BANK ({code}): HTMLフォールバック成功 ({len(result['periods'])}期間)")
+        # 配当利回りを計算（HTMLフォールバック時も実行）
+        _calc_dividend_yield_from_prices(code, result)
+        # バリュエーション指標を取得
+        result["valuation"] = fetch_valuation_metrics(code)
+        # キャッシュに保存
+        _fundamentals_cache[f"fundamentals|{code}"] = {"data": result, "timestamp": time.time()}
+        _save_fundamentals_cache()
+        return result
 
     # ==========================================
     # IR BANKのデータ形式:
@@ -1364,11 +2097,13 @@ def fetch_fundamentals_data(code: str) -> dict:
             n_items = len(cat_data.get("item", {}))
             print(f"  IR BANK ({code}): [{cat_name}] 列名={cols}, データ数={n_items}")
 
-    # マスタデータから銘柄名を取得
+    # マスタデータから銘柄名・業種を取得
     stock_name = code
+    stock_sector = ""
     for stock in JP_STOCKS:
         if stock["code"] == code:
             stock_name = stock["name"]
+            stock_sector = stock.get("sector", "")
             break
 
     # 各セクションのマッピング定義
@@ -1388,14 +2123,24 @@ def fetch_fundamentals_data(code: str) -> dict:
     ]
 
     # 期間リストを決定（全カテゴリの期間をマージ）
+    # 期間キーを正規化して統一する（例: "2024/1" → "2024/01"）
     period_set = set()
+    _period_key_map = {}  # 正規化後 → 元のキー（JSON itemアクセス用）
     for cat_name, cat_data in raw_data.items():
         if isinstance(cat_data, dict):
             items = cat_data.get("item", {})
             if items:
                 cat_periods = list(items.keys())
                 print(f"  IR BANK ({code}): [{cat_name}] 期間数={len(cat_periods)}, 先頭={cat_periods[:3]}, 末尾={cat_periods[-3:]}")
-                period_set.update(cat_periods)
+                for p in cat_periods:
+                    normalized = _normalize_period(p)
+                    period_set.add(normalized)
+                    _period_key_map[normalized] = p
+                # 正規化した期間キーでitemを再マップ
+                new_items = {}
+                for p, v in items.items():
+                    new_items[_normalize_period(p)] = v
+                cat_data["item"] = new_items
     all_periods = sorted(period_set)
 
     # 直近15年分に限定
@@ -1407,6 +2152,7 @@ def fetch_fundamentals_data(code: str) -> dict:
     result = {
         "code": code,
         "stockName": stock_name,
+        "sector": stock_sector,
         "periods": all_periods,
         "sections": {}
     }
@@ -1605,25 +2351,84 @@ def fetch_fundamentals_data(code: str) -> dict:
             print(f"  IR BANK ({code}): ROE: BPSも見つからず計算不可")
 
     # =============================================
-    # 配当利回りを計算（IR BANKのデータがない場合）
-    # 配当利回り = 1株配当 ÷ 年度末株価 × 100
-    # Yahoo Financeから過去の月次終値を取得して計算
+    # JSON APIで不足しているデータをHTMLスクレイピングで補完
+    # （EPS, ROE, 配当等がnullの場合）
     # =============================================
+    try:
+        _supplement_from_html(code, result, opener, ir_headers)
+    except Exception as e:
+        print(f"  IR BANK ({code}): HTML補完エラー: {e}")
+
+    # =============================================
+    # 配当利回りを計算（HTML補完後に実行）
+    # =============================================
+    _calc_dividend_yield_from_prices(code, result)
+
+    # operatingProfitはフロントエンドで不要なので除外
+    if "operatingProfit" in result["sections"]:
+        del result["sections"]["operatingProfit"]
+
+    # =============================================
+    # Yahoo Financeからバリュエーション指標を取得
+    # PER, PBR, 配当利回り
+    # =============================================
+    result["valuation"] = fetch_valuation_metrics(code)
+
+    # 全セクションがNoneの期間を除去（まだ決算データがない年度）
+    # 末尾だけでなく中間の空期間も除去する
+    remove_indices = []
+    for idx in range(len(result["periods"])):
+        all_none = True
+        for sec in result["sections"].values():
+            vals = sec.get("values", [])
+            if idx < len(vals) and vals[idx] is not None:
+                all_none = False
+                break
+        if all_none:
+            remove_indices.append(idx)
+    if remove_indices:
+        for removed_idx in reversed(remove_indices):
+            removed = result["periods"].pop(removed_idx)
+            for sec in result["sections"].values():
+                vals = sec.get("values", [])
+                if removed_idx < len(vals):
+                    vals.pop(removed_idx)
+            print(f"  IR BANK ({code}): 空期間を除去: {removed}")
+
+    # ファンダメンタルズ専用キャッシュに保存（メモリ+ファイル）
+    if not result.get("error"):
+        _fundamentals_cache[f"fundamentals|{code}"] = {"data": result, "timestamp": time.time()}
+        _save_fundamentals_cache()
+        print(f"  IR BANK ({code}): ファンダメンタルズキャッシュに保存完了")
+
+    return result
+
+
+def _calc_dividend_yield_from_prices(code: str, result: dict):
+    """
+    配当利回りを計算する（配当利回り = 1株配当 ÷ 年度末株価 × 100）
+    既存の配当利回りデータが半分未満の場合にYahoo Financeから株価を取得して計算する
+
+    Args:
+        code: 証券コード
+        result: ファンダメンタルズデータ（変更される）
+    """
+    all_periods = result.get("periods", [])
+    if not all_periods:
+        return
     dy = result["sections"].get("dividendYield", {})
     dy_values = dy.get("values", [])
     dy_valid = [v for v in dy_values if v is not None]
-    if len(dy_valid) < len(dy_values) * 0.5:
+    if len(dy_valid) < len(all_periods) * 0.5:
         div_vals = result["sections"].get("dividend", {}).get("values", [])
         if div_vals and any(v is not None for v in div_vals):
             try:
-                # 各期間の年度末月の終値を取得
                 yearly_prices = _fetch_yearly_closing_prices(code, all_periods)
                 if yearly_prices:
                     calc_dy = []
                     for i, period in enumerate(all_periods):
                         dv = div_vals[i] if i < len(div_vals) else None
                         price = yearly_prices.get(period)
-                        # 既存の値があればそれを使う
                         existing = dy_values[i] if i < len(dy_values) else None
                         if existing is not None:
                             calc_dy.append(existing)
@@ -1643,43 +2448,6 @@ def fetch_fundamentals_data(code: str) -> dict:
                         }
             except Exception as e:
                 print(f"  IR BANK ({code}): dividendYield計算エラー: {e}")
-
-    # operatingProfitはフロントエンドで不要なので除外
-    if "operatingProfit" in result["sections"]:
-        del result["sections"]["operatingProfit"]
-
-    # =============================================
-    # Yahoo Financeからバリュエーション指標を取得
-    # PER, PBR, 配当利回り
-    # =============================================
-    result["valuation"] = fetch_valuation_metrics(code)
-
-    # 末尾の全セクションがNoneの期間を除去（まだ決算データがない年度）
-    while result["periods"]:
-        last_idx = len(result["periods"]) - 1
-        all_none = True
-        for sec in result["sections"].values():
-            vals = sec.get("values", [])
-            if last_idx < len(vals) and vals[last_idx] is not None:
-                all_none = False
-                break
-        if all_none:
-            removed = result["periods"].pop()
-            for sec in result["sections"].values():
-                vals = sec.get("values", [])
-                if vals:
-                    vals.pop()
-            print(f"  IR BANK ({code}): 末尾の空期間を除去: {removed}")
-        else:
-            break
-
-    # ファンダメンタルズ専用キャッシュに保存（メモリ+ファイル）
-    if not result.get("error"):
-        _fundamentals_cache[f"fundamentals|{code}"] = {"data": result, "timestamp": time.time()}
-        _save_fundamentals_cache()
-        print(f"  IR BANK ({code}): ファンダメンタルズキャッシュに保存完了")
-
-    return result
 
 
 def _fetch_yearly_closing_prices(code: str, periods: list) -> dict:
@@ -2060,7 +2828,12 @@ def main():
     """サーバーを起動する"""
     # Renderなどのクラウド環境ではPORT環境変数が設定される
     port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(("0.0.0.0", port), StockAPIHandler)
+    class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+        daemon_threads = True
+    server = ThreadingHTTPServer(("0.0.0.0", port), StockAPIHandler)
+
+    # アラートの定期チェックをバックグラウンドで起動（Mac通知で知らせる）
+    _start_alert_scheduler()
 
     print("=" * 50)
     print("  StockView サーバー起動")
@@ -2072,8 +2845,13 @@ def main():
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nサーバーを停止しました")
+        print("\nサーバーを停止中...")
+        # 未保存のファンダメンタルズキャッシュをフラッシュ
+        if _fundamentals_cache_dirty:
+            print("  ファンダメンタルズキャッシュを保存中...")
+            _save_fundamentals_cache_now()
         server.server_close()
+        print("サーバーを停止しました")
 
 
 if __name__ == "__main__":
