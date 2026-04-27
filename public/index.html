@@ -1,0 +1,5699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>StockView - 株式チャート</title>
+
+  <!-- PWA設定 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1976d2">
+  <meta name="description" content="TradingView風の株式チャートアプリ">
+
+  <!-- iOS (iPhone/iPad) 対応 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="StockView">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- Lightweight Charts（TradingView公式のチャートライブラリ）-->
+  <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+
+  <style>
+    /* ========================================
+       全体のリセットと基本スタイル
+       白背景のクリーンなテーマ
+    ======================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #ffffff;
+      color: #333333;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    /* ========================================
+       ヘッダー（上部バー）
+    ======================================== */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #e0e0e0;
+      height: 36px;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .app-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1976d2;
+      letter-spacing: 1px;
+    }
+
+    /* ========================================
+       ロゴドロップダウンメニュー
+    ======================================== */
+    .app-logo-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .app-logo-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+    }
+
+    .app-logo-btn:hover {
+      background-color: #e8eef5;
+    }
+
+    .app-logo-chevron {
+      font-size: 10px;
+      color: #1976d2;
+      line-height: 1;
+      transition: transform 0.15s;
+    }
+
+    .app-logo-btn.open .app-logo-chevron {
+      transform: rotate(180deg);
+    }
+
+    .app-logo-menu {
+      position: fixed;
+      min-width: 160px;
+      background: #ffffff;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      padding: 4px;
+      z-index: 9000;
+      display: none;
+    }
+
+    .app-logo-menu.open {
+      display: block;
+    }
+
+    .app-logo-menu-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .app-logo-menu-item:hover {
+      background-color: #f0f4f9;
+      color: #1976d2;
+    }
+
+    /* ========================================
+       設定モーダル
+    ======================================== */
+    .settings-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-modal-overlay.open {
+      display: flex;
+    }
+
+    .settings-modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px 24px;
+      width: 420px;
+      max-width: 90vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      position: relative;
+    }
+
+    .settings-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .settings-modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .settings-modal-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      color: #888;
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .settings-modal-close:hover {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    .settings-section {
+      margin-bottom: 16px;
+    }
+
+    .settings-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .settings-section-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .settings-action-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      margin-bottom: 6px;
+      background: #fff;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .settings-action-btn:last-child {
+      margin-bottom: 0;
+    }
+
+    .settings-action-btn.import {
+      border: 1px solid #c8d4e3;
+      color: #1976d2;
+    }
+
+    .settings-action-btn.import:hover {
+      background: #f0f6fd;
+      border-color: #1976d2;
+    }
+
+    .settings-action-btn.danger {
+      border: 1px solid #f0b8b3;
+      color: #c9534a;
+    }
+
+    .settings-action-btn.danger:hover {
+      background: #fdf2f2;
+      border-color: #ef5350;
+      color: #ef5350;
+    }
+
+    .settings-button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .positive { color: #26a69a; }  /* 上昇は緑 */
+    .negative { color: #ef5350; }  /* 下落は赤 */
+
+    /* ========================================
+       検索バー
+    ======================================== */
+    .search-container {
+      position: relative;
+    }
+
+    .search-input {
+      width: 180px;
+      padding: 5px 10px 5px 28px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      background-color: #ffffff;
+      color: #333333;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: #1976d2;
+    }
+
+    .search-input::placeholder {
+      color: #999;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* 検索結果のドロップダウン */
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #ffffff;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      margin-top: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .search-results.active {
+      display: block;
+    }
+
+    .search-result-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .search-result-item:hover {
+      background-color: #f5f7fa;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-symbol {
+      font-weight: 600;
+      color: #1976d2;
+    }
+
+    .result-name {
+      font-size: 12px;
+      color: #888;
+      margin-left: 8px;
+    }
+
+    .result-market {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background-color: #eef2f7;
+      color: #666;
+    }
+
+    .result-add-btn {
+      background: none;
+      border: 1px solid #1976d2;
+      color: #1976d2;
+      font-size: 14px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .result-add-btn:hover {
+      background: #1976d2;
+      color: #fff;
+    }
+
+    /* ========================================
+       ツールバー要素（ヘッダー内に統合）
+    ======================================== */
+    .toolbar-group {
+      display: flex;
+      gap: 2px;
+    }
+
+    .toolbar-label {
+      font-size: 11px;
+      color: #888;
+      margin-right: 4px;
+      align-self: center;
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 20px;
+      background-color: #d0d0d0;
+      margin: 0 6px;
+      align-self: center;
+    }
+
+    .interval-btn {
+      padding: 3px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background-color: transparent;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .interval-btn:hover {
+      background-color: #e8e8e8;
+      color: #333;
+    }
+
+    .interval-btn.active {
+      background-color: #1976d2;
+      color: #ffffff;
+      border-color: #1976d2;
+      font-weight: 600;
+    }
+
+    .range-btn {
+      padding: 3px 8px;
+      border: none;
+      border-radius: 4px;
+      background-color: transparent;
+      color: #888;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .range-btn:hover {
+      color: #333;
+    }
+
+    .range-btn.active {
+      color: #1976d2;
+      font-weight: 600;
+    }
+
+    /* マーケットタブ（日本株/米国株切り替え） */
+    .market-tab {
+      padding: 3px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background-color: transparent;
+      color: #888;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .market-tab:hover {
+      background-color: #e8e8e8;
+    }
+
+    .market-tab.active {
+      background-color: #1976d2;
+      color: #ffffff;
+      border-color: #1976d2;
+    }
+
+    /* 出来高トグルボタン */
+    .toggle-btn {
+      padding: 3px 8px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background-color: transparent;
+      color: #888;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn:hover {
+      background-color: #e8e8e8;
+    }
+
+    .toggle-btn.active {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      border-color: #1976d2;
+    }
+
+    /* ========================================
+       描画ツール（トレンドライン等）
+    ======================================== */
+    .drawing-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .drawing-canvas.active {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+    .drawing-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .drawing-btn {
+      padding: 3px 8px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background-color: transparent;
+      color: #888;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .drawing-btn:hover {
+      background-color: #e8e8e8;
+    }
+    .drawing-btn.active {
+      background-color: #fff3e0;
+      color: #e65100;
+      border-color: #e65100;
+    }
+    .drawing-status {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(230, 81, 0, 0.9);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      display: none;
+      white-space: nowrap;
+    }
+    .drawing-point-marker {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e65100;
+      border: 2px solid #fff;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    /* ========================================
+       アプリ全体ルート（左カラム + ウォッチリスト 横並び）
+    ======================================== */
+    .app-root {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* 左カラム（ヘッダー + チャートを縦stack） */
+    .left-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* ========================================
+       メインレイアウト（チャートエリア用）
+       ※ left-column 内で、ヘッダー以外の残り全高を埋める
+    ======================================== */
+    .main-area {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ========================================
+       チャートエリア
+    ======================================== */
+    .chart-container {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      min-width: 0;
+    }
+
+    /* ========================================
+       ウォッチリスト（右サイドバー）
+       ページの最上端から最下端まで独立した縦カラム
+    ======================================== */
+    .watchlist {
+      width: 220px;
+      min-width: 220px;
+      height: 100vh;
+      border-left: 1px solid #e0e0e0;
+      background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding-top: 0;
+    }
+
+    .watchlist.hidden {
+      display: none;
+    }
+
+    .watchlist-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 12px;
+      border-bottom: 1px solid #d8dce0;
+      background-color: #eef1f5;
+    }
+
+    .watchlist-header h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a1a;
+      letter-spacing: 0.3px;
+    }
+
+    .watchlist-header-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .watchlist-header-btn {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: #888;
+      padding: 2px 4px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+
+    .watchlist-header-btn:hover {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    .watchlist-items {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .watchlist-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background-color 0.15s, transform 0.15s, box-shadow 0.15s;
+      height: 32px;
+      user-select: none;
+    }
+
+    .watchlist-item:hover {
+      background-color: #e8ecf0;
+    }
+
+    .watchlist-item.active {
+      background-color: #e3f2fd;
+    }
+
+    .watchlist-item.dragging {
+      opacity: 0.4;
+      background-color: #e0e0e0;
+    }
+
+    .watchlist-item.drag-over {
+      border-top: 2px solid #1976d2;
+    }
+
+    .watchlist-item-left {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .watchlist-item-symbol {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      flex-shrink: 0;
+    }
+
+    .watchlist-item-name {
+      font-size: 10px;
+      color: #999;
+      margin-left: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .watchlist-item-right {
+      text-align: right;
+      display: flex;
+      align-items: center;
+    }
+
+    .watchlist-item-price {
+      display: none;
+    }
+
+    .watchlist-item-change {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 3px;
+      min-width: 56px;
+      text-align: center;
+    }
+
+    .watchlist-item-change.positive {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .watchlist-item-change.negative {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    .watchlist-item-change.neutral {
+      background-color: #f5f5f5;
+      color: #888;
+    }
+
+    .watchlist-item-dividend {
+      display: none;
+    }
+
+    .watchlist-item-delete {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      color: #ccc;
+      padding: 0 2px;
+      line-height: 1;
+    }
+
+    .watchlist-item:hover .watchlist-item-delete {
+      display: block;
+    }
+
+    .watchlist-item-delete:hover {
+      color: #ef5350;
+    }
+
+    .watchlist-empty {
+      text-align: center;
+      padding: 24px 16px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* 銘柄詳細パネル */
+    /* ウォッチリストと詳細パネルの間のリサイズハンドル */
+    .watchlist-resize-handle {
+      display: none;
+      height: 6px;
+      background: #e0e0e0;
+      cursor: ns-resize;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .watchlist-resize-handle:hover,
+    .watchlist-resize-handle.dragging {
+      background: #42a5f5;
+    }
+    .watchlist-resize-handle::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px;
+      height: 2px;
+      background: #999;
+      border-radius: 1px;
+    }
+    .watchlist-resize-handle.visible {
+      display: none; /* リサイズ機能は無効化（パネル高さは max-height で固定） */
+    }
+
+    .stock-detail-panel {
+      display: none;
+      padding: 6px 10px 8px;
+      border-top: 1px solid #e0e0e0;
+      background-color: #fafbfc;
+      overflow-y: auto;
+      flex-shrink: 0;
+      max-height: 50vh;
+    }
+
+    .stock-detail-panel.visible {
+      display: block;
+    }
+
+    .stock-detail-header {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 1px;
+    }
+
+    .stock-detail-symbol {
+      font-size: 15px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .stock-detail-exchange {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .stock-detail-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .stock-detail-sector {
+      font-size: 10px;
+      color: #888;
+      background: #f0f0f0;
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-left: 2px;
+    }
+
+    .stock-detail-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 2px;
+    }
+
+    .stock-detail-price {
+      font-size: 22px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .stock-detail-currency {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .stock-detail-change {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .stock-detail-change.positive { color: #26a69a; }
+    .stock-detail-change.negative { color: #ef5350; }
+
+    .stock-detail-divider {
+      height: 1px;
+      background-color: #e6e8eb;
+      margin: 6px 0 4px;
+    }
+
+    .stock-detail-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #6b7280;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .stock-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1px 0;
+    }
+
+    .stock-detail-label {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .stock-detail-value {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    /* 配当情報セクション: 2列グリッドでコンパクトに */
+    .stock-detail-dividend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 10px;
+      padding: 6px 8px;
+      background-color: #f4f6f9;
+      border-radius: 6px;
+    }
+    .stock-detail-dividend-grid .stock-detail-row {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 1px;
+    }
+    .stock-detail-dividend-grid .stock-detail-row:last-child {
+      grid-column: 1 / -1;
+    }
+    .stock-detail-dividend-grid .stock-detail-label {
+      font-size: 10px;
+      color: #8a8f99;
+    }
+    .stock-detail-dividend-grid .stock-detail-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    /* 計算ツール / アラート設定: 区切り線で軽く分離（カード背景は廃止） */
+    .detail-tool-card {
+      background: transparent;
+      border: none;
+      border-top: 1px solid #eee;
+      border-radius: 0;
+      padding: 6px 0 4px;
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+    .detail-tool-card .stock-detail-section-title {
+      margin-bottom: 4px;
+    }
+    .detail-tool-card .alert-section {
+      margin-top: 0;
+    }
+    .detail-tool-card .alert-row {
+      gap: 6px;
+      padding: 0;
+      flex-wrap: nowrap;
+    }
+
+    /* アクションボタン群（ファンダ + 一括処理） */
+    .detail-action-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .detail-action-group .watchlist-import-btn,
+    .detail-action-group .watchlist-clear-btn {
+      flex: 1;
+      padding: 5px 6px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .detail-action-group .watchlist-clear-btn {
+      border-color: #f5b6b0;
+      color: #c9534a;
+    }
+    .detail-action-group .watchlist-clear-btn:hover {
+      border-color: #ef5350;
+      color: #ef5350;
+      background: #fdf2f2;
+    }
+
+    /* ========================================
+       ファンダメンタルズ別タブで開くボタン
+    ======================================== */
+    .funda-open-btn {
+      width: 100%;
+      padding: 6px 10px;
+      border: 2px solid #1976d2;
+      border-radius: 6px;
+      background: #fff;
+      color: #1976d2;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .funda-open-btn:hover {
+      background: #1976d2;
+      color: #fff;
+    }
+
+    .funda-open-icon {
+      font-size: 14px;
+    }
+
+    .funda-open-btn.disabled {
+      border-color: #ccc;
+      color: #999;
+      cursor: default;
+    }
+    .funda-open-btn.disabled:hover {
+      background: #fff;
+      color: #999;
+    }
+
+    /* アラート設定 */
+    .alert-section {
+      margin-top: 0;
+    }
+    .alert-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 0;
+      flex-wrap: nowrap;
+    }
+    .alert-row .alert-price-input {
+      flex: 1;
+      min-width: 0;
+    }
+    .alert-row .alert-set-btn {
+      flex: 0 0 auto;
+    }
+    .alert-price-input {
+      width: 80px;
+      padding: 4px 6px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      font-size: 13px;
+      text-align: center;
+    }
+    .alert-price-input:focus {
+      border-color: #1976d2;
+      outline: none;
+    }
+    .alert-set-btn {
+      padding: 4px 10px;
+      border: 1px solid #e74c6f;
+      background: #fff;
+      color: #e74c6f;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .alert-set-btn:hover {
+      background: #e74c6f;
+      color: #fff;
+    }
+    .alert-set-btn.active {
+      background: #e74c6f;
+      color: #fff;
+    }
+    .alert-set-btn.yield-btn {
+      border-color: #5bb5a2;
+      color: #5bb5a2;
+    }
+    .alert-set-btn.yield-btn:hover {
+      background: #5bb5a2;
+      color: #fff;
+    }
+    .alert-clear-btn {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #999;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .alert-clear-btn:hover {
+      border-color: #999;
+      color: #666;
+    }
+    .alert-status {
+      font-size: 11px;
+      color: #888;
+      padding: 2px 0;
+    }
+    .alert-status:empty {
+      padding: 0;
+    }
+    .alert-status.triggered {
+      color: #e74c6f;
+      font-weight: bold;
+    }
+    .watchlist-item-alert-icon {
+      color: #e74c6f;
+      font-size: 10px;
+      margin-left: 2px;
+    }
+
+    /* ウォッチリスト追加パネル */
+    .watchlist-add-input {
+      flex: 1;
+      padding: 4px 8px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+      background-color: #fff;
+      color: #333;
+    }
+
+    .watchlist-add-input:focus {
+      border-color: #1976d2;
+    }
+
+    .watchlist-add-btn {
+      margin-left: 4px;
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: #1976d2;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .watchlist-add-btn:hover {
+      background-color: #1565c0;
+    }
+
+    /* ウォッチリストタブ */
+    .watchlist-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      border-bottom: 1px solid #e0e0e0;
+      background: #fafafa;
+      padding: 4px 6px 0;
+      align-items: flex-end;
+    }
+    .watchlist-tab {
+      padding: 3px 8px;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      background: #f5f5f5;
+      font-size: 11px;
+      color: #666;
+      cursor: pointer;
+      margin-right: 2px;
+      white-space: nowrap;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative;
+    }
+    .watchlist-tab:hover { background: #eee; }
+    .watchlist-tab.active {
+      background: #fff;
+      color: #1976d2;
+      font-weight: 600;
+      border-color: #ccc;
+      margin-bottom: -1px;
+      padding-bottom: 4px;
+    }
+    .watchlist-tab-add {
+      padding: 2px 6px;
+      border: 1px dashed #ccc;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      background: transparent;
+      font-size: 12px;
+      color: #999;
+      cursor: pointer;
+    }
+    .watchlist-tab-add:hover { background: #e8f0fe; color: #1976d2; }
+    .watchlist-tab .tab-close {
+      display: none;
+      font-size: 10px;
+      margin-left: 3px;
+      color: #999;
+    }
+    .watchlist-tab:hover .tab-close { display: inline; }
+    .watchlist-tab .tab-close:hover { color: #e53935; }
+
+    .watchlist-sort-bar {
+      display: flex;
+      border-bottom: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .watchlist-sort-btn {
+      flex: 1;
+      padding: 4px 0;
+      border: none;
+      background: transparent;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .watchlist-sort-btn:hover {
+      color: #333;
+      background: #f0f0f0;
+    }
+
+    .watchlist-sort-btn.active {
+      color: #1976d2;
+      font-weight: 600;
+    }
+
+    .watchlist-import-bar {
+      padding: 8px 10px 10px;
+      border-top: 1px solid #e6e8eb;
+      display: flex;
+      gap: 6px;
+    }
+
+    .watchlist-import-btn {
+      flex: 1;
+      padding: 6px;
+      border: 1px dashed #aaa;
+      border-radius: 4px;
+      background: transparent;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .watchlist-import-btn:hover {
+      border-color: #1976d2;
+      color: #1976d2;
+    }
+
+    .watchlist-clear-btn {
+      padding: 6px 10px;
+      border: 1px dashed #f0b8b3;
+      border-radius: 4px;
+      background: transparent;
+      color: #c9534a;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .watchlist-clear-btn:hover {
+      border-color: #ef5350;
+      color: #ef5350;
+      background: #fdf2f2;
+    }
+
+    .import-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .import-modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      width: 420px;
+      max-width: 90vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    .import-modal h3 {
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .import-desc {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .import-textarea {
+      width: 100%;
+      height: 120px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+      font-family: monospace;
+      resize: vertical;
+    }
+
+    .import-textarea:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+
+    .import-modal-btns {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .import-cancel-btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .import-submit-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .import-submit-btn:hover {
+      background: #1565c0;
+    }
+
+
+    /* ローディング表示 */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      z-index: 50;
+    }
+
+    .loading-overlay.hidden {
+      display: none;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e0e0e0;
+      border-top-color: #1976d2;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 12px;
+      color: #888;
+      font-size: 14px;
+    }
+
+    /* エラー表示 */
+    .error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #d32f2f;
+      display: none;
+    }
+
+    .error-message.active {
+      display: block;
+    }
+
+    .error-message h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .error-message p {
+      font-size: 13px;
+      color: #888;
+    }
+
+    /* ツールチップ（OHLCV情報） */
+    .tooltip {
+      position: absolute;
+      top: 42px; /* 銘柄オーバーレイ(18px太字)の下に配置 */
+      left: 16px;
+      z-index: 20;
+      pointer-events: none;
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+    }
+
+    .tooltip-item {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tooltip-label {
+      color: #666;
+    }
+
+    .tooltip-value {
+      font-weight: 500;
+    }
+
+    /* ========================================
+       インジケーター設定パネル
+    ======================================== */
+    .indicator-panel {
+      position: absolute;
+      top: 42px;
+      left: 16px;
+      background-color: #ffffff;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      z-index: 80;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      display: none;
+      min-width: 240px;
+    }
+
+    .indicator-panel.active {
+      display: block;
+    }
+
+    .indicator-panel h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 6px;
+    }
+
+    .indicator-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+    }
+
+    .indicator-row label {
+      font-size: 13px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .indicator-row input[type="checkbox"] {
+      accent-color: #1976d2;
+    }
+
+    .indicator-row input[type="number"] {
+      width: 50px;
+      padding: 2px 6px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: center;
+      color: #333;
+    }
+
+    .indicator-color-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* 銘柄オーバーレイ（TradingView風: チャート左上） */
+    .symbol-overlay {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 21;
+      pointer-events: none;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: 4px;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .symbol-overlay-code {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1976d2;
+      letter-spacing: 0.5px;
+    }
+
+    .symbol-overlay-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #222;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* インジケーター凡例（チャート上部に表示） */
+    .indicator-legend {
+      position: absolute;
+      top: 64px; /* OHLCV (tooltip) の下に配置 */
+      left: 16px;
+      z-index: 20;
+      pointer-events: none;
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-value {
+      font-weight: 500;
+      color: #555;
+    }
+
+    /* ========================================
+       レスポンシブ対応（iPhone向け）
+    ======================================== */
+    /* ========================================
+       タブレット（768px以下）
+    ======================================== */
+    @media (max-width: 768px) {
+      .header {
+        padding: 6px 10px;
+        flex-wrap: wrap;
+        height: auto;
+      }
+
+      .app-title {
+        font-size: 14px;
+      }
+
+      .stock-info {
+        gap: 8px;
+      }
+
+      .stock-symbol {
+        font-size: 16px;
+      }
+
+      .stock-price {
+        font-size: 16px;
+      }
+
+      .search-input {
+        width: 180px;
+        font-size: 16px; /* iOSでズームされないようにする */
+      }
+
+      .toolbar-label {
+        font-size: 10px;
+      }
+
+      .toolbar-separator {
+        display: none;
+      }
+
+      .tooltip {
+        font-size: 10px;
+        gap: 8px;
+      }
+
+      .watchlist {
+        width: 180px;
+        min-width: 180px;
+      }
+
+      .watchlist-item-name {
+        max-width: 80px;
+      }
+    }
+
+    /* ========================================
+       スマートフォン（480px以下）
+    ======================================== */
+    @media (max-width: 480px) {
+      body {
+        overflow-y: auto;
+        height: auto;
+      }
+
+      /* ヘッダー: コンパクト化 */
+      .header {
+        padding: 4px 8px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .header-left {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .app-title {
+        font-size: 13px;
+      }
+
+      .stock-info {
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .stock-symbol { font-size: 15px; }
+      .stock-name { font-size: 11px; }
+      .stock-price { font-size: 15px; }
+      .stock-change { font-size: 12px; }
+      .stock-dividend { font-size: 10px; padding: 1px 6px; }
+
+      /* 検索バー: 全幅 */
+      .search-container {
+        width: 100%;
+      }
+
+      .search-input {
+        width: 100%;
+        font-size: 16px;
+      }
+
+      .search-results {
+        width: 100%;
+        max-height: 200px;
+      }
+
+      /* ヘッダー: スクロール可能に */
+      .header {
+        padding: 3px 6px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 2px;
+        height: auto;
+      }
+
+      .header::-webkit-scrollbar {
+        display: none;
+      }
+
+      .toolbar-label {
+        font-size: 9px;
+        white-space: nowrap;
+      }
+
+      .toolbar-group {
+        flex-shrink: 0;
+      }
+
+      .toolbar-separator {
+        display: none;
+      }
+
+      .interval-btn,
+      .range-btn,
+      .toggle-btn,
+      .drawing-btn {
+        padding: 3px 7px;
+        font-size: 11px;
+        min-height: 28px;
+      }
+
+      /* スマホでは全体を縦積みに（左カラム + ウォッチリスト 縦並び） */
+      .app-root {
+        flex-direction: column;
+        height: auto;
+      }
+
+      /* メインエリア: 縦積みレイアウト */
+      .main-area {
+        flex-direction: column;
+        height: auto;
+      }
+
+      /* チャート: 画面幅いっぱい、高さ固定 */
+      .chart-container {
+        width: 100% !important;
+        height: 55vh !important;
+        min-height: 300px;
+      }
+
+      /* ウォッチリスト: 下に配置、全幅 */
+      .watchlist {
+        width: 100% !important;
+        min-width: 100% !important;
+        height: auto;
+        max-height: 40vh;
+        border-left: none;
+        border-top: 2px solid #e0e0e0;
+      }
+
+      .watchlist.hidden {
+        display: none;
+      }
+
+      .watchlist-items {
+        max-height: 25vh;
+      }
+
+      .watchlist-item {
+        padding: 8px 12px;
+      }
+
+      .watchlist-item-name {
+        max-width: 120px;
+      }
+
+      /* 詳細パネル */
+      .stock-detail-panel {
+        max-height: 40vh;
+      }
+
+      /* ツールチップ: モバイルでは非表示（タッチ操作と相性悪い） */
+      .tooltip {
+        display: none;
+      }
+
+      /* 指標設定パネル: 全幅 */
+      .indicator-panel {
+        width: calc(100vw - 20px);
+        right: 10px;
+      }
+
+      /* セーフエリア対応（ノッチ付きiPhone） */
+      .header {
+        padding-top: max(4px, env(safe-area-inset-top));
+        padding-left: max(6px, env(safe-area-inset-left));
+        padding-right: max(6px, env(safe-area-inset-right));
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ==========================================
+       アプリルート（左カラム + ウォッチリストを横並びに配置）
+  ========================================== -->
+  <div class="app-root">
+
+  <!-- 左カラム（ヘッダー + チャートを縦stack） -->
+  <div class="left-column">
+
+  <!-- ==========================================
+       ヘッダー（タイトル + ツールバー + 検索を1行に統合）
+  ========================================== -->
+  <header class="header">
+    <div class="header-left">
+      <div class="app-logo-wrapper">
+        <button type="button" class="app-logo-btn" id="appLogoBtn" aria-haspopup="true" aria-expanded="false">
+          <span class="app-title">StockView</span>
+          <span class="app-logo-chevron">&#9662;</span>
+        </button>
+        <div class="app-logo-menu" id="appLogoMenu" role="menu">
+          <button type="button" class="app-logo-menu-item" id="openSettingsBtn" role="menuitem">&#9881;&#65039; 設定</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-container" style="margin-left: 6px;">
+      <div style="position: relative;">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          id="searchInput"
+          placeholder="銘柄検索・追加（7203, AAPL, トヨタ...）"
+          autocomplete="off"
+        >
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <div class="toolbar-group">
+      <button class="interval-btn" data-interval="1d">日</button>
+      <button class="interval-btn active" data-interval="1wk">週</button>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <div class="toolbar-group">
+      <button class="range-btn" data-range="1y">1Y</button>
+      <button class="range-btn" data-range="3y">3Y</button>
+      <button class="range-btn active" data-range="5y">5Y</button>
+      <button class="range-btn" data-range="10y">10Y</button>
+      <button class="range-btn" data-range="15y">15Y</button>
+      <button class="range-btn" data-range="max">MAX</button>
+      <button class="range-btn" id="refreshBtn" title="データ更新">⟳</button>
+    </div>
+
+    <div style="flex: 1;"></div>
+  </header>
+
+  <!-- ==========================================
+       メインエリア（チャート + ウォッチリスト）
+  ========================================== -->
+  <div class="main-area">
+
+  <!-- チャートエリア -->
+  <div class="chart-container" id="chartContainer">
+    <!-- チャートはJavaScriptで描画される -->
+
+    <!-- 描画用Canvasオーバーレイ -->
+    <canvas class="drawing-canvas" id="drawingCanvas"></canvas>
+    <div class="drawing-status" id="drawingStatus"></div>
+
+    <!-- 銘柄オーバーレイ（チャート左上にTradingView風に表示） -->
+    <div class="symbol-overlay" id="symbolOverlay">
+      <span class="symbol-overlay-code" id="symbolOverlayCode">-</span>
+      <span class="symbol-overlay-name" id="symbolOverlayName"></span>
+    </div>
+
+    <!-- インジケーター凡例（チャート上部） -->
+    <div class="indicator-legend" id="indicatorLegend"></div>
+
+    <!-- インジケーター設定パネル -->
+    <div class="indicator-panel" id="indicatorPanel">
+      <h4>テクニカル指標の設定</h4>
+
+      <div class="indicator-row">
+        <label>
+          <input type="checkbox" id="chkEMA" checked>
+          <span class="indicator-color-dot" style="background:#2196F3"></span>
+          EMA（指数移動平均）
+        </label>
+        <input type="number" id="emaPeriod" value="200" min="2" max="500">
+      </div>
+
+      <div class="indicator-row">
+        <label>
+          <input type="checkbox" id="chkBB" checked>
+          <span class="indicator-color-dot" style="background:#2196F3"></span>
+          ボリンジャーバンド
+        </label>
+        <input type="number" id="bbPeriod" value="20" min="2" max="200">
+      </div>
+
+      <div class="indicator-row" style="margin-left: 28px;">
+        <label style="font-size: 12px; color: #888;">σ倍率</label>
+        <input type="number" id="bbMultiplier" value="2" min="1" max="3" step="0.5">
+      </div>
+    </div>
+
+    <!-- ツールチップ（マウスホバーで表示されるOHLCV情報） -->
+    <div class="tooltip" id="tooltip">
+      <div class="tooltip-item">
+        <span class="tooltip-label">始値</span>
+        <span class="tooltip-value" id="tooltipOpen">-</span>
+      </div>
+      <div class="tooltip-item">
+        <span class="tooltip-label">高値</span>
+        <span class="tooltip-value" id="tooltipHigh">-</span>
+      </div>
+      <div class="tooltip-item">
+        <span class="tooltip-label">安値</span>
+        <span class="tooltip-value" id="tooltipLow">-</span>
+      </div>
+      <div class="tooltip-item">
+        <span class="tooltip-label">終値</span>
+        <span class="tooltip-value" id="tooltipClose">-</span>
+      </div>
+      <div class="tooltip-item">
+        <span class="tooltip-label">出来高</span>
+        <span class="tooltip-value" id="tooltipVolume">-</span>
+      </div>
+    </div>
+
+    <!-- ローディング表示 -->
+    <div class="loading-overlay" id="loading">
+      <div style="text-align: center;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">データを取得中...</div>
+      </div>
+    </div>
+
+    <!-- エラー表示 -->
+    <div class="error-message" id="errorMessage">
+      <h3>データを取得できませんでした</h3>
+      <p id="errorDetail">しばらく待ってからもう一度お試しください</p>
+    </div>
+  </div>
+  <!-- チャートコンテナ終了 -->
+
+  </div>
+  <!-- メインエリア終了（チャートのみ内包） -->
+
+  </div>
+  <!-- 左カラム終了 -->
+
+  <!-- ==========================================
+       ウォッチリスト（右サイドバー）
+       app-root 直下に配置 → ページの最上端から最下端まで独立
+  ========================================== -->
+  <div class="watchlist" id="watchlistPanel">
+    <div class="watchlist-header">
+      <h3>ウォッチリスト</h3>
+      <div class="watchlist-header-btns">
+        <button class="watchlist-header-btn" id="alertCheckAllBtn" title="全アラートをチェック">🔔</button>
+        <button class="watchlist-header-btn" id="watchlistAddTabBtn" title="新しいウォッチリストを追加">+</button>
+      </div>
+    </div>
+
+    <!-- ウォッチリストタブ（JP/US/カスタム） -->
+    <div class="watchlist-tabs" id="watchlistTabs">
+      <!-- JSで動的に生成 -->
+    </div>
+
+    <div class="watchlist-sort-bar">
+      <div id="flagFilter" style="position:relative;display:inline-block;">
+        <button class="watchlist-sort-btn" id="flagFilterBtn" title="フラグフィルタ" style="display:flex;align-items:center;gap:4px;">
+          <span id="flagFilterIcon" style="width:10px;height:10px;border-radius:50%;border:2px solid #888;background:transparent;display:inline-block;"></span>
+          <span id="flagFilterLabel">フラグ</span>
+        </button>
+        <div id="flagDropdown" style="display:none;position:absolute;top:100%;left:0;z-index:999;background:#2a2a2a;border:1px solid #555;border-radius:6px;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.5);min-width:100px;">
+          <div class="flag-dropdown-item" data-flag="" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="width:12px;height:12px;border-radius:50%;border:2px solid #888;background:transparent;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">すべて</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="green" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span class="flag-check" style="width:14px;font-size:11px;color:#4caf50;"></span>
+            <span style="width:12px;height:12px;border-radius:50%;background:#4caf50;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">緑</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="blue" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span class="flag-check" style="width:14px;font-size:11px;color:#42a5f5;"></span>
+            <span style="width:12px;height:12px;border-radius:50%;background:#42a5f5;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">青</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="orange" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span class="flag-check" style="width:14px;font-size:11px;color:#ffa726;"></span>
+            <span style="width:12px;height:12px;border-radius:50%;background:#ffa726;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">オレンジ</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="pink" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span class="flag-check" style="width:14px;font-size:11px;color:#f48fb1;"></span>
+            <span style="width:12px;height:12px;border-radius:50%;background:#f48fb1;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">ピンク</span>
+          </div>
+          <div class="flag-dropdown-item" data-flag="red" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span class="flag-check" style="width:14px;font-size:11px;color:#ef5350;"></span>
+            <span style="width:12px;height:12px;border-radius:50%;background:#ef5350;display:inline-block;"></span>
+            <span style="color:#ccc;font-size:11px;">赤</span>
+          </div>
+          <hr style="border:none;border-top:1px solid #555;margin:4px 0;">
+          <div id="clearAllFlagsBtn" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="font-size:12px;color:#ff6b6b;">✕</span>
+            <span style="color:#ff6b6b;font-size:11px;">フラグを全削除</span>
+          </div>
+          <div id="autoFlagBtn" style="display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer;border-radius:4px;">
+            <span style="font-size:12px;color:#42a5f5;">★</span>
+            <span style="color:#42a5f5;font-size:11px;">配当利回り自動</span>
+          </div>
+        </div>
+      </div>
+      <button class="watchlist-sort-btn active" id="sortCodeBtn" title="コード順">コード <span id="sortCodeArrow">▲</span></button>
+      <button class="watchlist-sort-btn" id="sortChangeBtn" title="変動率順">変動率 <span id="sortChangeArrow">-</span></button>
+    </div>
+
+    <div class="watchlist-items" id="watchlistItems">
+      <div class="watchlist-empty" id="watchlistEmpty">
+        銘柄がありません<br>
+        検索から銘柄を追加できます
+      </div>
+    </div>
+
+    <!-- リサイズハンドル（ウォッチリストと詳細パネルの間） -->
+    <div class="watchlist-resize-handle" id="watchlistResizeHandle"></div>
+
+    <!-- 銘柄詳細パネル（ウォッチリスト選択時に表示） -->
+    <div class="stock-detail-panel" id="stockDetailPanel">
+      <div class="stock-detail-header">
+        <span class="stock-detail-symbol" id="detailSymbol">-</span>
+        <span class="stock-detail-exchange" id="detailExchange">-</span>
+        <span class="stock-detail-sector" id="detailSector"></span>
+      </div>
+      <div class="stock-detail-name" id="detailName">-</div>
+
+      <div class="stock-detail-price-row">
+        <span class="stock-detail-price" id="detailPrice">-</span>
+        <span class="stock-detail-currency" id="detailCurrency">JPY</span>
+        <span class="stock-detail-change" id="detailChange"></span>
+      </div>
+
+      <div class="stock-detail-divider"></div>
+
+      <!-- 配当情報サマリー（2列グリッド・見出しなし） -->
+      <div class="stock-detail-dividend-grid">
+        <div class="stock-detail-row">
+          <span class="stock-detail-label">配当利回り</span>
+          <span class="stock-detail-value" id="detailDividendYield">-</span>
+        </div>
+        <div class="stock-detail-row">
+          <span class="stock-detail-label">年間配当金</span>
+          <span class="stock-detail-value" id="detailDividendRate">-</span>
+        </div>
+        <div class="stock-detail-row">
+          <span class="stock-detail-label">次回配当落ち日</span>
+          <span class="stock-detail-value" id="detailExDivDate">-</span>
+        </div>
+      </div>
+
+      <!-- 目標配当利回り → 目標株価（区切り線で分離） -->
+      <div class="detail-tool-card">
+        <h4 class="stock-detail-section-title">目標配当利回りから株価を算出</h4>
+        <div class="alert-section" id="yieldTargetSection">
+          <div class="alert-row">
+            <input type="text" inputmode="decimal" class="alert-price-input" id="targetYieldInput" placeholder="" style="width:60px;flex:0 0 auto;">
+            <span style="font-size:12px;color:#888;">%</span>
+            <button class="alert-set-btn" id="targetYieldBtn" style="border-color:#5bb5a2;color:#5bb5a2;">算出</button>
+          </div>
+          <div id="targetYieldResult" style="font-size:12px;color:#666;padding:2px 0;"></div>
+        </div>
+      </div>
+
+      <!-- 価格アラート設定（区切り線で分離） -->
+      <div class="detail-tool-card">
+        <h4 class="stock-detail-section-title">価格アラートを設定</h4>
+        <div class="alert-section" id="alertSection">
+          <div class="alert-row">
+            <input type="number" class="alert-price-input" id="alertPriceInput">
+            <span style="font-size:12px;color:#888;white-space:nowrap;">円以下</span>
+            <button class="alert-set-btn" id="alertSetBtn">設定</button>
+          </div>
+          <div class="alert-status" id="alertStatus"></div>
+        </div>
+      </div>
+
+      <!-- ファンダメンタルズ：別タブで開くボタン -->
+      <button class="funda-open-btn" id="fundaOpenBtn" title="ファンダメンタルズ分析を別タブで開く" style="margin-top:6px;">
+        ファンダメンタルズ分析
+        <span class="funda-open-icon">↗</span>
+      </button>
+    </div>
+
+    <!-- 一括インポートモーダル -->
+    <div class="import-modal-overlay" id="importModalOverlay" style="display:none;">
+      <div class="import-modal">
+        <h3>銘柄の一括インポート</h3>
+        <p class="import-desc">銘柄コードをカンマ、スペース、または改行で区切って入力してください。<br>日本株は4桁コード、米国株はティッカーで入力できます。</p>
+        <textarea class="import-textarea" id="importTextarea" placeholder="例:&#10;7203, 9984, 6758, 8306&#10;AAPL MSFT GOOGL&#10;1321&#10;9201"></textarea>
+        <div class="import-modal-btns">
+          <button class="import-cancel-btn" id="importCancelBtn">キャンセル</button>
+          <button class="import-submit-btn" id="importSubmitBtn">インポート</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:8px 4px; font-size:10px; color:#555; border-top:1px solid #2a2a3e; margin-top:8px;">
+      データ出典：<a href="https://irbank.net/" target="_blank" style="color:#4a90d9; text-decoration:none;">IR BANK</a> ／
+      <a href="https://finance.yahoo.com/" target="_blank" style="color:#4a90d9; text-decoration:none;">Yahoo Finance</a>
+    </div>
+  </div>
+  <!-- ウォッチリスト終了 -->
+
+  </div>
+  <!-- app-root 終了 -->
+
+  <!-- ==========================================
+       JavaScript（アプリのロジック）
+  ========================================== -->
+  <script>
+    // ==========================================
+    // グローバル変数（アプリの状態管理）
+    // ==========================================
+
+    /** 現在表示中の銘柄（localStorageから復元、なければデフォルト1321.T） */
+    let currentSymbol = localStorage.getItem("stockview_lastSymbol") || "1321.T";
+    // 現在表示中の銘柄の配当データ（目標利回り計算用）
+    let _currentDividendRate = 0;  // 年間配当金（円 or $）
+
+    /** 現在選択中の時間足（"1d", "1wk", "1mo"） */
+    let currentInterval = "1wk";
+
+    /** 現在選択中の期間（"1mo", "3mo", "6mo", "1y", "5y", "10y", "15y", "max"） */
+    let currentRange = "5y";
+
+    /** 日本株マスタデータ（jp-stocks.jsonから読み込み） */
+    let jpStocksMaster = [];
+
+    /** 米国株マスタデータ（us-stocks.jsonから読み込み） */
+    let usStocksMaster = [];
+
+    /** Lightweight Charts のチャートインスタンス */
+    let chart = null;
+
+    /** ローソク足シリーズ */
+    let candleSeries = null;
+
+    /** 出来高シリーズ */
+    let volumeSeries = null;
+
+    /** 最後に取得した株価データ */
+    let lastData = null;
+
+    /** 検索のタイマー（入力後少し待ってから検索する） */
+    let searchTimer = null;
+
+    /** 出来高の表示状態（false = デフォルト非表示） */
+    let showVolume = false;
+
+    /** 現在選択中のマーケット（検索用） */
+    let currentMarket = "US";
+
+    // ==========================================
+    // テクニカル指標の状態管理
+    // ==========================================
+
+    /** インジケーターのオン/オフ状態（デフォルトON） */
+    let showEMA = true;
+    let showBB = true;
+
+    /** インジケーターのラインシリーズ */
+    let emaLineSeries = null;
+    let bbUpperSeries = null;
+    let bbMiddleSeries = null;
+    let bbLowerSeries = null;
+
+    // ==========================================
+    // チャートの初期化
+    // ==========================================
+
+    function initChart() {
+      const container = document.getElementById("chartContainer");
+
+      // Lightweight Charts のチャートを作成
+      chart = LightweightCharts.createChart(container, {
+        // チャートの基本設定
+        width: container.clientWidth,
+        height: container.clientHeight,
+
+        // 白テーマの色設定
+        layout: {
+          background: { type: "solid", color: "#ffffff" },
+          textColor: "#888888",
+          fontSize: 12,
+        },
+
+        // グリッド線の設定
+        grid: {
+          vertLines: { color: "#f0f0f0" },
+          horzLines: { color: "#f0f0f0" },
+        },
+
+        // X軸（時間軸）の設定
+        timeScale: {
+          borderColor: "#e0e0e0",
+          timeVisible: false,  // 日足なので時刻は非表示
+        },
+
+        // Y軸（価格軸）の設定
+        rightPriceScale: {
+          borderColor: "#e0e0e0",
+        },
+
+        // クロスヘア（十字線）の設定
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: {
+            color: "#1976d2",
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+          },
+          horzLine: {
+            color: "#1976d2",
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+          },
+        },
+      });
+
+      // ローソク足シリーズの追加
+      candleSeries = chart.addCandlestickSeries({
+        upColor: "#26a69a",       // 陽線の色（緑）
+        downColor: "#ef5350",     // 陰線の色（赤）
+        borderUpColor: "#26a69a",
+        borderDownColor: "#ef5350",
+        wickUpColor: "#26a69a",   // 上ヒゲの色
+        wickDownColor: "#ef5350", // 下ヒゲの色
+      });
+
+      // 出来高シリーズの追加（チャート下部に表示）
+      volumeSeries = chart.addHistogramSeries({
+        priceFormat: { type: "volume" },
+        priceScaleId: "volume",   // 独自のY軸を使う
+      });
+
+      // 出来高のY軸設定（チャートの下20%に表示）
+      chart.priceScale("volume").applyOptions({
+        scaleMargins: {
+          top: 0.8,   // 上80%はローソク足用
+          bottom: 0,   // 下20%が出来高用
+        },
+      });
+
+      // EMAライン（青） - ローソク足と同じ価格スケールに明示的に配置
+      emaLineSeries = chart.addLineSeries({
+        color: "#2196F3",
+        lineWidth: 1.5,
+        priceScaleId: "right",
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+
+      // ボリンジャーバンド 上限（青）
+      bbUpperSeries = chart.addLineSeries({
+        color: "#2196F3",
+        lineWidth: 1,
+        priceScaleId: "right",
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+
+      // ボリンジャーバンド 中央（オレンジ）
+      bbMiddleSeries = chart.addLineSeries({
+        color: "#FF9800",
+        lineWidth: 1,
+        priceScaleId: "right",
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+
+      // ボリンジャーバンド 下限（青）
+      bbLowerSeries = chart.addLineSeries({
+        color: "#2196F3",
+        lineWidth: 1,
+        priceScaleId: "right",
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+
+      // マウスホバー時のツールチップ更新
+      chart.subscribeCrosshairMove((param) => {
+        updateTooltip(param);
+      });
+
+      // ウィンドウリサイズ時にチャートも自動リサイズ
+      window.addEventListener("resize", () => {
+        chart.applyOptions({
+          width: container.clientWidth,
+          height: container.clientHeight,
+        });
+      });
+    }
+
+    // ==========================================
+    // 株価データの取得
+    // ==========================================
+
+    /**
+     * チャートデータのメモリキャッシュ
+     * キー: "symbol|interval|range" → 値: { data, timestamp }
+     * 一度取得したデータを保持し、同じ銘柄に戻ったとき即座に表示する
+     */
+    const chartDataCache = new Map();
+    const CHART_CACHE_MAX = 100; // 最大100銘柄分保持（ウォッチリスト全銘柄をカバー）
+
+    /**
+     * キャッシュの有効期限を動的に計算する
+     *
+     * 【場中】平日 9:00〜15:30 → 5分後に期限切れ（価格が動いているので頻繁に更新）
+     * 【場後】平日 15:30以降   → 翌営業日 9:00まで有効（閉場後は価格不変）
+     * 【場前】平日 9:00より前  → 今日の 9:00まで有効
+     * 【週末】土日              → 次の月曜 9:00まで有効
+     */
+    function computeCacheExpiry() {
+      const now = new Date();
+      const day = now.getDay();            // 0=日, 1=月…6=土
+      const totalMin = now.getHours() * 60 + now.getMinutes();
+      const OPEN  = 9 * 60;        // 9:00
+      const CLOSE = 15 * 60 + 30;  // 15:30
+
+      const isWeekday    = day >= 1 && day <= 5;
+      const isMarketOpen = isWeekday && totalMin >= OPEN && totalMin < CLOSE;
+
+      if (isMarketOpen) {
+        // 場中：5分後に期限切れ
+        return Date.now() + 5 * 60 * 1000;
+      }
+
+      // 場外：次の営業日 9:00 を計算
+      const next = new Date(now);
+      next.setHours(9, 0, 0, 0);  // 同日 9:00 にセット
+
+      // 今日の 9:00 がまだ未来（場前）ならそのまま使う
+      // それ以外（場後・週末）は翌日以降に進める
+      if (now >= next) {
+        next.setDate(next.getDate() + 1);
+      }
+
+      // 土日をスキップして月曜へ
+      while (next.getDay() === 0 || next.getDay() === 6) {
+        next.setDate(next.getDate() + 1);
+      }
+
+      return next.getTime();
+    }
+
+    function getChartCacheKey(symbol, interval, range) {
+      return `${symbol}|${interval}|${range}`;
+    }
+
+    function getCachedChartData(symbol, interval, range) {
+      const key = getChartCacheKey(symbol, interval, range);
+      const entry = chartDataCache.get(key);
+      if (!entry) return null;
+      if (Date.now() > entry.expiresAt) {
+        chartDataCache.delete(key);
+        return null;
+      }
+      return entry.data;
+    }
+
+    function setCachedChartData(symbol, interval, range, data) {
+      // 容量超過時は古いものから削除
+      if (chartDataCache.size >= CHART_CACHE_MAX) {
+        const oldestKey = chartDataCache.keys().next().value;
+        chartDataCache.delete(oldestKey);
+      }
+      const key = getChartCacheKey(symbol, interval, range);
+      chartDataCache.set(key, { data, expiresAt: computeCacheExpiry() });
+    }
+
+    /**
+     * APIからチャートデータを取得する（キャッシュなし）
+     */
+    async function fetchChartDataFromAPI(symbol, interval, range) {
+      try {
+        const url = `/api/stock/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("API error");
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        return data;
+      } catch (apiError) {
+        console.warn("API未接続。サンプルデータを使用します:", apiError.message);
+        return generateSampleData(symbol, interval, range);
+      }
+    }
+
+    async function loadStockData(symbol, interval, range) {
+      showError(false);
+
+      // キャッシュにあれば即座に表示（保存時に重複排除済み・TTL管理済み）
+      const cached = getCachedChartData(symbol, interval, range);
+      if (cached) {
+        lastData = cached;
+        updateChart(cached);
+        updateStockInfo(cached);
+        prefetchAdjacentStocks(symbol, interval, range);
+        return;
+      }
+
+      // キャッシュなし：ローディング表示して取得
+      showLoading(true);
+
+      try {
+        const rawData = await fetchChartDataFromAPI(symbol, interval, range);
+
+        if (!rawData.data || rawData.data.length === 0) {
+          throw new Error("株価データがありません");
+        }
+
+        // 重複排除してから保存
+        const data = deduplicateStockData(rawData);
+
+        // キャッシュに保存
+        setCachedChartData(symbol, interval, range, data);
+
+        // データを保存
+        lastData = data;
+
+        // チャートにデータをセット
+        updateChart(data);
+
+        // ヘッダーの銘柄情報を更新
+        updateStockInfo(data);
+
+        // 先読み実行
+        prefetchAdjacentStocks(symbol, interval, range);
+
+      } catch (error) {
+        console.error("データ取得エラー:", error);
+        showError(true, error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    /**
+     * ウォッチリストの全銘柄を時間差でバックグラウンド先読みする
+     * ページ読み込み後に呼び出すことで、矢印キーナビを常にキャッシュヒットにする
+     */
+    function prefetchAllWatchlistStocks(interval, range, delayMs = 150) {
+      const container = document.getElementById("watchlistItems");
+      const items = Array.from(container.querySelectorAll(".watchlist-item"))
+        .filter((el) => el.dataset.symbol !== currentSymbol); // 現在表示中は除く
+      if (items.length === 0) return;
+
+      // 現在のアクティブ銘柄に近い順（前後交互）に優先度を付ける
+      const activeIndex = Array.from(container.querySelectorAll(".watchlist-item"))
+        .findIndex((el) => el.dataset.symbol === currentSymbol);
+
+      let ordered;
+      if (activeIndex !== -1) {
+        const allItems = Array.from(container.querySelectorAll(".watchlist-item"));
+        const sorted = [];
+        for (let offset = 1; offset <= allItems.length; offset++) {
+          const nextIdx = (activeIndex + offset) % allItems.length;
+          const prevIdx = (activeIndex - offset + allItems.length) % allItems.length;
+          if (allItems[nextIdx] && allItems[nextIdx].dataset.symbol !== currentSymbol) {
+            sorted.push(allItems[nextIdx]);
+          }
+          if (allItems[prevIdx] && allItems[prevIdx] !== allItems[nextIdx] &&
+              allItems[prevIdx].dataset.symbol !== currentSymbol) {
+            sorted.push(allItems[prevIdx]);
+          }
+        }
+        ordered = [...new Map(sorted.map(el => [el.dataset.symbol, el])).values()];
+      } else {
+        ordered = items;
+      }
+
+      // 150ms間隔でバックグラウンド取得（サーバー側キャッシュ改善によりリクエスト負荷は軽減済み）
+      ordered.forEach((el, i) => {
+        setTimeout(() => {
+          const sym = el.dataset.symbol;
+          if (getCachedChartData(sym, interval, range)) return; // すでにキャッシュ済み
+          fetchChartDataFromAPI(sym, interval, range)
+            .then((data) => {
+              if (data && data.data && data.data.length > 0) {
+                setCachedChartData(sym, interval, range, deduplicateStockData(data));
+              }
+            }).catch(() => {});
+        }, (i + 1) * 150);
+      });
+    }
+
+    /**
+     * ウォッチリスト内の前後の銘柄データをバックグラウンドで先読みする
+     */
+    function prefetchAdjacentStocks(symbol, interval, range) {
+      const container = document.getElementById("watchlistItems");
+      const items = Array.from(container.querySelectorAll(".watchlist-item"));
+      if (items.length < 2) return;
+
+      const currentIndex = items.findIndex((el) => el.dataset.symbol === symbol);
+      if (currentIndex === -1) return;
+
+      // 前後3銘柄を先読み対象にする（連続ナビゲーションでも途切れにくい）
+      const adjacentIndices = [];
+      for (let offset = 1; offset <= 3; offset++) {
+        adjacentIndices.push((currentIndex - offset + items.length) % items.length);
+        adjacentIndices.push((currentIndex + offset) % items.length);
+      }
+      // 重複を除去
+      const uniqueIndices = [...new Set(adjacentIndices)];
+
+      for (const idx of uniqueIndices) {
+        const adjSymbol = items[idx].dataset.symbol;
+        // すでにキャッシュにあればスキップ
+        if (getCachedChartData(adjSymbol, interval, range)) continue;
+        // バックグラウンドで取得してキャッシュに入れる
+        fetchChartDataFromAPI(adjSymbol, interval, range).then((data) => {
+          if (data && data.data && data.data.length > 0) {
+            setCachedChartData(adjSymbol, interval, range, data);
+          }
+        }).catch(() => {});
+      }
+    }
+
+    // ==========================================
+    // サンプルデータ生成（API未接続時のデモ用）
+    // サーバーを起動すれば実際のYahoo Financeデータに切り替わります
+    // ==========================================
+
+    function generateSampleData(symbol, interval, range) {
+      // 銘柄ごとの初期値と名前
+      const stockProfiles = {
+        "AAPL":  { name: "Apple Inc.",           price: 178, currency: "USD", market: "US" },
+        "MSFT":  { name: "Microsoft Corp.",      price: 415, currency: "USD", market: "US" },
+        "GOOGL": { name: "Alphabet Inc.",        price: 175, currency: "USD", market: "US" },
+        "AMZN":  { name: "Amazon.com Inc.",      price: 185, currency: "USD", market: "US" },
+        "TSLA":  { name: "Tesla Inc.",           price: 245, currency: "USD", market: "US" },
+        "NVDA":  { name: "NVIDIA Corp.",         price: 880, currency: "USD", market: "US" },
+        "7203":  { name: "トヨタ自動車",          price: 2850, currency: "JPY", market: "JP" },
+        "6758":  { name: "ソニーグループ",         price: 13500, currency: "JPY", market: "JP" },
+        "9984":  { name: "ソフトバンクグループ",    price: 8500, currency: "JPY", market: "JP" },
+        "8306":  { name: "三菱UFJ FG",           price: 1650, currency: "JPY", market: "JP" },
+        "USDJPY=X": { name: "米ドル/円",        price: 148, currency: "JPY", market: "US" },
+        "JPY=X":    { name: "米ドル/円",        price: 148, currency: "JPY", market: "US" },
+      };
+
+      const profile = stockProfiles[symbol] || {
+        name: symbol,
+        price: 100,
+        currency: symbol.match(/^\d{4}$/) ? "JPY" : "USD",
+        market: symbol.match(/^\d{4}$/) ? "JP" : "US",
+      };
+
+      // 期間に応じたデータ数
+      const rangeDays = { "1mo": 22, "3mo": 65, "6mo": 130, "1y": 252, "5y": 1260, "10y": 2520, "15y": 3780, "max": 5040 };
+      let days = rangeDays[range] || 252;
+
+      // 週足・月足なら本数を調整
+      if (interval === "1wk") days = Math.ceil(days / 5);
+      if (interval === "1mo") days = Math.ceil(days / 22);
+
+      // ランダムウォークでリアルな株価データを生成
+      const data = [];
+      let price = profile.price;
+      const today = new Date();
+      const volatility = profile.currency === "JPY" ? 0.015 : 0.02;
+
+      // seed for reproducibility per symbol
+      let seed = 0;
+      for (let i = 0; i < symbol.length; i++) seed += symbol.charCodeAt(i);
+
+      function seededRandom() {
+        seed = (seed * 16807 + 0) % 2147483647;
+        return (seed - 1) / 2147483646;
+      }
+
+      for (let i = days; i >= 0; i--) {
+        const daysBack = interval === "1wk" ? i * 7 : interval === "1mo" ? i * 30 : i;
+        const date = new Date(today);
+        date.setDate(date.getDate() - daysBack);
+
+        // 土日をスキップ（日足の場合）
+        if (interval === "1d" && (date.getDay() === 0 || date.getDay() === 6)) continue;
+
+        // ランダムな値動き
+        const change = (seededRandom() - 0.48) * volatility;
+        price = price * (1 + change);
+
+        const open = price * (1 + (seededRandom() - 0.5) * 0.005);
+        const close = price;
+        const high = Math.max(open, close) * (1 + seededRandom() * 0.01);
+        const low = Math.min(open, close) * (1 - seededRandom() * 0.01);
+        const volume = Math.floor(30_000_000 + seededRandom() * 40_000_000);
+
+        const decimals = profile.currency === "JPY" ? 0 : 2;
+
+        data.push({
+          date: date.toISOString().split("T")[0],
+          open: parseFloat(open.toFixed(decimals)),
+          high: parseFloat(high.toFixed(decimals)),
+          low: parseFloat(low.toFixed(decimals)),
+          close: parseFloat(close.toFixed(decimals)),
+          volume: volume,
+        });
+      }
+
+      return {
+        symbol: symbol,
+        name: profile.name + " (サンプル)",
+        market: profile.market,
+        currency: profile.currency,
+        data: data,
+      };
+    }
+
+    // ==========================================
+    // チャートの更新
+    // ==========================================
+
+    /**
+     * チャートデータの日付重複を排除して時系列順にソートする
+     * Yahoo Finance APIが期間指定方式（period1/period2）で重複データを返すことがある
+     * Lightweight Chartsは重複日付でエラーになるため、事前に排除する
+     */
+    function deduplicateStockData(stockData) {
+      if (!stockData || !stockData.data) return stockData;
+      const uniqueMap = new Map();
+      for (const c of stockData.data) {
+        uniqueMap.set(c.date, c);
+      }
+      const uniqueCandles = Array.from(uniqueMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+      return { ...stockData, data: uniqueCandles };
+    }
+
+    function updateChart(stockData) {
+      const candles = stockData.data;
+
+      // ローソク足データの形式に変換
+      // Lightweight Charts が要求する形式: { time, open, high, low, close }
+      const candleData = candles.map((c) => ({
+        time: c.date,    // "YYYY-MM-DD" 形式
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+      }));
+
+      // 出来高データの形式に変換
+      // 陽線なら緑、陰線なら赤で色分け
+      const volumeData = candles.map((c) => ({
+        time: c.date,
+        value: c.volume,
+        color: c.close >= c.open
+          ? "rgba(38, 166, 154, 0.5)"   // 陽線（緑、半透明）
+          : "rgba(239, 83, 80, 0.5)",    // 陰線（赤、半透明）
+      }));
+
+      // シリーズにデータをセット
+      candleSeries.setData(candleData);
+      // 出来高がオンの場合のみデータをセット
+      if (showVolume) {
+        volumeSeries.setData(volumeData);
+      } else {
+        volumeSeries.setData([]);
+      }
+
+      // 表示範囲をデータ全体に合わせる
+      chart.timeScale().fitContent();
+
+      // テクニカル指標を再計算・描画
+      updateIndicators(stockData);
+    }
+
+    // ==========================================
+    // テクニカル指標の計算と描画
+    // ==========================================
+
+    /**
+     * SMA（単純移動平均）を計算する
+     * 直近N本の終値の平均値
+     *
+     * @param {Array} candles - ローソク足データの配列
+     * @param {number} period - 期間（例: 25）
+     * @returns {Array} - { time, value } の配列
+     */
+    function calculateSMA(candles, period) {
+      const result = [];
+      if (!candles || candles.length < period) return result;
+      for (let i = period - 1; i < candles.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+          sum += candles[i - j].close;
+        }
+        result.push({
+          time: candles[i].date,
+          value: parseFloat((sum / period).toFixed(2)),
+        });
+      }
+      return result;
+    }
+
+    /**
+     * EMA（指数移動平均）を計算する
+     * 直近のデータに重みを付けた移動平均
+     * EMA = 前日EMA + α × (当日終値 - 前日EMA)
+     * α = 2 / (期間 + 1)
+     *
+     * @param {Array} candles - ローソク足データの配列
+     * @param {number} period - 期間（例: 25）
+     * @returns {Array} - { time, value } の配列
+     */
+    function calculateEMA(candles, period) {
+      const result = [];
+      if (!candles || candles.length === 0) return result;
+      const alpha = 2 / (period + 1);
+
+      // 最初のデータポイントから表示する
+      // period未満の区間はその時点までのSMAを使い、
+      // period到達後は正式なEMAに切り替える
+      let sum = 0;
+      let ema = null;
+
+      for (let i = 0; i < candles.length; i++) {
+        sum += candles[i].close;
+
+        if (i < period - 1) {
+          // period未満：ここまでのSMA（暫定値）を表示
+          const sma = sum / (i + 1);
+          result.push({
+            time: candles[i].date,
+            value: parseFloat(sma.toFixed(2)),
+          });
+        } else if (i === period - 1) {
+          // ちょうどperiod到達：SMAで初期化
+          ema = sum / period;
+          result.push({
+            time: candles[i].date,
+            value: parseFloat(ema.toFixed(2)),
+          });
+        } else {
+          // period以降：EMAの式で計算
+          ema = ema + alpha * (candles[i].close - ema);
+          result.push({
+            time: candles[i].date,
+            value: parseFloat(ema.toFixed(2)),
+          });
+        }
+      }
+      return result;
+    }
+
+    /**
+     * ボリンジャーバンドを計算する
+     * 中央線 = SMA(期間)
+     * 上限 = SMA + σ倍率 × 標準偏差
+     * 下限 = SMA - σ倍率 × 標準偏差
+     *
+     * @param {Array} candles - ローソク足データの配列
+     * @param {number} period - SMAの期間（例: 20）
+     * @param {number} multiplier - 標準偏差の倍率（例: 2）
+     * @returns {Object} - { upper, middle, lower } 各々 { time, value } の配列
+     */
+    function calculateBollingerBands(candles, period, multiplier) {
+      const upper = [];
+      const middle = [];
+      const lower = [];
+      if (!candles || candles.length < period) return { upper, middle, lower };
+
+      for (let i = period - 1; i < candles.length; i++) {
+        // SMA（中央線）
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+          sum += candles[i - j].close;
+        }
+        const sma = sum / period;
+
+        // 標準偏差
+        let sumSqDiff = 0;
+        for (let j = 0; j < period; j++) {
+          const diff = candles[i - j].close - sma;
+          sumSqDiff += diff * diff;
+        }
+        const stdDev = Math.sqrt(sumSqDiff / period);
+
+        middle.push({ time: candles[i].date, value: parseFloat(sma.toFixed(2)) });
+        upper.push({ time: candles[i].date, value: parseFloat((sma + multiplier * stdDev).toFixed(2)) });
+        lower.push({ time: candles[i].date, value: parseFloat((sma - multiplier * stdDev).toFixed(2)) });
+      }
+
+      return { upper, middle, lower };
+    }
+
+    /**
+     * テクニカル指標の表示を更新する
+     */
+    function updateIndicators(stockData) {
+      if (!stockData || !stockData.data || stockData.data.length === 0) return;
+
+      // 安全のため重複排除を再適用
+      const cleaned = deduplicateStockData(stockData);
+      const candles = cleaned.data;
+
+      // EMA
+      try {
+        if (showEMA) {
+          const period = parseInt(document.getElementById("emaPeriod").value) || 25;
+          const emaData = calculateEMA(candles, period);
+          emaLineSeries.setData(emaData);
+        } else {
+          emaLineSeries.setData([]);
+        }
+      } catch (e) {
+        console.error("EMA描画エラー:", e.message, e);
+      }
+
+      // ボリンジャーバンド
+      try {
+        if (showBB) {
+          const period = parseInt(document.getElementById("bbPeriod").value) || 20;
+          const multiplier = parseFloat(document.getElementById("bbMultiplier").value) || 2;
+          const bb = calculateBollingerBands(candles, period, multiplier);
+          bbUpperSeries.setData(bb.upper);
+          bbMiddleSeries.setData(bb.middle);
+          bbLowerSeries.setData(bb.lower);
+        } else {
+          bbUpperSeries.setData([]);
+          bbMiddleSeries.setData([]);
+          bbLowerSeries.setData([]);
+        }
+      } catch (e) {
+        console.warn("ボリンジャーバンド描画エラー:", e);
+      }
+
+      // 凡例を更新
+      updateIndicatorLegend(candles);
+    }
+
+    /**
+     * インジケーター凡例（チャート上部のラベル）を更新する
+     */
+    function updateIndicatorLegend(candles) {
+      const legend = document.getElementById("indicatorLegend");
+      const latest = candles[candles.length - 1];
+      let html = "";
+
+      if (showEMA) {
+        const period = parseInt(document.getElementById("emaPeriod").value) || 25;
+        const emaData = calculateEMA(candles, period);
+        const val = emaData.length > 0 ? emaData[emaData.length - 1].value : "-";
+        html += `<div class="legend-item">
+          <span class="legend-dot" style="background:#2196F3"></span>
+          <span class="legend-value">EMA(${period}): ${typeof val === "number" ? val.toLocaleString() : val}</span>
+        </div>`;
+      }
+
+      if (showBB) {
+        const period = parseInt(document.getElementById("bbPeriod").value) || 20;
+        const multiplier = parseFloat(document.getElementById("bbMultiplier").value) || 2;
+        const bb = calculateBollingerBands(candles, period, multiplier);
+        const upper = bb.upper.length > 0 ? bb.upper[bb.upper.length - 1].value : "-";
+        const lower = bb.lower.length > 0 ? bb.lower[bb.lower.length - 1].value : "-";
+        html += `<div class="legend-item">
+          <span class="legend-dot" style="background:#2196F3"></span>
+          <span class="legend-value">BB(${period},${multiplier}σ): ${typeof upper === "number" ? upper.toLocaleString() : upper} / ${typeof lower === "number" ? lower.toLocaleString() : lower}</span>
+        </div>`;
+      }
+
+      legend.innerHTML = html;
+    }
+
+    // ==========================================
+    // ヘッダーの銘柄情報の更新
+    // ==========================================
+
+    function updateStockInfo(stockData) {
+      // チャート左上の銘柄オーバーレイ（TradingView風）とブラウザタイトルを更新
+      const displaySymbol = stockData.symbol.replace(".T", "");
+      const masterName = lookupStockName(stockData.symbol);
+      const name = (masterName && masterName !== displaySymbol) ? masterName : (stockData.name || "");
+      document.title = `${displaySymbol} ${name} - StockView`;
+
+      const codeEl = document.getElementById("symbolOverlayCode");
+      const nameEl = document.getElementById("symbolOverlayName");
+      if (codeEl) codeEl.textContent = displaySymbol;
+      if (nameEl) nameEl.textContent = name && name !== displaySymbol ? name : "";
+    }
+
+    // ==========================================
+    // ツールチップ（マウスホバー時の情報表示）
+    // ==========================================
+
+    function updateTooltip(param) {
+      if (!param.time || !param.seriesData || param.seriesData.size === 0) {
+        return;
+      }
+
+      // ローソク足のデータを取得
+      const candleDataPoint = param.seriesData.get(candleSeries);
+      if (!candleDataPoint) return;
+
+      const { open, high, low, close } = candleDataPoint;
+
+      // 出来高データを取得
+      const volumeDataPoint = param.seriesData.get(volumeSeries);
+      const volume = volumeDataPoint ? volumeDataPoint.value : 0;
+
+      // 通貨記号
+      const curr = lastData && lastData.currency === "JPY" ? "¥" : "$";
+
+      // ツールチップを更新
+      document.getElementById("tooltipOpen").textContent = `${curr}${open.toLocaleString()}`;
+      document.getElementById("tooltipHigh").textContent = `${curr}${high.toLocaleString()}`;
+      document.getElementById("tooltipLow").textContent = `${curr}${low.toLocaleString()}`;
+      document.getElementById("tooltipClose").textContent = `${curr}${close.toLocaleString()}`;
+      document.getElementById("tooltipVolume").textContent = formatVolume(volume);
+
+      // 終値の色を変える
+      const closeEl = document.getElementById("tooltipClose");
+      closeEl.style.color = close >= open ? "#26a69a" : "#ef5350";
+    }
+
+    /**
+     * 出来高の数値を読みやすい形式に変換する
+     * 例: 58234000 → "58.2M"
+     */
+    function formatVolume(volume) {
+      if (volume >= 1_000_000_000) return (volume / 1_000_000_000).toFixed(1) + "B";
+      if (volume >= 1_000_000) return (volume / 1_000_000).toFixed(1) + "M";
+      if (volume >= 1_000) return (volume / 1_000).toFixed(1) + "K";
+      return volume.toString();
+    }
+
+    // ==========================================
+    // ローディング・エラー表示の切り替え
+    // ==========================================
+
+    function showLoading(visible) {
+      document.getElementById("loading").classList.toggle("hidden", !visible);
+    }
+
+    function showError(visible, message = "") {
+      const el = document.getElementById("errorMessage");
+      el.classList.toggle("active", visible);
+      if (message) {
+        document.getElementById("errorDetail").textContent = message;
+      }
+    }
+
+    // ==========================================
+    // 銘柄検索
+    // ==========================================
+
+    function setupSearch() {
+      const input = document.getElementById("searchInput");
+      const results = document.getElementById("searchResults");
+
+      // 入力内容からマーケットを自動判定
+      function detectMarket(query) {
+        // 数字のみ or 日本語が含まれる → 日本株
+        if (/^\d+$/.test(query) || /[\u3000-\u9fff]/.test(query)) return "JP";
+        return "US";
+      }
+
+      // 入力時に検索を実行（300ms待ってから）
+      input.addEventListener("input", () => {
+        clearTimeout(searchTimer);
+        const query = input.value.trim();
+
+        if (query.length < 1) {
+          results.classList.remove("active");
+          return;
+        }
+
+        // マーケット自動判定
+        currentMarket = detectMarket(query);
+
+        searchTimer = setTimeout(() => searchStocks(query), 300);
+      });
+
+      // 検索欄にフォーカスが当たったとき
+      input.addEventListener("focus", () => {
+        if (input.value.trim().length >= 1) {
+          results.classList.add("active");
+        }
+      });
+
+      // 検索欄以外をクリックしたら結果を閉じる
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".search-container")) {
+          results.classList.remove("active");
+        }
+      });
+
+      // Enterキーで直接シンボルを指定（チャート表示＋ウォッチリスト追加）
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const query = input.value.trim().toUpperCase();
+          if (query) {
+            // 4桁数字なら日本株
+            const symbol = /^\d{4}$/.test(query) ? query + ".T" : query;
+            const name = lookupStockName(symbol);
+            loadSymbol(symbol);
+            addToWatchlist(symbol, name);
+            input.value = "";
+            results.classList.remove("active");
+          }
+        }
+      });
+    }
+
+    async function searchStocks(query) {
+      const results = document.getElementById("searchResults");
+
+      try {
+        const url = `/api/search?q=${encodeURIComponent(query)}&market=${currentMarket}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+          results.innerHTML = data.results
+            .map((item) => {
+              const sectorTag = item.sector
+                ? `<span class="result-market">${item.sector}</span>`
+                : `<span class="result-market">${item.market}</span>`;
+              return `
+                <div class="search-result-item" data-symbol="${item.symbol}" data-name="${(item.name || "").replace(/"/g, "&quot;")}">
+                  <div>
+                    <span class="result-symbol">${item.symbol}</span>
+                    <span class="result-name">${item.name}</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    ${sectorTag}
+                    <button class="result-add-btn" title="ウォッチリストに追加">+</button>
+                  </div>
+                </div>
+              `;
+            })
+            .join("");
+
+          // 各結果のクリックイベント
+          results.querySelectorAll(".search-result-item").forEach((el) => {
+            // 「+」ボタン → ウォッチリストに追加のみ
+            const addBtn = el.querySelector(".result-add-btn");
+            addBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const sym = el.dataset.symbol;
+              const name = el.dataset.name || sym;
+              const symbol = /^\d{4}$/.test(sym) ? sym + ".T" : sym;
+              addToWatchlist(symbol, name);
+              addBtn.textContent = "✓";
+              addBtn.style.borderColor = "#26a69a";
+              addBtn.style.color = "#26a69a";
+            });
+
+            // 行クリック → チャート表示 + 詳細パネル更新
+            el.addEventListener("click", (e) => {
+              if (e.target.closest(".result-add-btn")) return;
+              const sym = el.dataset.symbol;
+              const symbol = /^\d{4}$/.test(sym) ? sym + ".T" : sym;
+              loadSymbol(symbol);
+              updateStockDetailPanel(symbol);
+              document.getElementById("searchInput").value = "";
+              results.classList.remove("active");
+            });
+          });
+
+          results.classList.add("active");
+        } else {
+          results.innerHTML = '<div class="search-result-item"><span class="result-name">該当する銘柄が見つかりません</span></div>';
+          results.classList.add("active");
+        }
+      } catch (error) {
+        console.error("検索エラー:", error);
+      }
+    }
+
+    /**
+     * 銘柄を読み込んでチャートを表示する
+     */
+    function loadSymbol(symbol) {
+      currentSymbol = symbol;
+      // 次回起動時に同じ銘柄を開くためlocalStorageに保存
+      try { localStorage.setItem("stockview_lastSymbol", symbol); } catch(e) {}
+      // 銘柄切替時はトレンドラインをクリア
+      if (typeof clearAllTrendlines === "function") {
+        clearAllTrendlines();
+      }
+      if (drawingMode && typeof cancelDrawing === "function") {
+        cancelDrawing();
+      }
+      loadStockData(symbol, currentInterval, currentRange);
+    }
+
+    // ==========================================
+    // ツールバーのボタン設定
+    // ==========================================
+
+    function setupToolbar() {
+      // 時間足ボタン
+      document.querySelectorAll(".interval-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          // アクティブ状態を切り替え
+          document.querySelectorAll(".interval-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          currentInterval = btn.dataset.interval;
+          loadStockData(currentSymbol, currentInterval, currentRange);
+          // 時間足変更 → 新しいintervalでウォッチリスト全体を再先読み
+          setTimeout(() => prefetchAllWatchlistStocks(currentInterval, currentRange, 500), 1500);
+        });
+      });
+
+      // 期間ボタン
+      document.querySelectorAll(".range-btn[data-range]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".range-btn[data-range]").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          currentRange = btn.dataset.range;
+
+          // 長期間の場合は自動的に週足・月足に切り替え（Yahoo Financeの制限対応）
+          if (["10y", "15y", "max"].includes(currentRange) && currentInterval === "1d") {
+            currentInterval = "1wk";
+            document.querySelectorAll(".interval-btn").forEach((b) => b.classList.remove("active"));
+            document.querySelector('.interval-btn[data-interval="1wk"]').classList.add("active");
+          }
+
+          loadStockData(currentSymbol, currentInterval, currentRange);
+          // 期間変更 → 新しいrangeでウォッチリスト全体を再先読み
+          setTimeout(() => prefetchAllWatchlistStocks(currentInterval, currentRange, 500), 1500);
+        });
+      });
+
+      // 更新ボタン
+      document.getElementById("refreshBtn").addEventListener("click", () => {
+        loadStockData(currentSymbol, currentInterval, currentRange);
+      });
+
+      // --- テクニカル指標のトグルボタン ---
+
+      // EMA トグル
+      document.getElementById("emaToggle").addEventListener("click", () => {
+        showEMA = !showEMA;
+        document.getElementById("emaToggle").classList.toggle("active", showEMA);
+        document.getElementById("chkEMA").checked = showEMA;
+        if (lastData) updateIndicators(lastData);
+      });
+
+      // BB トグル
+      document.getElementById("bbToggle").addEventListener("click", () => {
+        showBB = !showBB;
+        document.getElementById("bbToggle").classList.toggle("active", showBB);
+        document.getElementById("chkBB").checked = showBB;
+        if (lastData) updateIndicators(lastData);
+      });
+
+      // 設定パネルの開閉
+      document.getElementById("indicatorSettingsBtn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const panel = document.getElementById("indicatorPanel");
+        panel.classList.toggle("active");
+      });
+
+      // 設定パネル外をクリックしたら閉じる
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest("#indicatorPanel") && !e.target.closest("#indicatorSettingsBtn")) {
+          document.getElementById("indicatorPanel").classList.remove("active");
+        }
+      });
+
+      // 設定パネル内のチェックボックス変更
+      document.getElementById("chkEMA").addEventListener("change", (e) => {
+        showEMA = e.target.checked;
+        document.getElementById("emaToggle").classList.toggle("active", showEMA);
+        if (lastData) updateIndicators(lastData);
+      });
+
+      document.getElementById("chkBB").addEventListener("change", (e) => {
+        showBB = e.target.checked;
+        document.getElementById("bbToggle").classList.toggle("active", showBB);
+        if (lastData) updateIndicators(lastData);
+      });
+
+      // 期間の数値変更時に再計算
+      ["emaPeriod", "bbPeriod", "bbMultiplier"].forEach((id) => {
+        document.getElementById(id).addEventListener("change", () => {
+          if (lastData) updateIndicators(lastData);
+        });
+      });
+
+      // 出来高オン/オフボタン
+      document.getElementById("volumeToggle").addEventListener("click", () => {
+        showVolume = !showVolume;
+        const btn = document.getElementById("volumeToggle");
+        btn.classList.toggle("active", showVolume);
+
+        // 出来高シリーズの表示/非表示を切り替え
+        if (showVolume) {
+          // 出来高を表示：Y軸のスケールを元に戻す
+          chart.priceScale("volume").applyOptions({
+            scaleMargins: { top: 0.8, bottom: 0 },
+          });
+          // 最後のデータがあれば出来高を再描画
+          if (lastData) {
+            const volumeData = lastData.data.map((c) => ({
+              time: c.date,
+              value: c.volume,
+              color: c.close >= c.open
+                ? "rgba(38, 166, 154, 0.5)"
+                : "rgba(239, 83, 80, 0.5)",
+            }));
+            volumeSeries.setData(volumeData);
+          }
+        } else {
+          // 出来高を非表示：データを空にする
+          volumeSeries.setData([]);
+        }
+      });
+    }
+
+    // ==========================================
+    // 銘柄マスタデータの読み込み
+    // ==========================================
+
+    /**
+     * jp-stocks.json と us-stocks.json を読み込んでマスタデータに格納する
+     */
+    async function loadMasterData() {
+      try {
+        const jpRes = await fetch("/jp-stocks.json");
+        if (jpRes.ok) jpStocksMaster = await jpRes.json();
+      } catch { /* マスタ読み込み失敗は無視 */ }
+
+      try {
+        const usRes = await fetch("/us-stocks.json");
+        if (usRes.ok) usStocksMaster = await usRes.json();
+      } catch { /* マスタ読み込み失敗は無視 */ }
+
+      console.log(`マスタデータ: JP=${jpStocksMaster.length}件, US=${usStocksMaster.length}件`);
+    }
+
+    /**
+     * 銘柄コードから銘柄名を検索する
+     * @param {string} symbol - "7203.T" or "AAPL" 形式
+     * @returns {string} 銘柄名（見つからなければシンボルそのもの）
+     */
+    function lookupStockName(symbol) {
+      // 日本株（.T付き）
+      if (symbol.endsWith(".T")) {
+        const code = symbol.replace(".T", "");
+        const found = jpStocksMaster.find((s) => s.code === code);
+        if (found) return found.name;
+      }
+      // 米国株
+      const found = usStocksMaster.find((s) => s.symbol === symbol);
+      if (found) return found.name;
+      // フォールバック
+      return symbol.replace(".T", "");
+    }
+
+    /**
+     * マスタデータから業種（セクター）を検索する
+     * @param {string} symbol - "7203.T" or "AAPL" 形式
+     * @returns {string} 業種（見つからなければ空文字）
+     */
+    function lookupStockSector(symbol) {
+      // 日本株（.T付き）
+      if (symbol.endsWith(".T")) {
+        const code = symbol.replace(".T", "");
+        const found = jpStocksMaster.find((s) => s.code === code);
+        if (found) return found.sector || "";
+      }
+      // 米国株
+      const found = usStocksMaster.find((s) => s.symbol === symbol);
+      if (found) return found.sector || "";
+      return "";
+    }
+
+    // ==========================================
+    // ウォッチリスト（localStorage で永続化）
+    // ==========================================
+
+    /** ウォッチリストの表示状態キー */
+    const WATCHLIST_VISIBLE_KEY = "stockview_watchlist_visible";
+
+    /**
+     * 現在の市場のウォッチリストをlocalStorageから読み込む
+     * @returns {Array} - [{ symbol, name }] の配列
+     */
+    function loadWatchlist() {
+      try {
+        if (isCustomTab(currentTab)) {
+          const lists = loadCustomLists();
+          return lists[currentTab]?.stocks || [];
+        }
+        const key = currentTab === "JP" ? WATCHLIST_KEY_JP : WATCHLIST_KEY_US;
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    /**
+     * 現在のタブのウォッチリストをlocalStorageに保存する
+     */
+    function saveWatchlist(list) {
+      if (isCustomTab(currentTab)) {
+        const lists = loadCustomLists();
+        if (lists[currentTab]) {
+          lists[currentTab].stocks = list;
+          saveCustomLists(lists);
+        }
+        return;
+      }
+      const key = currentTab === "JP" ? WATCHLIST_KEY_JP : WATCHLIST_KEY_US;
+      localStorage.setItem(key, JSON.stringify(list));
+    }
+
+    /**
+     * ウォッチリストに銘柄を追加する
+     */
+    function addToWatchlist(symbol, name) {
+      if (isCustomTab(currentTab)) {
+        // カスタムタブ選択中 → そのタブに追加
+        const lists = loadCustomLists();
+        const tab = lists[currentTab];
+        if (!tab) return;
+        if (tab.stocks.some(item => item.symbol === symbol)) return;
+        tab.stocks.push({ symbol, name: name || symbol });
+        saveCustomLists(lists);
+        renderWatchlist();
+        return;
+      }
+
+      // JP/USタブ選択中 → 銘柄の種類に応じたタブに追加
+      const code = symbol.replace(".T", "");
+      const targetTab = /^\d{4}$/.test(code) ? "JP" : "US";
+
+      const key = targetTab === "JP" ? WATCHLIST_KEY_JP : WATCHLIST_KEY_US;
+      let list;
+      try {
+        const data = localStorage.getItem(key);
+        list = data ? JSON.parse(data) : [];
+      } catch { list = []; }
+
+      // 重複チェック
+      if (list.some((item) => item.symbol === symbol)) return;
+      list.push({ symbol, name: name || symbol });
+      localStorage.setItem(key, JSON.stringify(list));
+
+      // 追加先のタブに切り替え
+      if (targetTab !== currentTab) {
+        switchTab(targetTab);
+      } else {
+        renderWatchlist();
+      }
+    }
+
+    /**
+     * ウォッチリストから銘柄を削除する
+     */
+    function removeFromWatchlist(symbol) {
+      let list = loadWatchlist();
+      list = list.filter((item) => item.symbol !== symbol);
+      saveWatchlist(list);
+      // アラートが設定されていれば解除
+      clearAlert(symbol);
+      renderWatchlist();
+    }
+
+    /**
+     * ウォッチリストの並び順を変更する（ドラッグ&ドロップ用）
+     * draggedSymbol を targetSymbol の位置に移動する
+     */
+    function reorderWatchlist(draggedSymbol, targetSymbol) {
+      let list = loadWatchlist();
+      const draggedIdx = list.findIndex(i => i.symbol === draggedSymbol);
+      const targetIdx = list.findIndex(i => i.symbol === targetSymbol);
+      if (draggedIdx === -1 || targetIdx === -1) return;
+
+      // ドラッグした要素を取り出す
+      const [dragged] = list.splice(draggedIdx, 1);
+      // ターゲットの位置に挿入
+      const newTargetIdx = list.findIndex(i => i.symbol === targetSymbol);
+      list.splice(newTargetIdx, 0, dragged);
+
+      saveWatchlist(list);
+      renderWatchlist();
+    }
+
+    /**
+     * ウォッチリスト内で前/次の銘柄に移動する
+     * @param {number} direction - -1で前（上）、+1で次（下）
+     */
+    function navigateWatchlist(direction) {
+      const container = document.getElementById("watchlistItems");
+      // フィルタリングで非表示のアイテムを除外し、表示中のもののみ対象にする
+      const items = Array.from(container.querySelectorAll(".watchlist-item"))
+        .filter((el) => el.style.display !== "none");
+      if (items.length === 0) return;
+
+      // 現在アクティブなアイテムのインデックスを取得
+      const activeIndex = items.findIndex((el) => el.classList.contains("active"));
+
+      let nextIndex;
+      if (activeIndex === -1) {
+        // アクティブなアイテムがなければ、先頭or末尾を選択
+        nextIndex = direction > 0 ? 0 : items.length - 1;
+      } else {
+        nextIndex = activeIndex + direction;
+        // 範囲外なら端でループ
+        if (nextIndex < 0) nextIndex = items.length - 1;
+        if (nextIndex >= items.length) nextIndex = 0;
+      }
+
+      // クリックイベントを発火して銘柄を切り替え
+      items[nextIndex].click();
+
+      // 選択した要素が見えるようにスクロール
+      items[nextIndex].scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
+    /**
+     * ウォッチリストの市場を切り替える
+     */
+    function switchTab(tabId) {
+      currentTab = tabId;
+      localStorage.setItem(ACTIVE_TAB_KEY, tabId);
+      renderWatchlistTabs();
+      renderWatchlist();
+      // 詳細パネルとリサイズハンドルを一旦非表示
+      document.getElementById("stockDetailPanel").classList.remove("visible");
+      document.getElementById("watchlistResizeHandle").classList.remove("visible");
+    }
+
+    /** ソート状態: "code-asc" | "code-desc" | "change-asc" | "change-desc" */
+    let watchlistSortMode = "code-asc";
+
+    /**
+     * ウォッチリストをソートしてlocalStorageに保存・再描画する
+     */
+    function sortWatchlist(mode) {
+      watchlistSortMode = mode;
+      const list = loadWatchlist();
+
+      if (mode === "code-asc") {
+        list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+      } else if (mode === "code-desc") {
+        list.sort((a, b) => b.symbol.localeCompare(a.symbol));
+      }
+      // 変動率ソートは価格取得後にDOM操作でソートする（後述）
+
+      saveWatchlist(list);
+      renderWatchlist();
+
+      // ソートボタンのUI更新
+      updateSortUI();
+    }
+
+    /**
+     * 変動率でウォッチリストのDOM要素を並べ替える
+     * （変動率はAPI取得後にのみ判明するので、DOMレベルで並べ替え）
+     */
+    function sortWatchlistByChange(ascending) {
+      const container = document.getElementById("watchlistItems");
+      const items = Array.from(container.querySelectorAll(".watchlist-item"));
+
+      items.sort((a, b) => {
+        const aChange = parseFloat(a.querySelector(".watchlist-item-change")?.textContent) || 0;
+        const bChange = parseFloat(b.querySelector(".watchlist-item-change")?.textContent) || 0;
+        return ascending ? aChange - bChange : bChange - aChange;
+      });
+
+      items.forEach((item) => container.appendChild(item));
+    }
+
+    /** ソートボタンのUI表示を更新 */
+    function updateSortUI() {
+      const codeBtn = document.getElementById("sortCodeBtn");
+      const changeBtn = document.getElementById("sortChangeBtn");
+      const codeArrow = document.getElementById("sortCodeArrow");
+      const changeArrow = document.getElementById("sortChangeArrow");
+
+      codeBtn.classList.toggle("active", watchlistSortMode.startsWith("code"));
+      changeBtn.classList.toggle("active", watchlistSortMode.startsWith("change"));
+
+      if (watchlistSortMode === "code-asc") codeArrow.textContent = "▲";
+      else if (watchlistSortMode === "code-desc") codeArrow.textContent = "▼";
+      else codeArrow.textContent = "-";
+
+      if (watchlistSortMode === "change-desc") changeArrow.textContent = "▼";
+      else if (watchlistSortMode === "change-asc") changeArrow.textContent = "▲";
+      else changeArrow.textContent = "-";
+    }
+
+    /**
+     * ウォッチリストのUIを描画する
+     */
+    function renderWatchlist() {
+      const container = document.getElementById("watchlistItems");
+      const emptyMsg = document.getElementById("watchlistEmpty");
+      const list = loadWatchlist();
+
+      if (list.length === 0) {
+        emptyMsg.style.display = "block";
+        // 空メッセージ以外をクリア
+        container.querySelectorAll(".watchlist-item").forEach((el) => el.remove());
+        return;
+      }
+
+      emptyMsg.style.display = "none";
+
+      // 既存のアイテムを一旦クリア
+      container.querySelectorAll(".watchlist-item").forEach((el) => el.remove());
+
+      let needsSave = false;
+      const fragment = document.createDocumentFragment();
+      list.forEach((item) => {
+        const el = document.createElement("div");
+        el.className = "watchlist-item" + (item.symbol === currentSymbol ? " active" : "");
+        el.dataset.symbol = item.symbol;
+        el.draggable = true;
+
+        // 銘柄コードの表示（.Tを除去）
+        const displaySymbol = item.symbol.replace(".T", "");
+
+        // マスタデータから正しい名前を取得し、不一致があれば修正
+        const resolvedName = lookupStockName(item.symbol);
+        if (resolvedName !== item.symbol && resolvedName !== displaySymbol) {
+          if (item.name !== resolvedName) {
+            item.name = resolvedName;
+            needsSave = true;
+          }
+        } else if (!item.name || item.name === item.symbol || item.name === displaySymbol) {
+          // マスタにない場合は既存のまま（コードのみの場合はそのまま）
+        }
+
+        // 名前は短く
+        const shortName = (item.name || displaySymbol).replace(" (サンプル)", "");
+
+        // アラート設定済みかチェック
+        const alertInfo = getAlert(item.symbol);
+        const alertIcon = (alertInfo && alertInfo.enabled) ? '<span class="watchlist-item-alert-icon" title="アラート設定中">🔔</span>' : '';
+
+        const flagColor = getFlag(item.symbol);
+        const flagHex = flagColor ? FLAG_COLORS[flagColor] : "transparent";
+        const flagStyle = flagColor
+          ? `background:${flagHex};border:1px solid ${flagHex};`
+          : `background:transparent;border:1px solid #555;`;
+
+        el.innerHTML = `
+          <div class="watchlist-item-left">
+            <span class="watchlist-flag-dot" data-symbol="${item.symbol}" title="フラグ設定" style="width:10px;height:10px;min-width:10px;border-radius:50%;cursor:pointer;display:inline-block;${flagStyle}margin-right:4px;"></span>
+            <span class="watchlist-item-symbol">${displaySymbol}${alertIcon}</span>
+            <span class="watchlist-item-name">${shortName}</span>
+          </div>
+          <div class="watchlist-item-right">
+            <span class="watchlist-item-price" id="wl-price-${item.symbol.replace(".", "_")}">-</span>
+            <span class="watchlist-item-change neutral" id="wl-change-${item.symbol.replace(".", "_")}">-</span>
+            <span class="watchlist-item-dividend" id="wl-div-${item.symbol.replace(".", "_")}"></span>
+          </div>
+          <button class="watchlist-item-delete" title="削除">×</button>
+        `;
+
+        fragment.appendChild(el);
+      });
+      container.appendChild(fragment);
+
+      // 名前が更新されたら保存
+      if (needsSave) saveWatchlist(list);
+
+      // 各銘柄の価格・変動率を取得
+      fetchWatchlistPrices(list);
+    }
+
+    /**
+     * ウォッチリストの銘柄名をAPIデータで更新する
+     * マスタデータに日本語名があればそちらを優先し、なければAPIの名前を使用する
+     */
+    function updateWatchlistName(symbol, apiName) {
+      const list = loadWatchlist();
+      const item = list.find((i) => i.symbol === symbol);
+      if (!item) return;
+
+      const displaySymbol = symbol.replace(".T", "");
+
+      // マスタデータの日本語名を優先、なければAPIの名前を使用
+      const masterName = lookupStockName(symbol);
+      const bestName = (masterName && masterName !== displaySymbol) ? masterName : apiName;
+      if (!bestName || bestName === symbol || bestName === displaySymbol) return;
+
+      // 名前が異なる場合に更新（マスタと不一致の場合も修正される）
+      if (item.name === bestName) return;
+
+      item.name = bestName;
+      saveWatchlist(list);
+      // UIも更新
+      const nameEl = document.querySelector(`[data-symbol="${symbol}"] .watchlist-item-name`);
+      if (nameEl) nameEl.textContent = bestName;
+    }
+
+    /**
+     * ウォッチリスト価格キャッシュ関連
+     * localStorage に価格データを保存し、ページ再読み込み時に即座に表示する
+     */
+    const PRICE_CACHE_KEY = "stockview_price_cache";
+    const PRICE_CACHE_TTL = 5 * 60 * 1000; // 5分間キャッシュ有効
+
+    // メモリ上にキャッシュを保持し、localStorageへの書き込みはデバウンスする
+    let _priceCache = null;
+    let _priceCacheDirty = false;
+    let _priceCacheFlushTimer = null;
+
+    function _ensurePriceCacheLoaded() {
+      if (_priceCache === null) {
+        try {
+          const raw = localStorage.getItem(PRICE_CACHE_KEY);
+          _priceCache = raw ? JSON.parse(raw) : {};
+        } catch { _priceCache = {}; }
+      }
+    }
+
+    function _flushPriceCache() {
+      if (_priceCacheDirty && _priceCache) {
+        try {
+          localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify(_priceCache));
+        } catch { /* ストレージ容量超過時は無視 */ }
+        _priceCacheDirty = false;
+      }
+      _priceCacheFlushTimer = null;
+    }
+
+    function _schedulePriceCacheFlush() {
+      if (!_priceCacheFlushTimer) {
+        _priceCacheFlushTimer = setTimeout(_flushPriceCache, 3000);
+      }
+    }
+
+    function getCachedPrice(symbol) {
+      _ensurePriceCacheLoaded();
+      const entry = _priceCache[symbol];
+      if (!entry) return null;
+      if (Date.now() - entry.timestamp > PRICE_CACHE_TTL) return null;
+      return entry;
+    }
+
+    function setCachedPrice(symbol, changePct) {
+      _ensurePriceCacheLoaded();
+      _priceCache[symbol] = { changePct, timestamp: Date.now() };
+      _priceCacheDirty = true;
+      _schedulePriceCacheFlush();
+    }
+
+    /**
+     * キャッシュからウォッチリストの変動率を即座に表示する
+     */
+    function applyPriceCacheToUI(list) {
+      for (const item of list) {
+        const cached = getCachedPrice(item.symbol);
+        if (cached) {
+          const safeId = item.symbol.replace(".", "_");
+          const changeEl = document.getElementById(`wl-change-${safeId}`);
+          if (changeEl) {
+            const sign = cached.changePct >= 0 ? "+" : "";
+            changeEl.textContent = `${sign}${cached.changePct.toFixed(2)}%`;
+            changeEl.className = `watchlist-item-change ${cached.changePct > 0 ? "positive" : cached.changePct < 0 ? "negative" : "neutral"}`;
+          }
+        }
+      }
+    }
+
+    /**
+     * 1銘柄の価格を取得してUI更新する（内部用）
+     */
+    async function fetchSingleStockPrice(item) {
+      try {
+        let data;
+        try {
+          const url = `/api/stock/${encodeURIComponent(item.symbol)}?interval=1d&range=5d`;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error("API error");
+          data = await response.json();
+          if (data.error) throw new Error(data.error);
+          if (data.name) updateWatchlistName(item.symbol, data.name);
+        } catch {
+          const rawSymbol = item.symbol.replace(".T", "");
+          data = generateSampleData(rawSymbol, "1d", "1mo");
+        }
+
+        if (!data.data || data.data.length < 2) return;
+
+        // APIのchangePercentを優先使用（詳細パネルと同じデータソース）
+        let changePct;
+        if (data.changePercent !== undefined && data.changePercent !== null) {
+          changePct = data.changePercent;
+        } else {
+          // フォールバック: ローソク足の終値から計算
+          const latest = data.data[data.data.length - 1];
+          let previous = null;
+          for (let i = data.data.length - 2; i >= 0; i--) {
+            if (data.data[i].date !== latest.date) {
+              previous = data.data[i];
+              break;
+            }
+          }
+          if (!previous) return;
+          changePct = ((latest.close - previous.close) / previous.close) * 100;
+        }
+
+        // キャッシュに保存
+        setCachedPrice(item.symbol, changePct);
+
+        const safeId = item.symbol.replace(".", "_");
+        const changeEl = document.getElementById(`wl-change-${safeId}`);
+        if (changeEl) {
+          const sign = changePct >= 0 ? "+" : "";
+          changeEl.textContent = `${sign}${changePct.toFixed(2)}%`;
+          changeEl.className = `watchlist-item-change ${changePct > 0 ? "positive" : changePct < 0 ? "negative" : "neutral"}`;
+        }
+      } catch { /* 失敗は無視 */ }
+    }
+
+    /**
+     * ウォッチリストの各銘柄の最新価格を並列取得する
+     * 同時に最大10銘柄ずつ取得して高速化
+     */
+    async function fetchWatchlistPrices(list) {
+      // まずキャッシュから即座に表示
+      applyPriceCacheToUI(list);
+
+      // バックグラウンドで最新データを取得して更新
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < list.length; i += BATCH_SIZE) {
+        const batch = list.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map((item) => fetchSingleStockPrice(item)));
+      }
+
+      // フラグフィルタが選択されていれば適用
+      applyFlagFilter();
+
+      // バックグラウンドで配当データをプリフェッチ
+      prefetchDividendData(list);
+    }
+
+    // ==========================================
+    // 配当データ プリフェッチ＆キャッシュ
+    // ==========================================
+    const DIV_CACHE_KEY = "stockview_div_cache";
+    const DIV_CACHE_TTL = 30 * 60 * 1000; // 30分間キャッシュ有効
+
+    // メモリ上にキャッシュを保持し、localStorageへの書き込みはデバウンスする
+    let _divCache = null;
+    let _divCacheDirty = false;
+    let _divCacheFlushTimer = null;
+
+    function _ensureDivCacheLoaded() {
+      if (_divCache === null) {
+        try { _divCache = JSON.parse(localStorage.getItem(DIV_CACHE_KEY) || "{}"); }
+        catch { _divCache = {}; }
+      }
+    }
+    function _flushDivCache() {
+      if (_divCacheDirty && _divCache) {
+        try { localStorage.setItem(DIV_CACHE_KEY, JSON.stringify(_divCache)); }
+        catch { /* ストレージ容量超過時は無視 */ }
+        _divCacheDirty = false;
+      }
+      _divCacheFlushTimer = null;
+    }
+    function _scheduleDivCacheFlush() {
+      if (!_divCacheFlushTimer) {
+        _divCacheFlushTimer = setTimeout(_flushDivCache, 3000);
+      }
+    }
+    function getCachedDiv(symbol) {
+      _ensureDivCacheLoaded();
+      const entry = _divCache[symbol];
+      if (!entry) return null;
+      if (Date.now() - entry.timestamp > DIV_CACHE_TTL) return null;
+      return entry.data;
+    }
+    function setCachedDiv(symbol, data) {
+      _ensureDivCacheLoaded();
+      _divCache[symbol] = { data, timestamp: Date.now() };
+      _divCacheDirty = true;
+      _scheduleDivCacheFlush();
+    }
+
+    /** ウォッチリスト全銘柄の配当データをバックグラウンドで先読み */
+    async function prefetchDividendData(list) {
+      const BATCH = 5;
+      for (let i = 0; i < list.length; i += BATCH) {
+        const batch = list.slice(i, i + BATCH);
+        await Promise.all(batch.map(async (item) => {
+          if (getCachedDiv(item.symbol)) return; // キャッシュあればスキップ
+          try {
+            const url = `/api/dividend/${encodeURIComponent(item.symbol)}`;
+            const resp = await fetch(url);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (!data.error) setCachedDiv(item.symbol, data);
+          } catch { /* 失敗は無視 */ }
+        }));
+      }
+    }
+
+    // ==========================================
+    // カラーフラグ機能
+    // ==========================================
+    const FLAG_COLORS = {
+      green: "#4caf50",
+      blue: "#42a5f5",
+      orange: "#ffa726",
+      pink: "#f48fb1",
+      red: "#ef5350",
+    };
+    const FLAG_STORAGE_KEY = "stockview_flags";
+    const FLAG_FILTER_KEY = "stockview_flag_filter";
+    let _activeFilterFlags = new Set(); // 現在のフィルタ色セット（空=すべて表示）
+
+    function saveFilterFlags() {
+      localStorage.setItem(FLAG_FILTER_KEY, JSON.stringify([..._activeFilterFlags]));
+    }
+    function loadFilterFlags() {
+      try {
+        const arr = JSON.parse(localStorage.getItem(FLAG_FILTER_KEY) || "[]");
+        _activeFilterFlags = new Set(arr);
+      } catch { _activeFilterFlags = new Set(); }
+    }
+
+    function loadFlags() {
+      try { return JSON.parse(localStorage.getItem(FLAG_STORAGE_KEY) || "{}"); }
+      catch { return {}; }
+    }
+    function saveFlags(flags) {
+      localStorage.setItem(FLAG_STORAGE_KEY, JSON.stringify(flags));
+    }
+    function getFlag(symbol) {
+      return loadFlags()[symbol] || "";
+    }
+    function setFlag(symbol, color) {
+      const flags = loadFlags();
+      if (color) {
+        flags[symbol] = color;
+      } else {
+        delete flags[symbol];
+      }
+      saveFlags(flags);
+    }
+
+    /**
+     * 配当利回りに基づいてフラグを自動設定する
+     * 4%以上→緑、3.5%以上→青、3%以上→オレンジ、3%未満→ピンク
+     */
+    async function autoFlagByDividendYield() {
+      const list = loadWatchlist();
+      const flags = loadFlags();
+      let updated = 0;
+
+      for (const item of list) {
+        // キャッシュから配当データを取得
+        let divData = getCachedDiv(item.symbol);
+        if (!divData) {
+          // キャッシュがなければAPIから取得
+          try {
+            const url = `/api/dividend/${encodeURIComponent(item.symbol)}`;
+            const resp = await fetch(url);
+            if (resp.ok) {
+              divData = await resp.json();
+              if (!divData.error) setCachedDiv(item.symbol, divData);
+            }
+          } catch { continue; }
+        }
+        if (!divData || !divData.dividendYield) {
+          delete flags[item.symbol];
+          continue;
+        }
+
+        const y = divData.dividendYield;
+        if (y >= 4) flags[item.symbol] = "green";
+        else if (y >= 3.5) flags[item.symbol] = "blue";
+        else if (y >= 3) flags[item.symbol] = "orange";
+        else flags[item.symbol] = "pink";
+        updated++;
+      }
+
+      saveFlags(flags);
+      renderWatchlist();
+      return updated;
+    }
+
+    /**
+     * フラグ色選択メニューを表示する
+     */
+    function showFlagMenu(symbol, anchorEl) {
+      // 既存メニューを削除
+      document.querySelectorAll(".flag-menu").forEach(m => m.remove());
+
+      const menu = document.createElement("div");
+      menu.className = "flag-menu";
+      menu.style.cssText = "position:absolute;z-index:9999;background:#333;border:1px solid #555;border-radius:6px;padding:6px;display:flex;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,0.5);";
+
+      const currentFlag = getFlag(symbol);
+
+      // 「なし」ボタン
+      const noneBtn = document.createElement("span");
+      noneBtn.title = "フラグなし";
+      noneBtn.style.cssText = `width:18px;height:18px;border-radius:50%;border:2px solid ${!currentFlag ? '#fff' : '#666'};cursor:pointer;display:inline-block;background:transparent;`;
+      noneBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setFlag(symbol, "");
+        menu.remove();
+        renderWatchlist();
+      });
+      menu.appendChild(noneBtn);
+
+      // 各色ボタン
+      for (const [name, hex] of Object.entries(FLAG_COLORS)) {
+        const dot = document.createElement("span");
+        dot.title = name;
+        dot.style.cssText = `width:18px;height:18px;border-radius:50%;cursor:pointer;display:inline-block;background:${hex};border:2px solid ${currentFlag === name ? '#fff' : 'transparent'};`;
+        dot.addEventListener("click", (e) => {
+          e.stopPropagation();
+          setFlag(symbol, name);
+          menu.remove();
+          renderWatchlist();
+        });
+        menu.appendChild(dot);
+      }
+
+      // 位置決め
+      const rect = anchorEl.getBoundingClientRect();
+      menu.style.left = rect.left + "px";
+      menu.style.top = (rect.bottom + 4) + "px";
+      menu.style.position = "fixed";
+      document.body.appendChild(menu);
+
+      // 外側クリックで閉じる
+      setTimeout(() => {
+        const closer = (e) => {
+          if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener("click", closer);
+          }
+        };
+        document.addEventListener("click", closer);
+      }, 0);
+    }
+
+    /**
+     * フラグフィルタを適用する
+     */
+    function applyFlagFilter() {
+      const items = document.querySelectorAll("#watchlistItems .watchlist-item");
+      let visibleCount = 0;
+
+      items.forEach(item => {
+        const symbol = item.dataset.symbol;
+        if (_activeFilterFlags.size === 0) {
+          item.style.display = "";
+          visibleCount++;
+        } else {
+          const flag = getFlag(symbol);
+          if (flag && _activeFilterFlags.has(flag)) {
+            item.style.display = "";
+            visibleCount++;
+          } else {
+            item.style.display = "none";
+          }
+        }
+      });
+
+      // フィルタ結果が0件の場合
+      const emptyMsg = document.getElementById("watchlistEmpty");
+      if (_activeFilterFlags.size > 0 && visibleCount === 0) {
+        emptyMsg.style.display = "block";
+        emptyMsg.innerHTML = `選択した色のフラグがついた銘柄はありません`;
+      } else if (visibleCount > 0) {
+        emptyMsg.style.display = "none";
+      }
+
+    }
+
+    /**
+     * フラグフィルタボタンの見た目を更新
+     */
+    function updateFlagFilterUI() {
+      const icon = document.getElementById("flagFilterIcon");
+      const label = document.getElementById("flagFilterLabel");
+      const names = { green: "緑", blue: "青", orange: "橙", pink: "ピンク", red: "赤" };
+
+      if (_activeFilterFlags.size === 1) {
+        const color = [..._activeFilterFlags][0];
+        icon.style.background = FLAG_COLORS[color];
+        icon.style.border = `2px solid ${FLAG_COLORS[color]}`;
+        label.textContent = names[color] || "フラグ";
+      } else if (_activeFilterFlags.size > 1) {
+        // 複数選択時はグラデーション風のアイコン
+        icon.style.background = "linear-gradient(135deg, " + [..._activeFilterFlags].map(c => FLAG_COLORS[c]).join(", ") + ")";
+        icon.style.border = "2px solid #ccc";
+        label.textContent = `${_activeFilterFlags.size}色`;
+      } else {
+        icon.style.background = "transparent";
+        icon.style.border = "2px solid #888";
+        label.textContent = "フラグ";
+      }
+
+      // ドロップダウンのチェック状態を更新
+      document.querySelectorAll(".flag-dropdown-item").forEach(item => {
+        const flag = item.dataset.flag;
+        const check = item.querySelector(".flag-check");
+        if (check) {
+          check.textContent = (flag && _activeFilterFlags.has(flag)) ? "✓" : "";
+        }
+      });
+    }
+
+    /**
+     * 配当データをパネルに反映する共通関数
+     */
+    async function applyDividendDataToPanel(data, symbol) {
+      const curr = data.currency === "JPY" ? "¥" : "$";
+
+      // 銘柄情報
+      if (data.name) {
+        const masterName = lookupStockName(symbol);
+        const displaySymbol = symbol.replace(".T", "");
+        const bestName = (masterName && masterName !== displaySymbol) ? masterName : data.name;
+        document.getElementById("detailName").textContent = bestName;
+        updateWatchlistName(symbol, data.name);
+      }
+      if (data.exchange) document.getElementById("detailExchange").textContent = data.exchange;
+      {
+        const sector = data.sector || lookupStockSector(symbol);
+        if (sector) {
+          const sectorText = data.industry ? `${sector} · ${data.industry}` : sector;
+          document.getElementById("detailSector").textContent = sectorText;
+        }
+      }
+
+      // 株価
+      if (data.price) {
+        document.getElementById("detailPrice").textContent = data.price.toLocaleString();
+      }
+      document.getElementById("detailCurrency").textContent = data.currency || "JPY";
+
+      // 変動（APIのchangeが0の場合はチャートデータから計算）
+      if (data.change !== undefined && data.change !== 0) {
+        const sign = data.change >= 0 ? "+" : "";
+        const changePct = data.changePercent || 0;
+        const changeEl = document.getElementById("detailChange");
+        changeEl.textContent = `${sign}${data.change} (${sign}${changePct.toFixed(2)}%)`;
+        changeEl.className = `stock-detail-change ${data.change >= 0 ? "positive" : "negative"}`;
+      } else {
+        // 既にロード済みのチャートデータから変動を計算（追加APIコール不要）
+        try {
+          const chartData = lastData;
+          if (chartData && chartData.symbol === symbol && chartData.data && chartData.data.length >= 2) {
+            const latest = chartData.data[chartData.data.length - 1];
+            let prev = null;
+            for (let i = chartData.data.length - 2; i >= 0; i--) {
+              if (chartData.data[i].date !== latest.date) { prev = chartData.data[i]; break; }
+            }
+            if (prev) {
+              const chg = latest.close - prev.close;
+              const chgPct = (chg / prev.close) * 100;
+              const s = chg >= 0 ? "+" : "";
+              const ce = document.getElementById("detailChange");
+              ce.textContent = `${s}${chg.toFixed(data.currency === "JPY" ? 0 : 2)} (${s}${chgPct.toFixed(2)}%)`;
+              ce.className = `stock-detail-change ${chg >= 0 ? "positive" : "negative"}`;
+            }
+          }
+        } catch { /* チャートデータ計算失敗時はそのまま */ }
+      }
+
+      // 配当情報
+      _currentDividendRate = 0;  // リセット
+      if (data.dividendYield > 0) {
+        document.getElementById("detailDividendYield").textContent = `${data.dividendYield.toFixed(2)}%`;
+        _currentDividendRate = data.dividendRate || 0;  // 年間配当金を保持
+        // 年間配当金 + データソースを1行に統合
+        const sourceTag = (data.source === "forward" || data.source === "yahoo_jp")
+          ? "予想" : "実績";
+        document.getElementById("detailDividendRate").innerHTML =
+          `${curr}${data.dividendRate} <span style="font-size:10px;color:#999;">(${sourceTag})</span>`;
+      } else if (data.source === "none") {
+        document.getElementById("detailDividendYield").textContent = "配当なし";
+        document.getElementById("detailDividendRate").textContent = "-";
+      }
+
+      // 次回配当落ち日
+      if (data.exDividendDate) {
+        document.getElementById("detailExDivDate").textContent = data.exDividendDate;
+      } else {
+        document.getElementById("detailExDivDate").textContent = "-";
+      }
+    }
+
+    /**
+     * ウォッチリストで選択された銘柄の詳細パネルを更新する
+     * 配当利回り、次回配当落ち日、セクター等を表示
+     */
+    async function updateStockDetailPanel(symbol) {
+      const panel = document.getElementById("stockDetailPanel");
+      panel.classList.add("visible");
+      document.getElementById("watchlistResizeHandle").classList.add("visible");
+
+      const displaySymbol = symbol.replace(".T", "");
+      const rawSymbol = symbol.replace(".T", "");
+      const name = lookupStockName(symbol);
+      const isJP = symbol.endsWith(".T") || /^\d{4}$/.test(rawSymbol);
+
+      // まず基本情報を設定
+      document.getElementById("detailSymbol").textContent = displaySymbol;
+      document.getElementById("detailName").textContent = name;
+      document.getElementById("detailExchange").textContent = isJP ? "TSE" : "US";
+      // 業種はマスタデータから即表示
+      const masterSector = lookupStockSector(symbol);
+      document.getElementById("detailSector").textContent = masterSector || "";
+      document.getElementById("detailCurrency").textContent = isJP ? "JPY" : "USD";
+      document.getElementById("detailDividendYield").textContent = "-";
+      document.getElementById("detailDividendRate").textContent = "-";
+      document.getElementById("detailExDivDate").textContent = "-";
+
+      // サンプルデータまたは現在のチャートデータから株価を表示
+      fillDetailFromChartData(symbol);
+
+      // ファンダボタンの状態更新（日本株のみ有効）
+      updateFundaButton(symbol);
+
+      // キャッシュがあれば即座に表示し、APIコールをスキップ
+      const cachedDiv = getCachedDiv(symbol);
+      if (cachedDiv) {
+        applyDividendDataToPanel(cachedDiv, symbol);
+      } else {
+        // キャッシュがない場合のみAPIから取得
+        try {
+          const url = `/api/dividend/${encodeURIComponent(symbol)}`;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error("API error");
+          const data = await response.json();
+          if (data.error) throw new Error(data.error);
+          setCachedDiv(symbol, data);
+          await applyDividendDataToPanel(data, symbol);
+        } catch {
+          // API未接続時はチャートデータの情報をそのまま使う
+        }
+      }
+
+      // アラート設定の表示を更新
+      updateAlertUI(symbol);
+    }
+
+    /**
+     * 現在のチャートデータ（lastData）から詳細パネルの株価・変動率を埋める
+     * API未接続（サンプルデータモード）でも基本情報が表示される
+     */
+    function fillDetailFromChartData(symbol) {
+      // 現在表示中の銘柄のデータを使う
+      let data = lastData;
+
+      // 違う銘柄なら新たにサンプルデータを生成
+      if (!data || data.symbol !== symbol) {
+        const rawSymbol = symbol.replace(".T", "");
+        data = generateSampleData(rawSymbol, "1d", "1mo");
+      }
+
+      if (!data || !data.data || data.data.length < 2) {
+        document.getElementById("detailPrice").textContent = "-";
+        document.getElementById("detailChange").textContent = "-";
+        return;
+      }
+
+      const candles = data.data;
+      const latest = candles[candles.length - 1];
+      // 同じ日付の重複データを除外して、異なる日付の前日データを取得
+      let previous = null;
+      for (let i = candles.length - 2; i >= 0; i--) {
+        if (candles[i].date !== latest.date) {
+          previous = candles[i];
+          break;
+        }
+      }
+      if (!previous) previous = candles[candles.length - 2];
+      const curr = data.currency === "JPY" ? "¥" : "$";
+
+      // 株価
+      document.getElementById("detailPrice").textContent =
+        latest.close.toLocaleString();
+
+      // 変動
+      const change = latest.close - previous.close;
+      const changePct = (change / previous.close) * 100;
+      const sign = change >= 0 ? "+" : "";
+      const changeEl = document.getElementById("detailChange");
+      changeEl.textContent = `${sign}${change.toFixed(data.currency === "JPY" ? 0 : 2)} (${sign}${changePct.toFixed(2)}%)`;
+      changeEl.className = `stock-detail-change ${change >= 0 ? "positive" : "negative"}`;
+    }
+
+
+    // ==========================================
+    // 価格アラート管理
+    // ==========================================
+    const ALERTS_KEY = "stockview_alerts";
+    const TARGET_YIELDS_KEY = "stockview_target_yields";
+
+    function loadTargetYields() {
+      try {
+        const data = localStorage.getItem(TARGET_YIELDS_KEY);
+        return data ? JSON.parse(data) : {};
+      } catch { return {}; }
+    }
+
+    function saveTargetYield(symbol, yieldValue) {
+      const code = symbol.replace(".T", "");
+      const yields = loadTargetYields();
+      yields[code] = yieldValue;
+      localStorage.setItem(TARGET_YIELDS_KEY, JSON.stringify(yields));
+    }
+
+    function getTargetYield(symbol) {
+      const code = symbol.replace(".T", "");
+      const yields = loadTargetYields();
+      return yields[code] || null;
+    }
+
+    function clearTargetYield(symbol) {
+      const code = symbol.replace(".T", "");
+      const yields = loadTargetYields();
+      delete yields[code];
+      localStorage.setItem(TARGET_YIELDS_KEY, JSON.stringify(yields));
+    }
+
+    function loadAlerts() {
+      try {
+        const data = localStorage.getItem(ALERTS_KEY);
+        return data ? JSON.parse(data) : {};
+      } catch { return {}; }
+    }
+
+    function saveAlerts(alerts) {
+      localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts));
+      // サーバー側にも同期（スケジュールタスク用）
+      syncAlertsToServer(alerts);
+    }
+
+    async function syncAlertsToServer(alerts) {
+      try {
+        await fetch("/api/alerts/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(alerts),
+        });
+      } catch (e) { /* サーバー未起動時は無視 */ }
+    }
+
+    function getAlert(symbol) {
+      const code = symbol.replace(".T", "");
+      const alerts = loadAlerts();
+      return alerts[code] || null;
+    }
+
+    function setAlert(symbol, price) {
+      const code = symbol.replace(".T", "");
+      const alerts = loadAlerts();
+      alerts[code] = {
+        price: price,
+        direction: "below",
+        enabled: true,
+        name: lookupStockName(symbol) || code,
+        createdAt: new Date().toISOString(),
+      };
+      saveAlerts(alerts);
+    }
+
+    function clearAlert(symbol) {
+      const code = symbol.replace(".T", "");
+      const alerts = loadAlerts();
+      delete alerts[code];
+      saveAlerts(alerts);
+    }
+
+    function updateAlertUI(symbol) {
+      const alert = getAlert(symbol);
+      const input = document.getElementById("alertPriceInput");
+      const btn = document.getElementById("alertSetBtn");
+      const status = document.getElementById("alertStatus");
+
+      if (alert && alert.enabled) {
+        input.value = alert.price;
+        btn.textContent = "解除";
+        btn.classList.add("active");
+        status.textContent = `¥${alert.price.toLocaleString()} 以下で通知`;
+        status.className = "alert-status";
+      } else {
+        input.value = "";
+        btn.textContent = "設定";
+        btn.classList.remove("active");
+        status.textContent = "";
+      }
+
+      // 目標利回りセクション：保存値を復元、またはアラート価格から利回りを算出
+      const yieldInput = document.getElementById("targetYieldInput");
+      const yieldResult = document.getElementById("targetYieldResult");
+
+      if (yieldInput && yieldResult) {
+        const savedYield = getTargetYield(symbol);
+        if (savedYield != null) {
+          // 保存された目標利回りがある → 復元して結果も再計算
+          yieldInput.value = savedYield;
+          if (_currentDividendRate > 0) {
+            const ty = parseFloat(savedYield);
+            if (!isNaN(ty) && ty > 0) {
+              const tp = Math.floor(_currentDividendRate / ty * 100);
+              yieldResult.innerHTML =
+                '<span style="color:#5bb5a2;">&yen;' + _currentDividendRate + ' &divide; ' + ty + '%</span>' +
+                ' &rarr; <strong style="color:#e74c6f;">&yen;' + tp.toLocaleString() + '</strong>';
+              yieldResult.style.color = "#666";
+            } else {
+              yieldResult.innerHTML = "";
+            }
+          } else {
+            yieldResult.innerHTML = "";
+          }
+        } else if (alert && alert.enabled && _currentDividendRate > 0) {
+          // 目標利回り未設定だがアラートあり → アラート価格での利回りを表示
+          const yieldAtAlert = (_currentDividendRate / alert.price * 100).toFixed(2);
+          yieldInput.value = yieldAtAlert;
+          const tp = Math.floor(_currentDividendRate / parseFloat(yieldAtAlert) * 100);
+          yieldResult.innerHTML =
+            '<span style="color:#5bb5a2;">&yen;' + _currentDividendRate + ' &divide; ' + yieldAtAlert + '%</span>' +
+            ' &rarr; <strong style="color:#e74c6f;">&yen;' + tp.toLocaleString() + '</strong>';
+          yieldResult.style.color = "#666";
+        } else {
+          yieldInput.value = "";
+          yieldResult.innerHTML = "";
+        }
+      }
+    }
+
+    /**
+     * 目標配当利回りから目標株価を算出し、価格アラートに設定する
+     * HTML onclick から直接呼び出される
+     */
+    function setupAlerts() {
+      const btn = document.getElementById("alertSetBtn");
+      const input = document.getElementById("alertPriceInput");
+
+      btn.addEventListener("click", () => {
+        const symbol = currentSymbol;
+        if (!symbol) return;
+
+        const existing = getAlert(symbol);
+        if (existing && existing.enabled) {
+          // 解除
+          clearAlert(symbol);
+          clearTargetYield(symbol);
+          updateAlertUI(symbol);
+          renderWatchlist(); // 🔔アイコン更新
+          redrawTrendlines(); // アラート線を消す
+        } else {
+          // 設定
+          const price = parseFloat(input.value);
+          if (!price || price <= 0) {
+            input.focus();
+            return;
+          }
+          setAlert(symbol, price);
+          updateAlertUI(symbol);
+          renderWatchlist(); // 🔔アイコン更新
+          redrawTrendlines(); // アラート線を描画
+        }
+      });
+
+      // Enterキーで設定
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") btn.click();
+      });
+
+      // 初回サーバー同期
+      syncAlertsToServer(loadAlerts());
+
+      // 全アラートチェックボタン
+      const checkAllBtn = document.getElementById("alertCheckAllBtn");
+      if (checkAllBtn) {
+        checkAllBtn.addEventListener("click", async () => {
+          const alerts = loadAlerts();
+          const enabledCount = Object.values(alerts).filter(a => a.enabled).length;
+          if (enabledCount === 0) {
+            alert("アラートが設定されていません");
+            return;
+          }
+          checkAllBtn.style.opacity = "0.5";
+          checkAllBtn.style.pointerEvents = "none";
+          try {
+            const resp = await fetch("/api/alerts/check", { method: "POST" });
+            const data = await resp.json();
+            const triggered = data.triggered || [];
+            if (triggered.length > 0) {
+              const lines = triggered.map(t =>
+                `${t.symbol} ${t.name}: ¥${t.currentPrice.toLocaleString()}（設定: ¥${t.alertPrice.toLocaleString()}）`
+              );
+              alert(`🔔 ${triggered.length}件のアラート該当:\n\n${lines.join("\n")}`);
+            } else {
+              alert(`✅ ${enabledCount}銘柄チェック完了\n該当なし`);
+            }
+          } catch (e) {
+            alert("チェックエラー: " + e.message);
+          } finally {
+            checkAllBtn.style.opacity = "1";
+            checkAllBtn.style.pointerEvents = "auto";
+          }
+        });
+      }
+
+      // 目標配当利回りの処理は calcTargetYield() グローバル関数で実装（HTML onclick から呼び出し）
+    }
+
+    /**
+     * ウォッチリスト機能のイベント設定
+     */
+    function setupWatchlist() {
+      // ウォッチリストは常に表示（トグル機能は削除済み）
+
+      // ── イベント委譲: ウォッチリストアイテムのイベントをコンテナで一括処理 ──
+      const wlContainer = document.getElementById("watchlistItems");
+
+      // クリック（銘柄選択、フラグ、削除）
+      wlContainer.addEventListener("click", (e) => {
+        const item = e.target.closest(".watchlist-item");
+        if (!item) return;
+        const symbol = item.dataset.symbol;
+
+        // 削除ボタン
+        if (e.target.closest(".watchlist-item-delete")) {
+          e.stopPropagation();
+          removeFromWatchlist(symbol);
+          return;
+        }
+        // フラグドット
+        const flagDot = e.target.closest(".watchlist-flag-dot");
+        if (flagDot) {
+          e.stopPropagation();
+          showFlagMenu(symbol, flagDot);
+          return;
+        }
+        // 銘柄選択
+        loadSymbol(symbol);
+        wlContainer.querySelectorAll(".watchlist-item").forEach((i) => i.classList.remove("active"));
+        item.classList.add("active");
+        updateStockDetailPanel(symbol);
+      });
+
+      // ホバー先読み
+      wlContainer.addEventListener("mouseenter", (e) => {
+        const item = e.target.closest(".watchlist-item");
+        if (!item) return;
+        const symbol = item.dataset.symbol;
+        if (!getCachedChartData(symbol, currentInterval, currentRange)) {
+          fetchChartDataFromAPI(symbol, currentInterval, currentRange)
+            .then((data) => {
+              if (data && data.data && data.data.length > 0) {
+                setCachedChartData(symbol, currentInterval, currentRange, deduplicateStockData(data));
+              }
+            }).catch(() => {});
+        }
+      }, true); // capture phaseでmouseenterを委譲
+
+      // ドラッグ&ドロップ
+      wlContainer.addEventListener("dragstart", (e) => {
+        const item = e.target.closest(".watchlist-item");
+        if (!item) return;
+        item.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", item.dataset.symbol);
+      });
+      wlContainer.addEventListener("dragend", (e) => {
+        const item = e.target.closest(".watchlist-item");
+        if (!item) return;
+        item.classList.remove("dragging");
+        wlContainer.querySelectorAll(".watchlist-item").forEach(i => i.classList.remove("drag-over"));
+      });
+      wlContainer.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        const item = e.target.closest(".watchlist-item");
+        if (!item) return;
+        const dragging = wlContainer.querySelector(".dragging");
+        if (dragging && dragging !== item) {
+          wlContainer.querySelectorAll(".watchlist-item").forEach(i => i.classList.remove("drag-over"));
+          item.classList.add("drag-over");
+        }
+      });
+      wlContainer.addEventListener("dragleave", (e) => {
+        const item = e.target.closest(".watchlist-item");
+        if (item) item.classList.remove("drag-over");
+      });
+      wlContainer.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const item = e.target.closest(".watchlist-item");
+        if (!item) return;
+        item.classList.remove("drag-over");
+        const draggedSymbol = e.dataTransfer.getData("text/plain");
+        if (draggedSymbol && draggedSymbol !== item.dataset.symbol) {
+          reorderWatchlist(draggedSymbol, item.dataset.symbol);
+        }
+      });
+
+      // ソートボタン
+      document.getElementById("sortCodeBtn").addEventListener("click", () => {
+        if (watchlistSortMode === "code-asc") {
+          sortWatchlist("code-desc");
+        } else {
+          sortWatchlist("code-asc");
+        }
+      });
+
+      document.getElementById("sortChangeBtn").addEventListener("click", () => {
+        if (watchlistSortMode === "change-desc") {
+          watchlistSortMode = "change-asc";
+          sortWatchlistByChange(true);
+        } else {
+          watchlistSortMode = "change-desc";
+          sortWatchlistByChange(false);
+        }
+        updateSortUI();
+      });
+
+      // フラグフィルタ（ドロップダウン）
+      const flagBtn = document.getElementById("flagFilterBtn");
+      const flagDropdown = document.getElementById("flagDropdown");
+      flagBtn.addEventListener("click", () => {
+        flagDropdown.style.display = flagDropdown.style.display === "none" ? "block" : "none";
+      });
+      // 外側クリックで閉じる
+      document.addEventListener("click", (e) => {
+        if (!document.getElementById("flagFilter").contains(e.target)) {
+          flagDropdown.style.display = "none";
+        }
+      });
+      // ドロップダウンの各項目（複数選択対応）
+      document.querySelectorAll(".flag-dropdown-item").forEach(item => {
+        item.addEventListener("mouseover", () => { item.style.background = "#3a3a3a"; });
+        item.addEventListener("mouseout", () => { item.style.background = "transparent"; });
+        item.addEventListener("click", () => {
+          const flag = item.dataset.flag;
+          if (!flag) {
+            // 「すべて」をクリック → フィルタ解除
+            _activeFilterFlags.clear();
+            flagDropdown.style.display = "none";
+          } else {
+            // 各色をトグル（ON/OFF切り替え）
+            if (_activeFilterFlags.has(flag)) {
+              _activeFilterFlags.delete(flag);
+            } else {
+              _activeFilterFlags.add(flag);
+            }
+          }
+          saveFilterFlags();
+          updateFlagFilterUI();
+          applyFlagFilter();
+        });
+      });
+
+      // フラグ全削除ボタン
+      const clearAllFlagsBtn = document.getElementById("clearAllFlagsBtn");
+      clearAllFlagsBtn.addEventListener("mouseover", () => { clearAllFlagsBtn.style.background = "#3a3a3a"; });
+      clearAllFlagsBtn.addEventListener("mouseout", () => { clearAllFlagsBtn.style.background = "transparent"; });
+      clearAllFlagsBtn.addEventListener("click", () => {
+        if (confirm("すべてのフラグを削除しますか？")) {
+          saveFlags({});
+          flagDropdown.style.display = "none";
+          _activeFilterFlags.clear();
+          saveFilterFlags();
+          updateFlagFilterUI();
+          renderWatchlist();
+        }
+      });
+
+      // 配当利回り自動フラグボタン
+      const autoFlagBtn = document.getElementById("autoFlagBtn");
+      autoFlagBtn.addEventListener("mouseover", () => { autoFlagBtn.style.background = "#3a3a3a"; });
+      autoFlagBtn.addEventListener("mouseout", () => { autoFlagBtn.style.background = "transparent"; });
+      autoFlagBtn.addEventListener("click", async () => {
+        flagDropdown.style.display = "none";
+        autoFlagBtn.querySelector("span:last-child").textContent = "取得中...";
+        const count = await autoFlagByDividendYield();
+        autoFlagBtn.querySelector("span:last-child").textContent = "配当利回り自動";
+        updateFlagFilterUI();
+      });
+
+      // ==========================================
+      // ウォッチリスト/詳細パネル リサイズハンドル
+      // ==========================================
+      (() => {
+        const handle = document.getElementById("watchlistResizeHandle");
+        const watchlistItems = document.getElementById("watchlistItems");
+        const detailPanel = document.getElementById("stockDetailPanel");
+        const watchlistPanel = document.getElementById("watchlistPanel");
+        let isDragging = false;
+        let startY = 0;
+        let startItemsH = 0;
+
+        handle.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          startY = e.clientY;
+          startItemsH = watchlistItems.getBoundingClientRect().height;
+          handle.classList.add("dragging");
+          document.body.style.cursor = "ns-resize";
+          document.body.style.userSelect = "none";
+          e.preventDefault();
+        });
+
+        handle.addEventListener("touchstart", (e) => {
+          isDragging = true;
+          startY = e.touches[0].clientY;
+          startItemsH = watchlistItems.getBoundingClientRect().height;
+          handle.classList.add("dragging");
+          e.preventDefault();
+        }, { passive: false });
+
+        const onMove = (clientY) => {
+          if (!isDragging) return;
+          const diff = clientY - startY;
+          const panelH = watchlistPanel.getBoundingClientRect().height;
+          const newItemsH = Math.max(60, Math.min(panelH - 100, startItemsH + diff));
+          watchlistItems.style.flex = "none";
+          watchlistItems.style.height = newItemsH + "px";
+          detailPanel.style.maxHeight = "none";
+          detailPanel.style.flex = "1";
+        };
+
+        document.addEventListener("mousemove", (e) => onMove(e.clientY));
+        document.addEventListener("touchmove", (e) => {
+          if (isDragging) onMove(e.touches[0].clientY);
+        }, { passive: true });
+
+        const onEnd = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          handle.classList.remove("dragging");
+          document.body.style.cursor = "";
+          document.body.style.userSelect = "";
+        };
+        document.addEventListener("mouseup", onEnd);
+        document.addEventListener("touchend", onEnd);
+      })();
+
+      // 「+」ボタン（ウォッチリストタブを追加/復活）
+      document.getElementById("watchlistAddTabBtn").addEventListener("click", () => {
+        const hidden = loadHiddenTabs();
+        if (hidden.length > 0) {
+          // 非表示のビルトインタブがある場合、復活メニューを表示
+          const labels = hidden.map(t => t === "JP" ? "JP（日本株）" : "US（米国株）");
+          const choice = prompt(
+            `追加するウォッチリストを選択:\n` +
+            hidden.map((t, i) => `${i + 1}. ${labels[i]} を復活`).join("\n") +
+            `\n${hidden.length + 1}. 新しいリストを作成\n\n番号を入力:`
+          );
+          if (!choice) return;
+          const num = parseInt(choice);
+          if (num >= 1 && num <= hidden.length) {
+            // ビルトインタブを復活
+            const tabId = hidden[num - 1];
+            showBuiltinTab(tabId);
+            switchTab(tabId);
+          } else if (num === hidden.length + 1) {
+            // 新規作成
+            const name = prompt("新しいウォッチリスト名を入力:");
+            if (name && name.trim()) createCustomTab(name.trim());
+          }
+        } else {
+          // 非表示タブなし → 新規作成のみ
+          const name = prompt("新しいウォッチリスト名を入力:");
+          if (name && name.trim()) createCustomTab(name.trim());
+        }
+      });
+
+      // 一括インポート
+      const importOverlay = document.getElementById("importModalOverlay");
+      const importTextarea = document.getElementById("importTextarea");
+
+      document.getElementById("watchlistImportBtn").addEventListener("click", () => {
+        importOverlay.style.display = "flex";
+        importTextarea.value = "";
+        importTextarea.focus();
+      });
+
+      document.getElementById("importCancelBtn").addEventListener("click", () => {
+        importOverlay.style.display = "none";
+      });
+
+      importOverlay.addEventListener("click", (e) => {
+        if (e.target === importOverlay) importOverlay.style.display = "none";
+      });
+
+      document.getElementById("importSubmitBtn").addEventListener("click", () => {
+        const text = importTextarea.value.trim();
+        if (!text) return;
+
+        // カンマ、スペース、改行、タブで分割
+        const codes = text.split(/[,\s\t\n]+/).map((s) => s.trim().toUpperCase()).filter(Boolean);
+        let addedCount = 0;
+
+        codes.forEach((raw) => {
+          // "TSE:1321" や "SAPSE:9027" 形式からコードだけ取り出す
+          const code = raw.includes(":") ? raw.split(":").pop() : raw;
+          // 4桁数字なら日本株
+          const symbol = /^\d{4}$/.test(code) ? code + ".T" : code;
+          const name = lookupStockName(symbol);
+          const list = loadWatchlist();
+          if (!list.some((item) => item.symbol === symbol)) {
+            addToWatchlist(symbol, name);
+            addedCount++;
+          }
+        });
+
+        importOverlay.style.display = "none";
+        if (addedCount > 0) {
+          sortWatchlist("code-asc"); // インポート後はコード昇順に
+        }
+      });
+
+      // 一括削除
+      document.getElementById("watchlistClearBtn").addEventListener("click", () => {
+        const list = loadWatchlist();
+        if (list.length === 0) return;
+        if (!confirm(`ウォッチリストの${list.length}銘柄をすべて削除しますか？`)) return;
+        // 削除対象の全銘柄のアラートを解除
+        list.forEach(item => clearAlert(item.symbol));
+        if (isCustomTab(currentTab)) {
+          const lists = loadCustomLists();
+          if (lists[currentTab]) {
+            lists[currentTab].stocks = [];
+            saveCustomLists(lists);
+          }
+        } else {
+          const key = currentTab === "JP" ? WATCHLIST_KEY_JP : WATCHLIST_KEY_US;
+          localStorage.setItem(key, JSON.stringify([]));
+        }
+        document.getElementById("stockDetailPanel").classList.remove("visible");
+        document.getElementById("watchlistResizeHandle").classList.remove("visible");
+        renderWatchlist();
+      });
+
+      // 初期描画（コード昇順でソート）
+      sortWatchlist("code-asc");
+    }
+
+    // ==========================================
+    // アプリの起動
+    // ==========================================
+
+    // ==========================================
+    // ファンダメンタルズ（別タブで開く）
+    // ==========================================
+
+    /**
+     * ファンダメンタルズ分析ページを別タブで開く
+     */
+    function openFundamentals(symbol) {
+      const code = symbol.replace(".T", "");
+      if (/^\d{4}$/.test(code)) {
+        window.open(`fundamentals.html?code=${code}`, "_blank");
+      }
+    }
+
+    /**
+     * ファンダボタンの状態を更新（日本株のみ有効）
+     */
+    function updateFundaButton(symbol) {
+      const btn = document.getElementById("fundaOpenBtn");
+      if (!btn) return;
+      const code = symbol.replace(".T", "");
+      const isJP = /^\d{4}$/.test(code);
+      if (isJP) {
+        btn.classList.remove("disabled");
+        btn.onclick = () => openFundamentals(symbol);
+      } else {
+        btn.classList.add("disabled");
+        btn.onclick = null;
+      }
+    }
+
+    // ==========================================
+    // ウォッチリスト マーケット切り替え
+    // ==========================================
+
+    /** ウォッチリストの保存キー（JP/US別） */
+    const WATCHLIST_KEY_JP = "stockview_watchlist_jp";
+    const WATCHLIST_KEY_US = "stockview_watchlist_us";
+
+    // ==========================================
+    // ウォッチリストタブ管理（JP/US/カスタム統合）
+    // ==========================================
+    const CUSTOM_LISTS_KEY = "stockview_custom_watchlists";
+    const ACTIVE_TAB_KEY = "stockview_active_tab";
+
+    /** 現在のアクティブタブ: "JP", "US", or カスタムタブID */
+    let currentTab = localStorage.getItem(ACTIVE_TAB_KEY) || "JP";
+
+    const HIDDEN_TABS_KEY = "stockview_hidden_tabs";
+
+    function isBuiltinTab(tab) { return tab === "JP" || tab === "US"; }
+    function isCustomTab(tab) { return !isBuiltinTab(tab); }
+
+    function loadHiddenTabs() {
+      try { return JSON.parse(localStorage.getItem(HIDDEN_TABS_KEY) || "[]"); }
+      catch { return []; }
+    }
+    function saveHiddenTabs(arr) {
+      localStorage.setItem(HIDDEN_TABS_KEY, JSON.stringify(arr));
+    }
+    function hideBuiltinTab(tabId) {
+      const hidden = loadHiddenTabs();
+      if (!hidden.includes(tabId)) hidden.push(tabId);
+      saveHiddenTabs(hidden);
+    }
+    function showBuiltinTab(tabId) {
+      const hidden = loadHiddenTabs();
+      saveHiddenTabs(hidden.filter(t => t !== tabId));
+    }
+
+    function loadCustomLists() {
+      try {
+        return JSON.parse(localStorage.getItem(CUSTOM_LISTS_KEY) || "{}");
+      } catch { return {}; }
+    }
+
+    function saveCustomLists(lists) {
+      localStorage.setItem(CUSTOM_LISTS_KEY, JSON.stringify(lists));
+    }
+
+    function createCustomTab(name) {
+      const lists = loadCustomLists();
+      const id = "custom_" + Date.now();
+      lists[id] = { name, stocks: [] };
+      saveCustomLists(lists);
+      switchTab(id);
+      return id;
+    }
+
+    function deleteCustomTab(id) {
+      const lists = loadCustomLists();
+      delete lists[id];
+      saveCustomLists(lists);
+      if (currentTab === id) {
+        // 残っているタブの中から最初のものに切り替え
+        const hidden = loadHiddenTabs();
+        const builtins = ["JP", "US"].filter(t => !hidden.includes(t));
+        const customs = Object.keys(lists);
+        const next = [...builtins, ...customs][0];
+        if (next) {
+          switchTab(next);
+        } else {
+          // すべて非表示/削除された → JPを復活
+          showBuiltinTab("JP");
+          switchTab("JP");
+        }
+      } else {
+        renderWatchlistTabs();
+      }
+    }
+
+    function renameCustomTab(id, newName) {
+      const lists = loadCustomLists();
+      if (lists[id]) {
+        lists[id].name = newName;
+        saveCustomLists(lists);
+        renderWatchlistTabs();
+      }
+    }
+
+    function renderWatchlistTabs() {
+      const container = document.getElementById("watchlistTabs");
+      const lists = loadCustomLists();
+      const customTabIds = Object.keys(lists);
+      const hiddenTabs = loadHiddenTabs();
+
+      // 表示するビルトインタブ
+      const visibleBuiltins = ["JP", "US"].filter(t => !hiddenTabs.includes(t));
+
+      // 全タブリスト（表示中のもの）
+      const allVisibleTabs = [...visibleBuiltins, ...customTabIds];
+
+      // 現在のタブが存在しない場合、最初の表示タブに切り替え
+      if (!allVisibleTabs.includes(currentTab)) {
+        currentTab = allVisibleTabs[0] || "JP";
+        localStorage.setItem(ACTIVE_TAB_KEY, currentTab);
+      }
+
+      container.style.display = "flex";
+
+      let html = "";
+
+      // ビルトインタブ（非表示でないもの）
+      for (const t of visibleBuiltins) {
+        const label = t === "JP" ? "JP" : "US";
+        const title = t === "JP" ? "日本株" : "米国株";
+        html += `<div class="watchlist-tab ${currentTab === t ? 'active' : ''}" data-tab="${t}" title="${title}">${label}<span class="tab-close" data-tab-close="${t}" title="非表示">×</span></div>`;
+      }
+
+      // カスタムタブ
+      for (const id of customTabIds) {
+        const isActive = currentTab === id;
+        const name = lists[id].name;
+        html += `<div class="watchlist-tab ${isActive ? 'active' : ''}" data-tab="${id}" title="右クリックで名前変更">${name}<span class="tab-close" data-tab-close="${id}" title="削除">×</span></div>`;
+      }
+
+      container.innerHTML = html;
+
+      // タブクリック
+      container.querySelectorAll(".watchlist-tab").forEach(tab => {
+        tab.addEventListener("click", (e) => {
+          if (e.target.classList.contains("tab-close")) return;
+          switchTab(tab.dataset.tab);
+        });
+        // 右クリックで名前変更（カスタムタブのみ）
+        tab.addEventListener("contextmenu", (e) => {
+          const tabId = tab.dataset.tab;
+          if (isBuiltinTab(tabId)) return;
+          e.preventDefault();
+          const lists = loadCustomLists();
+          const currentName = lists[tabId]?.name || "";
+          const newName = prompt("リスト名を変更:", currentName);
+          if (newName && newName.trim()) {
+            renameCustomTab(tabId, newName.trim());
+          }
+        });
+      });
+
+      // ×ボタン
+      container.querySelectorAll(".tab-close").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.tabClose;
+          if (isBuiltinTab(id)) {
+            // ビルトインタブ → 非表示にする
+            if (!confirm(`「${id}」タブを非表示にしますか？\n（「+」ボタンから復活できます）`)) return;
+            hideBuiltinTab(id);
+            if (currentTab === id) {
+              // 別のタブに切り替え
+              const remaining = ["JP", "US"].filter(t => !loadHiddenTabs().includes(t));
+              const customs = Object.keys(loadCustomLists());
+              const next = [...remaining, ...customs][0] || "JP";
+              switchTab(next);
+            } else {
+              renderWatchlistTabs();
+            }
+          } else {
+            // カスタムタブ → 完全削除
+            const lists = loadCustomLists();
+            if (confirm(`「${lists[id]?.name}」を削除しますか？`)) {
+              deleteCustomTab(id);
+            }
+          }
+        });
+      });
+    }
+
+    /**
+     * 古い単一ウォッチリストからの移行
+     */
+    function migrateWatchlist() {
+      const oldKey = "stockview_watchlist";
+      const oldData = localStorage.getItem(oldKey);
+      if (!oldData) return;
+
+      try {
+        const list = JSON.parse(oldData);
+        if (!Array.isArray(list) || list.length === 0) return;
+
+        // 既に移行済みなら何もしない
+        if (localStorage.getItem(WATCHLIST_KEY_JP) || localStorage.getItem(WATCHLIST_KEY_US)) return;
+
+        const jpList = [];
+        const usList = [];
+        for (const item of list) {
+          const code = item.symbol.replace(".T", "");
+          if (/^\d{4}$/.test(code)) {
+            jpList.push(item);
+          } else {
+            usList.push(item);
+          }
+        }
+
+        if (jpList.length > 0) localStorage.setItem(WATCHLIST_KEY_JP, JSON.stringify(jpList));
+        if (usList.length > 0) localStorage.setItem(WATCHLIST_KEY_US, JSON.stringify(usList));
+
+        console.log(`ウォッチリスト移行完了: JP=${jpList.length}, US=${usList.length}`);
+      } catch {
+        // 移行失敗は無視
+      }
+    }
+
+    // ==========================================
+    // トレンドライン（延長線）描画システム
+    // ==========================================
+
+    /**
+     * 描画済みのトレンドライン一覧
+     * 各要素: { p1: {time, price}, p2: {time, price} }
+     * time は Lightweight Charts の time 形式（"YYYY-MM-DD" 文字列）
+     */
+    let trendlines = [];
+
+    /** 描画モードの状態 */
+    let drawingMode = false;  // true: 描画モード中
+    let drawingStep = 0;      // 0: 待機, 1: 1点目確定済み→2点目待ち
+    let drawingP1 = null;     // 1点目 {time, price, x, y}
+    let drawingPreview = null; // プレビュー用の現在のマウス位置
+
+    /** 描画Canvas関連 */
+    let drawingCanvas = null;
+    let drawingCtx = null;
+
+    /** 1点目のマーカーDOM */
+    let pointMarker = null;
+
+    /**
+     * 描画Canvasを初期化する
+     */
+    function initDrawingCanvas() {
+      drawingCanvas = document.getElementById("drawingCanvas");
+      drawingCtx = drawingCanvas.getContext("2d");
+      resizeDrawingCanvas();
+
+      // マウスイベント
+      drawingCanvas.addEventListener("click", onDrawingClick);
+      drawingCanvas.addEventListener("mousemove", onDrawingMouseMove);
+      drawingCanvas.addEventListener("contextmenu", (e) => {
+        // 右クリックで描画モードキャンセル
+        if (drawingMode) {
+          e.preventDefault();
+          cancelDrawing();
+        }
+      });
+
+      // Escキーで描画モードをキャンセル
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && drawingMode) {
+          cancelDrawing();
+        }
+      });
+
+      // リサイズ時にCanvasサイズを更新して再描画
+      window.addEventListener("resize", () => {
+        resizeDrawingCanvas();
+        redrawTrendlines();
+      });
+    }
+
+    /**
+     * Canvasサイズをコンテナに合わせる
+     */
+    function resizeDrawingCanvas() {
+      if (!drawingCanvas) return;
+      const container = document.getElementById("chartContainer");
+      const rect = container.getBoundingClientRect();
+      // デバイスピクセル比対応
+      const dpr = window.devicePixelRatio || 1;
+      drawingCanvas.width = rect.width * dpr;
+      drawingCanvas.height = rect.height * dpr;
+      drawingCanvas.style.width = rect.width + "px";
+      drawingCanvas.style.height = rect.height + "px";
+      drawingCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    /**
+     * 描画モードを開始する
+     */
+    function startDrawing() {
+      drawingMode = true;
+      drawingStep = 0;
+      drawingP1 = null;
+      drawingPreview = null;
+      drawingCanvas.classList.add("active");
+      document.getElementById("trendlineBtn").classList.add("active");
+      showDrawingStatus("1点目をクリックしてください（右クリック/Escでキャンセル）");
+    }
+
+    /**
+     * 描画モードをキャンセルする
+     */
+    function cancelDrawing() {
+      drawingMode = false;
+      drawingStep = 0;
+      drawingP1 = null;
+      drawingPreview = null;
+      drawingCanvas.classList.remove("active");
+      document.getElementById("trendlineBtn").classList.remove("active");
+      hideDrawingStatus();
+      removePointMarker();
+      redrawTrendlines();
+    }
+
+    /**
+     * ステータスメッセージを表示
+     */
+    function showDrawingStatus(msg) {
+      const el = document.getElementById("drawingStatus");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+
+    function hideDrawingStatus() {
+      document.getElementById("drawingStatus").style.display = "none";
+    }
+
+    /**
+     * 1点目のマーカーを表示
+     */
+    function showPointMarker(x, y) {
+      removePointMarker();
+      pointMarker = document.createElement("div");
+      pointMarker.className = "drawing-point-marker";
+      pointMarker.style.left = x + "px";
+      pointMarker.style.top = y + "px";
+      document.getElementById("chartContainer").appendChild(pointMarker);
+    }
+
+    function removePointMarker() {
+      if (pointMarker) {
+        pointMarker.remove();
+        pointMarker = null;
+      }
+    }
+
+    /**
+     * マウス位置からチャート座標（time, price）を取得する
+     */
+    function getChartCoordFromMouse(e) {
+      if (!chart || !candleSeries) return null;
+      const container = document.getElementById("chartContainer");
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Lightweight Charts の座標変換
+      const timeScale = chart.timeScale();
+      const priceScale = candleSeries;
+
+      // x → time
+      const time = timeScale.coordinateToTime(x);
+      // y → price
+      const price = priceScale.coordinateToPrice(y);
+
+      if (time === null || price === null) return null;
+
+      return { time, price, x, y };
+    }
+
+    /**
+     * チャート座標（time, price）からピクセル座標を取得する
+     */
+    function getPixelFromChartCoord(time, price) {
+      if (!chart || !candleSeries) return null;
+      const timeScale = chart.timeScale();
+
+      const x = timeScale.timeToCoordinate(time);
+      const y = candleSeries.priceToCoordinate(price);
+
+      if (x === null || y === null) return null;
+      return { x, y };
+    }
+
+    /**
+     * 描画クリックイベント
+     */
+    function onDrawingClick(e) {
+      if (!drawingMode) return;
+
+      const coord = getChartCoordFromMouse(e);
+      if (!coord) return;
+
+      if (drawingStep === 0) {
+        // 1点目を確定
+        drawingP1 = coord;
+        drawingStep = 1;
+        showPointMarker(coord.x, coord.y);
+        showDrawingStatus("2点目をクリックしてください（右クリック/Escでキャンセル）");
+      } else if (drawingStep === 1) {
+        // 2点目を確定 → トレンドライン追加
+        const p2 = coord;
+        trendlines.push({
+          p1: { time: drawingP1.time, price: drawingP1.price },
+          p2: { time: p2.time, price: p2.price },
+        });
+
+        // 描画モードを終了
+        cancelDrawing();
+        redrawTrendlines();
+      }
+    }
+
+    /**
+     * マウス移動イベント（プレビュー描画）
+     */
+    function onDrawingMouseMove(e) {
+      if (!drawingMode || drawingStep !== 1) return;
+
+      const container = document.getElementById("chartContainer");
+      const rect = container.getBoundingClientRect();
+      drawingPreview = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+
+      redrawTrendlines();
+    }
+
+    /**
+     * トレンドラインをすべて再描画する
+     * - 確定済みラインの描画
+     * - プレビューラインの描画（描画モード中）
+     */
+    function redrawTrendlines() {
+      if (!drawingCtx || !drawingCanvas) return;
+      resizeDrawingCanvas();
+
+      const w = parseFloat(drawingCanvas.style.width);
+      const h = parseFloat(drawingCanvas.style.height);
+
+      drawingCtx.clearRect(0, 0, w, h);
+
+      // 確定済みトレンドラインを描画
+      for (const line of trendlines) {
+        const px1 = getPixelFromChartCoord(line.p1.time, line.p1.price);
+        const px2 = getPixelFromChartCoord(line.p2.time, line.p2.price);
+        if (!px1 || !px2) continue;
+
+        drawExtendedLine(px1.x, px1.y, px2.x, px2.y, w, h, "#e65100", 2, false);
+
+        // 2つの確定ポイントを丸で表示
+        drawPoint(px1.x, px1.y, "#e65100");
+        drawPoint(px2.x, px2.y, "#e65100");
+      }
+
+      // プレビューライン（描画モード中、1点目確定済み）
+      if (drawingMode && drawingStep === 1 && drawingP1 && drawingPreview) {
+        const px1 = getPixelFromChartCoord(drawingP1.time, drawingP1.price);
+        if (px1) {
+          drawExtendedLine(px1.x, px1.y, drawingPreview.x, drawingPreview.y, w, h, "#e65100", 1.5, true);
+        }
+      }
+
+      // アラート価格の水平線を描画
+      drawAlertPriceLine(w, h);
+    }
+
+    /**
+     * アラート価格の水平線を描画する
+     * 現在表示中の銘柄にアラートが設定されている場合、その価格に破線を引く
+     */
+    function drawAlertPriceLine(canvasW, canvasH) {
+      if (!currentSymbol || !candleSeries || !chart) return;
+
+      const alert = getAlert(currentSymbol);
+      if (!alert || !alert.enabled || !alert.price) return;
+
+      const y = candleSeries.priceToCoordinate(alert.price);
+      if (y === null || y === undefined) return;
+
+      const area = getChartArea();
+
+      drawingCtx.save();
+
+      // チャートエリア内にクリップ
+      if (area.right - area.left > 10 && area.bottom - area.top > 10) {
+        drawingCtx.beginPath();
+        drawingCtx.rect(area.left, area.top, area.right - area.left, area.bottom - area.top);
+        drawingCtx.clip();
+      }
+
+      // 破線スタイル
+      drawingCtx.strokeStyle = "#e53935";
+      drawingCtx.lineWidth = 1.5;
+      drawingCtx.setLineDash([8, 4]);
+
+      // 水平線を描画
+      drawingCtx.beginPath();
+      drawingCtx.moveTo(area.left, y);
+      drawingCtx.lineTo(area.right, y);
+      drawingCtx.stroke();
+
+      // 価格ラベルを描画
+      const labelText = `¥${alert.price.toLocaleString()}`;
+      drawingCtx.font = "11px sans-serif";
+      const textWidth = drawingCtx.measureText(labelText).width;
+      const labelX = area.left + 8;
+      const labelY = y - 6;
+
+      // ラベル背景
+      drawingCtx.fillStyle = "#e53935";
+      drawingCtx.fillRect(labelX - 3, labelY - 11, textWidth + 6, 15);
+
+      // ラベルテキスト
+      drawingCtx.fillStyle = "#ffffff";
+      drawingCtx.setLineDash([]);
+      drawingCtx.fillText(labelText, labelX, labelY);
+
+      drawingCtx.restore();
+    }
+
+    /**
+     * チャートの描画エリア（ローソク足が表示される範囲）を取得する
+     * 既知の価格とtimeを使って座標変換し、チャートエリアの境界を推定する
+     */
+    function getChartArea() {
+      const w = parseFloat(drawingCanvas.style.width);
+      const h = parseFloat(drawingCanvas.style.height);
+      if (!chart || !candleSeries || !lastData || !lastData.data || lastData.data.length === 0) {
+        return { left: 0, top: 0, right: w, bottom: h };
+      }
+
+      // 時間軸の可視範囲から左右境界を推定
+      const timeScale = chart.timeScale();
+      const visibleRange = timeScale.getVisibleRange();
+      if (!visibleRange) {
+        return { left: 0, top: 0, right: w - 60, bottom: h - 25 };
+      }
+
+      // 可視範囲の最初と最後の時間をピクセルに変換
+      const xLeft = timeScale.timeToCoordinate(visibleRange.from);
+      const xRight = timeScale.timeToCoordinate(visibleRange.to);
+
+      // 右端は最後のデータポイント + 少し余白（価格軸の手前まで）
+      // 価格軸の幅を推定: xRight から canvasWidth の差
+      const priceAxisWidth = w - (xRight || (w - 60)) - 10;
+      const chartRight = w - Math.max(priceAxisWidth, 40);
+
+      // 時間軸の高さを推定（下部約25px）
+      const chartBottom = h - 25;
+
+      return {
+        left: Math.max(0, (xLeft || 0) - 20),
+        top: 0,
+        right: chartRight,
+        bottom: chartBottom,
+      };
+    }
+
+    /**
+     * 2点を通る延長線を描画する
+     * 両方向にチャートエリアの端まで延長し、チャートエリア内にクリップする
+     */
+    function drawExtendedLine(x1, y1, x2, y2, canvasW, canvasH, color, lineWidth, isDashed) {
+      if (x1 === x2 && y1 === y2) return;
+
+      // 方向ベクトル
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+
+      // 両方向に大きく延長
+      const t = 5000;
+      const fwdX = x2 + dx * t;
+      const fwdY = y2 + dy * t;
+      const bwdX = x1 - dx * t;
+      const bwdY = y1 - dy * t;
+
+      // チャートエリアにクリップして描画（ローソク足の範囲内に制限）
+      const area = getChartArea();
+      const clipW = area.right - area.left;
+      const clipH = area.bottom - area.top;
+
+      drawingCtx.save();
+      if (clipW > 10 && clipH > 10) {
+        drawingCtx.beginPath();
+        drawingCtx.rect(area.left, area.top, clipW, clipH);
+        drawingCtx.clip();
+      }
+
+      drawingCtx.strokeStyle = color;
+      drawingCtx.lineWidth = lineWidth;
+      if (isDashed) {
+        drawingCtx.setLineDash([6, 4]);
+      }
+      drawingCtx.beginPath();
+      drawingCtx.moveTo(bwdX, bwdY);
+      drawingCtx.lineTo(fwdX, fwdY);
+      drawingCtx.stroke();
+      drawingCtx.restore();
+    }
+
+    /**
+     * ポイントの丸印を描画
+     */
+    function drawPoint(x, y, color) {
+      drawingCtx.save();
+      drawingCtx.fillStyle = color;
+      drawingCtx.strokeStyle = "#fff";
+      drawingCtx.lineWidth = 2;
+      drawingCtx.beginPath();
+      drawingCtx.arc(x, y, 4, 0, Math.PI * 2);
+      drawingCtx.fill();
+      drawingCtx.stroke();
+      drawingCtx.restore();
+    }
+
+
+
+    /**
+     * すべてのトレンドラインを消去する
+     */
+    function clearAllTrendlines() {
+      trendlines = [];
+      redrawTrendlines();
+    }
+
+    /**
+     * チャートのスクロール・ズーム時にトレンドラインを再描画する
+     */
+    function setupTrendlineRedraw() {
+      if (!chart) return;
+
+      let redrawTimer = null;
+      function throttledRedraw() {
+        if (redrawTimer) return;
+        redrawTimer = requestAnimationFrame(() => {
+          redrawTimer = null;
+          const hasAlert = currentSymbol && getAlert(currentSymbol)?.enabled;
+          if (trendlines.length > 0 || hasAlert) {
+            redrawTrendlines();
+          }
+        });
+      }
+
+      // 時間軸の変更（スクロール・ズーム）を監視
+      chart.timeScale().subscribeVisibleLogicalRangeChange(throttledRedraw);
+      chart.timeScale().subscribeVisibleTimeRangeChange(throttledRedraw);
+    }
+
+    /**
+     * 描画ツールバーのイベントを設定
+     */
+    function setupDrawingToolbar() {
+      // トレンドラインボタン
+      document.getElementById("trendlineBtn").addEventListener("click", () => {
+        if (drawingMode) {
+          cancelDrawing();
+        } else {
+          startDrawing();
+        }
+      });
+
+      // 消去ボタン（ヘッダーから削除済み。要素が存在する場合のみリスナー登録）
+      const clearBtn = document.getElementById("clearDrawingsBtn");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          if (trendlines.length === 0) return;
+          clearAllTrendlines();
+        });
+      }
+    }
+
+    // ページ離脱時にキャッシュをフラッシュ
+    window.addEventListener("pagehide", () => {
+      _flushPriceCache();
+      _flushDivCache();
+    });
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // 1. チャートを初期化
+      initChart();
+
+      // 2. ツールバーのイベントを設定
+      setupToolbar();
+
+      // 2.5. 描画ツールを初期化
+      initDrawingCanvas();
+      setupDrawingToolbar();
+      setupTrendlineRedraw();
+
+      // 3. 検索機能を設定
+      setupSearch();
+
+      // 3.5 ロゴドロップダウン & 設定モーダル（fetchを待たずに早期登録）
+      initLogoDropdownAndSettings();
+
+      // 4. 銘柄マスタデータを読み込み（ウォッチリストの名前解決に必要）
+      await loadMasterData();
+
+      // 5. ウォッチリスト移行（旧形式→JP/US別）
+      migrateWatchlist();
+
+      // 6. ウォッチリストを設定
+      renderWatchlistTabs();
+      setupWatchlist();
+
+      // 6.5 フラグフィルターを復元
+      loadFilterFlags();
+      if (_activeFilterFlags.size > 0) {
+        updateFlagFilterUI();
+        applyFlagFilter();
+      }
+
+      // 7. アラート機能を設定
+      setupAlerts();
+
+      // 7.5 目標配当利回り → 目標株価 → アラート設定
+      (function() {
+        function doCalc() {
+          // 毎回DOMから取得（参照が古くならないように）
+          var yInput = document.getElementById("targetYieldInput");
+          var resultEl = document.getElementById("targetYieldResult");
+          if (!yInput || !resultEl) { console.error("targetYield elements not found"); return; }
+
+          var val = yInput.value || "";
+          console.log("[targetYield] doCalc called, input value:", JSON.stringify(val), "dividendRate:", _currentDividendRate);
+
+          // 全角→半角
+          val = val.replace(/[０-９．]/g, function(s) {
+            return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+          }).trim();
+
+          var targetYield = parseFloat(val);
+          if (isNaN(targetYield) || targetYield <= 0) {
+            resultEl.textContent = "数値を入力してください（例: 4.0）";
+            resultEl.style.color = "#e74c6f";
+            return;
+          }
+
+          if (!_currentDividendRate || _currentDividendRate <= 0) {
+            resultEl.textContent = "配当データの読み込みを待っています...";
+            resultEl.style.color = "#e74c6f";
+            return;
+          }
+
+          var targetPrice = Math.floor(_currentDividendRate / targetYield * 100);
+          resultEl.innerHTML =
+            '<span style="color:#5bb5a2;">&yen;' + _currentDividendRate + ' &divide; ' + targetYield + '%</span>' +
+            ' &rarr; <strong style="color:#e74c6f;">&yen;' + targetPrice.toLocaleString() + '</strong>';
+          resultEl.style.color = "#666";
+
+          // 目標利回りを銘柄ごとに保存
+          saveTargetYield(currentSymbol, val);
+
+          // 価格アラートに自動反映
+          document.getElementById("alertPriceInput").value = targetPrice;
+          setAlert(currentSymbol, targetPrice);
+          document.getElementById("alertStatus").textContent =
+            "\u00a5" + targetPrice.toLocaleString() + " \u4ee5\u4e0b\u3067\u901a\u77e5\uff08\u5229\u56de\u308a" + targetYield + "%\uff09";
+          document.getElementById("alertSetBtn").textContent = "\u89e3\u9664";
+          document.getElementById("alertSetBtn").classList.add("active");
+          renderWatchlist();
+        }
+
+        // イベントリスナー（イベント委譲で確実に動作）
+        document.addEventListener("click", function(e) {
+          if (e.target && e.target.id === "targetYieldBtn") {
+            doCalc();
+          }
+        });
+        document.addEventListener("keydown", function(e) {
+          if (e.target && e.target.id === "targetYieldInput" && e.key === "Enter") {
+            doCalc();
+          }
+        });
+        console.log("[targetYield] event delegation attached");
+      })();
+
+      // 7. キーボードの上下キーでウォッチリスト内を移動
+      document.addEventListener("keydown", (e) => {
+        // テキスト入力中は無視（検索欄、追加欄、インポート欄など）
+        const tag = document.activeElement.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          navigateWatchlist(-1);
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          navigateWatchlist(1);
+        }
+      });
+
+      // 7. 最初の銘柄を読み込み＋詳細パネルも表示
+      loadStockData(currentSymbol, currentInterval, currentRange);
+      updateStockDetailPanel(currentSymbol);
+
+      // 8. 初回ロード完了後、ウォッチリスト全銘柄をバックグラウンド先読み
+      //    （2秒後スタート：初回表示を邪魔しないよう遅延）
+      setTimeout(() => {
+        prefetchAllWatchlistStocks(currentInterval, currentRange, 400);
+      }, 2000);
+
+      // 7. Service Worker を登録（PWA対応）
+      // localhost(開発時)は SW を登録せず、既存の登録があれば解除する
+      if ("serviceWorker" in navigator) {
+        const isLocalDev = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+        if (isLocalDev) {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((reg) => reg.unregister());
+          });
+          // 既存キャッシュも全削除(開発時の古いキャッシュ排除)
+          if ("caches" in window) {
+            caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+          }
+        } else {
+          navigator.serviceWorker.register("/sw.js").then(() => {
+            console.log("Service Worker 登録完了");
+          }).catch((err) => {
+            console.warn("Service Worker 登録失敗:", err);
+          });
+        }
+      }
+
+      // 8. ロゴドロップダウン & 設定モーダルの初期化
+      function initLogoDropdownAndSettings() {
+        const logoBtn = document.getElementById("appLogoBtn");
+        const logoMenu = document.getElementById("appLogoMenu");
+        const openSettingsBtn = document.getElementById("openSettingsBtn");
+        const settingsOverlay = document.getElementById("settingsModalOverlay");
+        const settingsCloseBtn = document.getElementById("settingsModalCloseBtn");
+        if (!logoBtn || !logoMenu || !settingsOverlay) return;
+
+        function closeMenu() {
+          logoMenu.classList.remove("open");
+          logoBtn.classList.remove("open");
+          logoBtn.setAttribute("aria-expanded", "false");
+        }
+        function openMenu() {
+          const rect = logoBtn.getBoundingClientRect();
+          logoMenu.style.top = (rect.bottom + 4) + "px";
+          logoMenu.style.left = rect.left + "px";
+          logoMenu.classList.add("open");
+          logoBtn.classList.add("open");
+          logoBtn.setAttribute("aria-expanded", "true");
+        }
+        function closeSettings() {
+          settingsOverlay.classList.remove("open");
+        }
+        function openSettings() {
+          settingsOverlay.classList.add("open");
+        }
+
+        logoBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (logoMenu.classList.contains("open")) closeMenu();
+          else openMenu();
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!logoMenu.classList.contains("open")) return;
+          if (e.target === logoBtn || logoBtn.contains(e.target)) return;
+          if (logoMenu.contains(e.target)) return;
+          closeMenu();
+        });
+
+        if (openSettingsBtn) {
+          openSettingsBtn.addEventListener("click", () => {
+            closeMenu();
+            openSettings();
+          });
+        }
+
+        if (settingsCloseBtn) {
+          settingsCloseBtn.addEventListener("click", closeSettings);
+        }
+
+        settingsOverlay.addEventListener("click", (e) => {
+          if (e.target === settingsOverlay) closeSettings();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            if (settingsOverlay.classList.contains("open")) closeSettings();
+            if (logoMenu.classList.contains("open")) closeMenu();
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- ==========================================
+       設定モーダル
+  ========================================== -->
+  <div class="settings-modal-overlay" id="settingsModalOverlay">
+    <div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="settings-modal-header">
+        <span class="settings-modal-title" id="settingsModalTitle">&#9881;&#65039; 設定</span>
+        <button type="button" class="settings-modal-close" id="settingsModalCloseBtn" aria-label="閉じる">&times;</button>
+      </div>
+      <div class="settings-section">
+        <span class="settings-section-label">指標</span>
+        <div class="settings-button-row">
+          <button class="toggle-btn active" id="emaToggle">EMA</button>
+          <button class="toggle-btn active" id="bbToggle">BB</button>
+          <button class="toggle-btn" id="volumeToggle">出来高</button>
+          <button class="toggle-btn" id="indicatorSettingsBtn" title="指標設定">&#9881;</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <span class="settings-section-label">描画ツール</span>
+        <div class="settings-button-row">
+          <button class="drawing-btn" id="trendlineBtn" title="延長線（クリックで表示・非表示を切替）">&#128207; 延長線</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <span class="settings-section-label">ウォッチリスト管理</span>
+        <button type="button" class="settings-action-btn import" id="watchlistImportBtn" title="銘柄コードを一括で追加">&#128451; 一括インポート</button>
+        <button type="button" class="settings-action-btn danger" id="watchlistClearBtn" title="ウォッチリストを一括削除">&#128465; 一括削除</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

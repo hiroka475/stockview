@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stockview",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // ⚠️ KV namespace: 自分の Cloudflare アカウントで作成した KV の ID に置き換えてください
+  // 作成方法:
+  //   wrangler kv namespace create "KV"
+  //   wrangler kv namespace create "KV" --preview
+  // 作成後に表示される id / preview_id を以下に貼り付けてください
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "REPLACE_WITH_YOUR_KV_ID",
+      "preview_id": "REPLACE_WITH_YOUR_KV_PREVIEW_ID"
+    }
+  ],
+  // Webhook シークレットなどは Cloudflare の secrets で別管理してください
+  //   wrangler secret put WEBHOOK_SECRET
+  "vars": {
+    "WEBHOOK_SECRET": ""
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "StockView - 株式チャート",
+  "short_name": "StockView",
+  "description": "TradingView風の株式チャートアプリ。日本株・米国株対応。EMA、ボリンジャーバンド、配当利回り表示。",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

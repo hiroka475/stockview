@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ファンダメンタルズ分析</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f0;
+      color: #333;
+      padding: 20px;
+    }
+
+    /* ヘッダー */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #5bb5a2;
+      background: #fff;
+      margin: -20px -20px 24px -20px;
+      padding: 16px 20px;
+    }
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+    }
+    .stock-code-input {
+      width: 80px;
+      padding: 6px 8px;
+      border: 2px solid #5bb5a2;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .stock-name-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    .header-links {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+    .header-link {
+      padding: 6px 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      color: #333;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .header-link:hover { background: #e8e8e8; }
+    .load-btn {
+      padding: 6px 18px;
+      border: none;
+      border-radius: 6px;
+      background: #5bb5a2;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .load-btn:hover { background: #4a9e8d; }
+
+    /* ローディング・エラー */
+    .loading { text-align: center; padding: 60px; font-size: 15px; color: #888; }
+    .error-msg { text-align: center; padding: 40px; color: #ef5350; font-size: 14px; }
+
+    /* チャートセクション */
+    .chart-section {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .chart-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .chart-subtitle {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 16px;
+    }
+    .chart-legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #666;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .legend-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+    .legend-circle {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 260px;
+    }
+
+    /* バリュエーション指標カード */
+    .valuation-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .valuation-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .valuation-card-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .valuation-card-sublabel {
+      font-size: 10px;
+      color: #aaa;
+    }
+    .valuation-card-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+    }
+    .valuation-card-value .unit {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+    }
+    /* 配当利回りハイライト */
+    .valuation-highlight {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      z-index: 10;
+    }
+    .valuation-highlight-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #e74c6f;
+    }
+    .valuation-highlight-label {
+      font-size: 11px;
+      color: #e74c6f;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .page-header { flex-wrap: wrap; gap: 8px; margin: -10px -10px 16px -10px; padding: 12px; }
+      .chart-section { padding: 16px; }
+      .chart-container { height: 220px; }
+      .chart-title { font-size: 16px; }
+      .valuation-cards { grid-template-columns: repeat(2, 1fr); }
+      .valuation-card-value { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <span class="page-title">ファンダメンタルズ分析</span>
+    <span style="font-size:13px; color:#888;">銘柄コード：</span>
+    <input type="text" class="stock-code-input" id="codeInput" maxlength="4" placeholder="7931">
+    <button class="load-btn" id="loadBtn">表示</button>
+    <span class="stock-name-label" id="stockNameLabel">銘柄名：-</span>
+    <span class="stock-sector-label" id="stockSectorLabel" style="font-size:13px; color:#888; background:#f0f0f0; padding:3px 10px; border-radius:4px; display:none;"></span>
+    <div class="header-links">
+      <span id="splitAdjustArea" style="display:none; align-items:center; gap:4px; font-size:12px; color:#888; border:1px solid #ddd; border-radius:6px; padding:4px 8px; background:#fafafa;">
+        分割調整: IR BANK ×<input type="number" id="splitMultiplier" value="1" min="0.01" step="0.1" style="width:50px; padding:2px 4px; border:1px solid #ccc; border-radius:4px; font-size:12px; text-align:center;">
+        <button id="splitApplyBtn" style="padding:2px 8px; border:1px solid #5bb5a2; border-radius:4px; background:#5bb5a2; color:#fff; font-size:11px; cursor:pointer;">適用</button>
+        <button id="splitResetBtn" style="padding:2px 6px; border:1px solid #ccc; border-radius:4px; background:#f0f0f0; color:#888; font-size:11px; cursor:pointer;">×1に戻す</button>
+      </span>
+      <a class="header-link" id="linkIrbank" href="#" target="_blank">IR BANK</a>
+      <a class="header-link" id="linkYahoo" href="#" target="_blank">Yahoo ファイナンス</a>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="loading" id="loadingMsg">銘柄コードを入力して「表示」を押してください</div>
+    <div class="error-msg" id="errorMsg" style="display:none;"></div>
+    <div id="sections"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const initialCode = params.get("code") || "";
+
+    const codeInput = document.getElementById("codeInput");
+    const loadBtn = document.getElementById("loadBtn");
+    const loadingMsg = document.getElementById("loadingMsg");
+    const errorMsg = document.getElementById("errorMsg");
+    const sectionsEl = document.getElementById("sections");
+    const nameLabel = document.getElementById("stockNameLabel");
+    const sectorLabel = document.getElementById("stockSectorLabel");
+    const linkIrbank = document.getElementById("linkIrbank");
+    const linkYahoo = document.getElementById("linkYahoo");
+    const splitAdjustArea = document.getElementById("splitAdjustArea");
+    const splitMultiplierInput = document.getElementById("splitMultiplier");
+    const splitApplyBtn = document.getElementById("splitApplyBtn");
+    const splitResetBtn = document.getElementById("splitResetBtn");
+
+    // 分割調整倍率の保存・読み込み
+    const SPLIT_KEY = "stockview_split_multipliers";
+    let _currentFundData = null;
+    let _currentFundCode = "";
+
+    function loadSplitMultipliers() {
+      try { return JSON.parse(localStorage.getItem(SPLIT_KEY) || "{}"); } catch { return {}; }
+    }
+    function getSplitMultiplier(code) {
+      return loadSplitMultipliers()[code] || 1;
+    }
+    function saveSplitMultiplier(code, value) {
+      const m = loadSplitMultipliers();
+      if (value === 1) { delete m[code]; } else { m[code] = value; }
+      localStorage.setItem(SPLIT_KEY, JSON.stringify(m));
+    }
+
+    // 倍率をIR BANKの1株あたり指標に適用（配当・EPS・BPS）
+    // Yahoo Finance由来のデータ（_yahooAppendedIndex）には適用しない
+    function applySplitMultiplier(data, multiplier) {
+      if (!data.sections || multiplier === 1) return data;
+      const copy = JSON.parse(JSON.stringify(data));
+      const yahooIdx = data._yahooAppendedIndex;
+      const perShareKeys = ["dividend", "eps", "bps", "dividendYield"];
+      for (const key of perShareKeys) {
+        if (copy.sections[key] && copy.sections[key].values) {
+          copy.sections[key].values = copy.sections[key].values.map((v, i) => {
+            if (v === null || v === undefined) return v;
+            // 配当のYahoo追加分は倍率を適用しない
+            if (key === "dividend" && yahooIdx !== undefined && i === yahooIdx) return v;
+            return Math.round(v * multiplier * 100) / 100;
+          });
+        }
+      }
+      return copy;
+    }
+
+    // 倍率UIのイベント
+    splitApplyBtn.addEventListener("click", () => {
+      const val = parseFloat(splitMultiplierInput.value);
+      if (isNaN(val) || val <= 0) return;
+      saveSplitMultiplier(_currentFundCode, val);
+      if (_currentFundData) {
+        sectionsEl.innerHTML = "";
+        renderAll(applySplitMultiplier(_currentFundData, val));
+      }
+    });
+    splitResetBtn.addEventListener("click", () => {
+      splitMultiplierInput.value = 1;
+      saveSplitMultiplier(_currentFundCode, 1);
+      if (_currentFundData) {
+        sectionsEl.innerHTML = "";
+        renderAll(applySplitMultiplier(_currentFundData, 1));
+      }
+    });
+
+    // 色定義
+    const COLORS = {
+      bar: "#5bb5a2",
+      barBorder: "#4a9e8d",
+      line: "#e74c6f",
+      lineDot: "#e74c6f",
+      refLine: "#e74c6f",
+      gridLine: "#eee",
+      text: "#666",
+      valueLabel: "#444",
+    };
+
+    if (initialCode) {
+      codeInput.value = initialCode;
+      loadFundamentals(initialCode);
+    }
+
+    loadBtn.addEventListener("click", () => {
+      const code = codeInput.value.trim();
+      if (code && /^\d{4}$/.test(code)) {
+        loadFundamentals(code);
+        history.replaceState(null, "", `?code=${code}`);
+      }
+    });
+    codeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadBtn.click(); });
+
+    async function loadFundamentals(code) {
+      loadingMsg.style.display = "block";
+      loadingMsg.textContent = "読み込み中...";
+      errorMsg.style.display = "none";
+      sectionsEl.innerHTML = "";
+
+      linkIrbank.href = `https://irbank.net/${code}/results`;
+      linkYahoo.href = `https://finance.yahoo.co.jp/quote/${code}.T`;
+      document.title = `ファンダ分析 - ${code}`;
+
+      try {
+        // ファンダメンタルデータと配当データを並行取得
+        const [fundResponse, divResponse] = await Promise.all([
+          fetch(`/api/fundamentals/${code}`),
+          fetch(`/api/dividend/${code}.T`).catch(() => null),
+        ]);
+        if (!fundResponse.ok) throw new Error(`HTTP ${fundResponse.status}`);
+        const data = await fundResponse.json();
+        if (data.error) throw new Error(data.error);
+
+        // 配当利回り: Yahoo Finance（メイン画面と同じソース）を優先
+        if (divResponse && divResponse.ok) {
+          try {
+            const divData = await divResponse.json();
+            const price = divData.price || 0;
+            if (!data.valuation) data.valuation = {};
+            data.valuation.price = price;
+
+            if (divData.dividendYield && divData.dividendYield > 0) {
+              // Yahoo Finance Japan（会社予想）の配当利回りを使用
+              data.valuation.dividendYield = divData.dividendYield;
+              console.log(`配当利回り: Yahoo Finance Japan（会社予想）= ${divData.dividendYield}%`);
+            } else {
+              // フォールバック: IR BANK配当 ÷ Yahoo株価で計算
+              const divSection = data.sections && data.sections.dividend;
+              let latestDiv = null;
+              if (divSection && divSection.values) {
+                for (let i = divSection.values.length - 1; i >= 0; i--) {
+                  if (divSection.values[i] != null) {
+                    latestDiv = divSection.values[i];
+                    break;
+                  }
+                }
+              }
+              if (price > 0 && latestDiv > 0) {
+                data.valuation.dividendYield = Math.round(latestDiv / price * 10000) / 100;
+                console.log(`配当利回りフォールバック: IR BANK配当${latestDiv} ÷ 株価${price} = ${data.valuation.dividendYield}%`);
+              }
+            }
+
+            // 会社予想の配当金をチャートに追加（IR BANKにまだない次期予想）
+            const forwardDiv = divData.forwardDividend || 0;
+            if (forwardDiv > 0 && data.periods && data.sections && data.sections.dividend) {
+              const lastPeriod = data.periods[data.periods.length - 1]; // 例: "2025/03"
+              const parts = lastPeriod.split("/");
+              if (parts.length === 2) {
+                const nextYear = parseInt(parts[0]) + 1;
+                const nextMonth = parts[1];
+                const nextPeriod = `${nextYear}/${nextMonth}`;
+
+                // まず、末尾の期間にdividendがnullなら、そこに予想配当を埋める
+                const lastDiv = data.sections.dividend.values[data.sections.dividend.values.length - 1];
+                if (lastDiv === null || lastDiv === undefined) {
+                  data.sections.dividend.values[data.sections.dividend.values.length - 1] = forwardDiv;
+                  data._yahooAppendedIndex = data.sections.dividend.values.length - 1;
+                  console.log(`会社予想配当 ${lastPeriod}: ${forwardDiv}円 を末尾のnullに埋め込み`);
+                } else if (forwardDiv !== lastDiv) {
+                  // 末尾にデータがある場合は次の年度として追加
+                  data.periods.push(nextPeriod);
+                  data.sections.dividend.values.push(forwardDiv);
+                  data._yahooAppendedIndex = data.sections.dividend.values.length - 1;
+                  for (const key of Object.keys(data.sections)) {
+                    if (key !== "dividend" && data.sections[key].values) {
+                      data.sections[key].values.push(null);
+                    }
+                  }
+                  console.log(`会社予想配当 ${nextPeriod}: ${forwardDiv}円 をチャートに追加`);
+                }
+              }
+            }
+          } catch (e) { console.warn("配当データ解析エラー:", e); }
+        }
+
+        loadingMsg.style.display = "none";
+        nameLabel.textContent = `銘柄名： ${data.stockName || code}`;
+        // 業種を表示
+        if (data.sector) {
+          sectorLabel.textContent = data.sector;
+          sectorLabel.style.display = "inline";
+        } else {
+          sectorLabel.style.display = "none";
+        }
+
+        // 分割調整倍率の適用
+        _currentFundData = data;
+        _currentFundCode = code;
+        const multiplier = getSplitMultiplier(code);
+        splitMultiplierInput.value = multiplier;
+        splitAdjustArea.style.display = "flex";
+        renderAll(applySplitMultiplier(data, multiplier));
+      } catch (e) {
+        loadingMsg.style.display = "none";
+        errorMsg.style.display = "block";
+        errorMsg.textContent = `データ取得エラー: ${e.message}`;
+        console.error("Fundamentals error:", e);
+      }
+    }
+
+    /** 期間ラベル: "2024/12" → "2024/12", "2024.03" → "2024/3" */
+    function shortPeriod(p) {
+      const parts = p.includes("/") ? p.split("/") : p.split(".");
+      if (parts.length === 2) {
+        const month = parseInt(parts[1]);
+        return `${parts[0]}/${month}`;
+      }
+      return p;
+    }
+
+    /** 数値フォーマット */
+    function fmtVal(v, unit) {
+      if (v === null || v === undefined) return "";
+      if (unit === "%") return v.toFixed(1) + "%";
+      if (unit === "円") {
+        if (v % 1 === 0) return v.toLocaleString() + "円";
+        return v.toFixed(1) + "円";
+      }
+      if (unit === "百万円") {
+        if (Math.abs(v) >= 10000) return (v / 10000).toFixed(1) + "億";
+        return v.toLocaleString();
+      }
+      return v.toLocaleString();
+    }
+
+    /** Chart.jsのデータラベルプラグイン（バー上に値を表示） */
+    const dataLabelsPlugin = {
+      id: "customDataLabels",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        const dataCount = chart.data.labels.length;
+        // データ数に応じてフォントサイズ調整
+        const fontSize = dataCount > 12 ? 9 : dataCount > 8 ? 10 : 11;
+
+        chart.data.datasets.forEach((dataset, dsIndex) => {
+          if (dataset._hideLabels) return;
+          const meta = chart.getDatasetMeta(dsIndex);
+          meta.data.forEach((element, index) => {
+            const val = dataset.data[index];
+            if (val === null || val === undefined) return;
+
+            const label = dataset._labelFormatter
+              ? dataset._labelFormatter(val)
+              : (dataset._labelUnit === "%" ? val.toFixed(1) : val.toLocaleString());
+
+            ctx.save();
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.fillStyle = dataset._labelColor || COLORS.valueLabel;
+
+            if (dataset.type === "line" || dataset._isLine) {
+              ctx.fillText(label, element.x, element.y - 8);
+            } else {
+              ctx.fillText(label, element.x, element.y - 4);
+            }
+            ctx.restore();
+          });
+        });
+      }
+    };
+
+    Chart.register(dataLabelsPlugin);
+
+    /** 全セクションをレンダリング */
+    function renderAll(data) {
+      sectionsEl.innerHTML = "";
+
+      if (!data.sections || !data.periods) {
+        errorMsg.style.display = "block";
+        errorMsg.textContent = "データがありません";
+        return;
+      }
+
+      const periods = data.periods;
+      const labels = periods.map(shortPeriod);
+      const s = data.sections;
+
+      // データがあるかチェックするヘルパー
+      const hasData = (sec) => sec && sec.values && sec.values.some(v => v !== null && v !== undefined);
+
+      // 1. 一株当たり配当金・配当性向（棒＋折れ線）
+      if (hasData(s.dividend)) {
+        createComboChart("一株当たり配当金・配当性向", "※単位：円", labels,
+          { label: "一株配当", values: s.dividend.values, unit: "円", color: COLORS.bar },
+          hasData(s.payoutRatio) ? { label: "配当性向", values: s.payoutRatio.values, unit: "%", color: COLORS.line } : null
+        );
+      }
+
+      // 2. EPS（棒グラフ）
+      if (hasData(s.eps)) {
+        createBarChart("EPS（1株当たり純利益）", "※単位：円", labels, s.eps.values, "円");
+      }
+
+      // 3. 売上高・営業利益率（棒＋折れ線）
+      if (hasData(s.revenue)) {
+        createComboChart("売上高・営業利益率", "※単位：百万円", labels,
+          { label: "売上高", values: s.revenue.values, unit: "百万円", color: COLORS.bar },
+          hasData(s.operatingMargin) ? { label: "営業利益率", values: s.operatingMargin.values, unit: "%", color: COLORS.line } : null
+        );
+      }
+
+      // 4. ROE（折れ線グラフ＋基準線）
+      if (hasData(s.roe)) {
+        createLineChart("ROE（自己資本利益率）", "※単位：%", labels, s.roe.values, "%",
+          { value: 8, label: "一般的な合格基準 8%", color: "#e74c6f" });
+      }
+
+      // 5. 配当利回り（折れ線グラフ＋現在値ハイライト＋平均線）
+      if (hasData(s.dividendYield)) {
+        const v = data.valuation || {};
+        // 現在の配当利回り: Yahoo Finance or IR BANKの最新値
+        let currentYield = v.dividendYield;
+        if (!currentYield && s.dividendYield && s.dividendYield.values) {
+          // IR BANKデータの最新の有効値をフォールバックに使う
+          for (let i = s.dividendYield.values.length - 1; i >= 0; i--) {
+            if (s.dividendYield.values[i] != null) {
+              currentYield = s.dividendYield.values[i];
+              break;
+            }
+          }
+        }
+        // 平均配当利回り（2012年以降の有効値で計算）
+        const validYields = s.dividendYield.values
+          .map((val, i) => ({ value: val, year: parseInt(labels[i]) }))
+          .filter(item => item.value != null && item.year >= 2012)
+          .map(item => item.value);
+        const avgYield = validYields.length > 0
+          ? validYields.reduce((a, b) => a + b, 0) / validYields.length
+          : null;
+        createLineChart("配当利回り", "※単位：%", labels, s.dividendYield.values, "%",
+          avgYield != null ? { value: avgYield, label: `平均配当利回り ${avgYield.toFixed(2)}%`, color: "#e74c6f" } : null,
+          currentYield ? `現在の配当利回り  ${currentYield}%` : null,
+          0.5);
+      }
+
+      // 6. バリュエーション指標カード
+      if (data.valuation && Object.keys(data.valuation).length > 0) {
+        createValuationCards(data.valuation);
+      }
+
+      // 7. 自己資本比率（折れ線グラフ）
+      if (hasData(s.equityRatio)) {
+        createLineChart("自己資本比率", "※単位：%", labels, s.equityRatio.values, "%", null);
+      }
+    }
+
+    /** 棒グラフ作成 */
+    function createBarChart(title, subtitle, labels, values, unit) {
+      const section = makeSection(title, subtitle);
+      const canvas = section.querySelector("canvas");
+
+      new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: COLORS.bar,
+            borderColor: COLORS.barBorder,
+            borderWidth: 1,
+            borderRadius: 3,
+            _labelUnit: unit === "%" ? "%" : "",
+            _labelFormatter: (v) => fmtVal(v, unit),
+            _labelColor: COLORS.valueLabel,
+          }]
+        },
+        options: barOptions(unit),
+      });
+
+      sectionsEl.appendChild(section);
+    }
+
+    /** 棒＋折れ線の複合チャート作成 */
+    function createComboChart(title, subtitle, labels, barData, lineData) {
+      const section = makeSection(title, subtitle);
+      const canvas = section.querySelector("canvas");
+
+      // 凡例を追加
+      const legendEl = section.querySelector(".chart-legend");
+      legendEl.innerHTML = `
+        <div class="legend-item"><div class="legend-box" style="background:${barData.color}"></div>${barData.label}</div>
+        ${lineData ? `<div class="legend-item"><div class="legend-circle" style="background:${lineData.color}"></div>${lineData.label}</div>` : ""}
+      `;
+
+      const datasets = [{
+        type: "bar",
+        data: barData.values,
+        backgroundColor: barData.color,
+        borderColor: COLORS.barBorder,
+        borderWidth: 1,
+        borderRadius: 3,
+        yAxisID: "y",
+        order: 2,
+        _labelFormatter: (v) => fmtVal(v, barData.unit),
+        _labelColor: COLORS.valueLabel,
+      }];
+
+      // 棒グラフの左Y軸
+      const barValues = barData.values.filter(v => v !== null && v !== undefined);
+      const scales = {
+        x: { grid: { display: false }, ticks: { font: { size: 11, weight: "bold" }, color: "#666" } },
+        y: {
+          position: "left",
+          beginAtZero: true,
+          grid: { color: COLORS.gridLine },
+          ticks: {
+            font: { size: 10 },
+            color: "#999",
+            callback: (v) => barData.unit === "百万円" ? (v >= 10000 ? (v / 10000).toFixed(0) + "億" : v.toLocaleString()) : v.toLocaleString(),
+          },
+        },
+      };
+
+      if (lineData) {
+        const lineValues = lineData.values.filter(v => v !== null && v !== undefined);
+        if (lineValues.length > 0) {
+          const lineMin = Math.min(...lineValues);
+          const lineMax = Math.max(...lineValues);
+          const padding = Math.max((lineMax - lineMin) * 0.3, 3);
+
+          datasets.push({
+            type: "line",
+            data: lineData.values,
+            borderColor: lineData.color,
+            backgroundColor: lineData.color,
+            pointRadius: 4,
+            pointBackgroundColor: lineData.color,
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            borderWidth: 2,
+            tension: 0,
+            yAxisID: "y1",
+            order: 1,
+            _isLine: true,
+            _labelFormatter: (v) => fmtVal(v, lineData.unit),
+            _labelColor: lineData.color,
+          });
+
+          scales.y1 = {
+            position: "right",
+            beginAtZero: false,
+            min: Math.max(0, Math.floor(lineMin - padding)),
+            max: Math.ceil(lineMax + padding),
+            grid: { display: false },
+            ticks: {
+              font: { size: 10 },
+              color: lineData.color,
+              callback: (v) => v + "%",
+            },
+          };
+        }
+      }
+
+      new Chart(canvas, {
+        type: "bar",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales,
+          layout: { padding: { top: 20 } },
+        },
+      });
+
+      sectionsEl.appendChild(section);
+    }
+
+    /** 折れ線グラフ作成（基準線付き、ハイライトテキスト付き） */
+    function createLineChart(title, subtitle, labels, values, unit, refLine, highlightText, yStepSize) {
+      const section = makeSection(title, subtitle);
+      const canvas = section.querySelector("canvas");
+
+      // ハイライトテキスト（例：「現在の配当利回り 3.45%」）
+      if (highlightText) {
+        const container = section.querySelector(".chart-container");
+        const hl = document.createElement("div");
+        hl.className = "valuation-highlight";
+        hl.innerHTML = `<div class="valuation-highlight-label">${highlightText}</div>`;
+        container.appendChild(hl);
+      }
+
+      const validValues = values.filter(v => v !== null && v !== undefined);
+      const minVal = Math.min(...validValues);
+      const maxVal = Math.max(...validValues);
+      const padding = (maxVal - minVal) * 0.3 || 5;
+      let yMin = Math.max(0, Math.floor(minVal - padding));
+      let yMax = Math.ceil(maxVal + padding);
+
+      if (refLine) {
+        yMin = Math.min(yMin, refLine.value - 2);
+        yMax = Math.max(yMax, refLine.value + 2);
+      }
+
+      // yStepSize 指定時は yMin/yMax を刻み単位に丸める
+      if (yStepSize) {
+        yMin = Math.max(0, Math.floor(minVal / yStepSize) * yStepSize);
+        yMax = Math.ceil(maxVal / yStepSize) * yStepSize;
+        if (refLine) {
+          yMin = Math.min(yMin, Math.floor((refLine.value - 0.5) / yStepSize) * yStepSize);
+          yMax = Math.max(yMax, Math.ceil((refLine.value + 0.5) / yStepSize) * yStepSize);
+        }
+      }
+
+      const plugins = [];
+
+      // 基準線プラグイン
+      if (refLine) {
+        plugins.push({
+          id: "refLinePlugin",
+          beforeDraw(chart) {
+            const yScale = chart.scales.y;
+            const ctx = chart.ctx;
+            const yPos = yScale.getPixelForValue(refLine.value);
+
+            ctx.save();
+            ctx.strokeStyle = refLine.color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(chart.chartArea.left, yPos);
+            ctx.lineTo(chart.chartArea.right, yPos);
+            ctx.stroke();
+
+            ctx.fillStyle = refLine.color;
+            ctx.font = "bold 11px sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText(refLine.label, chart.chartArea.right, yPos - 6);
+            ctx.restore();
+          }
+        });
+      }
+
+      new Chart(canvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            borderColor: "#5bb5a2",
+            backgroundColor: "#5bb5a2",
+            pointRadius: 5,
+            pointBackgroundColor: "#5bb5a2",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            tension: 0,
+            _isLine: true,
+            _labelFormatter: (v) => fmtVal(v, unit),
+            _labelColor: "#5bb5a2",
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: true } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 11, weight: "bold" }, color: "#666" } },
+            y: {
+              min: yMin,
+              max: yMax,
+              grid: { color: COLORS.gridLine },
+              ticks: {
+                font: { size: 10 },
+                color: "#999",
+                callback: (v) => unit === "%" ? v.toFixed(1) + "%" : v,
+                ...(yStepSize ? { stepSize: yStepSize } : {}),
+              },
+            },
+          },
+          layout: { padding: { top: 20 } },
+        },
+        plugins,
+      });
+
+      sectionsEl.appendChild(section);
+    }
+
+    /** バリュエーション指標カード */
+    function createValuationCards(v) {
+      if (!v.forwardPER && !v.trailingPER && !v.pbr) return;
+
+      const container = document.createElement("div");
+      container.className = "valuation-cards";
+
+      const cards = [];
+
+      if (v.forwardPER) {
+        cards.push({ label: "予想PER", sublabel: "株価収益率", value: v.forwardPER, unit: "倍" });
+      }
+      if (v.trailingPER) {
+        cards.push({ label: "実績PER", sublabel: "Trailing P/E", value: v.trailingPER, unit: "倍" });
+      }
+      if (v.pbr) {
+        cards.push({ label: "PBR", sublabel: "株価純資産倍率", value: v.pbr, unit: "倍" });
+      }
+      if (v.dividendYield) {
+        cards.push({ label: "配当利回り", sublabel: "予想ベース", value: v.dividendYield, unit: "%" });
+      }
+
+      for (const card of cards) {
+        const el = document.createElement("div");
+        el.className = "valuation-card";
+        el.innerHTML = `
+          <div class="valuation-card-label">${card.label} <span class="valuation-card-sublabel">${card.sublabel}</span></div>
+          <div class="valuation-card-value">${card.value}<span class="unit">${card.unit}</span></div>
+        `;
+        container.appendChild(el);
+      }
+
+      sectionsEl.appendChild(container);
+    }
+
+    /** セクションDOM作成ヘルパー */
+    function makeSection(title, subtitle) {
+      const section = document.createElement("div");
+      section.className = "chart-section";
+      section.innerHTML = `
+        <div class="chart-title">${title}</div>
+        <div class="chart-subtitle">${subtitle}</div>
+        <div class="chart-legend"></div>
+        <div class="chart-container"><canvas></canvas></div>
+      `;
+      return section;
+    }
+
+    /** 棒グラフの共通オプション */
+    function barOptions(unit) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 10, weight: "bold" }, color: "#666", maxRotation: 45, minRotation: 0 },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: COLORS.gridLine },
+            ticks: {
+              font: { size: 10 },
+              color: "#999",
+              callback: (v) => {
+                if (unit === "%") return v + "%";
+                if (unit === "百万円" && Math.abs(v) >= 10000) return (v / 10000).toFixed(0) + "億";
+                return v.toLocaleString();
+              },
+            },
+          },
+        },
+        layout: { padding: { top: 20 } },
+      };
+    }
+  </script>
+  <footer style="text-align:center; padding:20px 0 12px; font-size:12px; color:#999; border-top:1px solid #eee; margin-top:30px;">
+    データ出典：<a href="https://irbank.net/" target="_blank" style="color:#4a90d9; text-decoration:none;">IR BANK</a>（EDINET・TDNETのXBRLデータを元に集計）／
+    株価データ：<a href="https://finance.yahoo.com/" target="_blank" style="color:#4a90d9; text-decoration:none;">Yahoo Finance</a>
+  </footer>
+</body>
+</html>
