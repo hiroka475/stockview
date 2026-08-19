@@ -239,6 +239,30 @@
     let _currentFundData = null;
     let _currentFundCode = "";
 
+    // 銘柄マスタ（コード→会社名・業種）。index.html と同じ /jp-stocks.json を流用
+    let _jpStocksMaster = null;
+    let _jpStocksPromise = null;
+    async function getStockMaster() {
+      if (_jpStocksMaster) return _jpStocksMaster;
+      if (!_jpStocksPromise) {
+        _jpStocksPromise = (async () => {
+          const map = new Map();
+          try {
+            const res = await fetch("/jp-stocks.json");
+            const arr = res.ok ? await res.json() : [];
+            for (const s of arr) if (s && s.code) map.set(String(s.code), s);
+          } catch (e) {
+            console.warn("銘柄マスタ読込エラー:", e);
+          }
+          _jpStocksMaster = map;
+          return map;
+        })();
+      }
+      return _jpStocksPromise;
+    }
+    // 早めにプリロード（表示時の待ち時間をなくす）
+    getStockMaster();
+
     function loadSplitMultipliers() {
       try { return JSON.parse(localStorage.getItem(SPLIT_KEY) || "{}"); } catch { return {}; }
     }
@@ -336,10 +360,12 @@
         const data = await fundResponse.json();
         if (data.error) throw new Error(data.error);
 
+        let _divName = null;  // 配当API(Yahoo由来)の会社名。銘柄名フォールバックに使う
         // 配当利回り: Yahoo Finance（メイン画面と同じソース）を優先
         if (divResponse && divResponse.ok) {
           try {
             const divData = await divResponse.json();
+            _divName = divData.name || null;
             const price = divData.price || 0;
             if (!data.valuation) data.valuation = {};
             data.valuation.price = price;
@@ -400,10 +426,14 @@
         }
 
         loadingMsg.style.display = "none";
-        nameLabel.textContent = `銘柄名： ${data.stockName || code}`;
+        // 銘柄マスタから会社名・業種を引く（無ければAPI値→コードの順でフォールバック）
+        const _master = await getStockMaster();
+        const _info = _master.get(String(code)) || {};
+        nameLabel.textContent = `銘柄名： ${_info.name || _divName || data.stockName || code}`;
         // 業種を表示
-        if (data.sector) {
-          sectorLabel.textContent = data.sector;
+        const _sector = _info.sector || data.sector;
+        if (_sector) {
+          sectorLabel.textContent = _sector;
           sectorLabel.style.display = "inline";
         } else {
           sectorLabel.style.display = "none";

@@ -294,21 +294,20 @@
       font-size: 14px;
     }
 
-    /* 検索結果のドロップダウン */
+    /* 検索結果のドロップダウン
+       ※ .header が overflow:hidden なので position:absolute だと切り取られて見えない。
+          position:fixed にして viewport 基準にし、JSで入力欄の真下に配置する。 */
     .search-results {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
+      position: fixed;
+      min-width: 240px;
       background-color: #ffffff;
       border: 1px solid #d0d0d0;
       border-radius: 6px;
-      margin-top: 4px;
-      max-height: 300px;
+      max-height: 320px;
       overflow-y: auto;
-      z-index: 100;
+      z-index: 1000;
       display: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     .search-results.active {
@@ -1524,6 +1523,28 @@
       white-space: nowrap;
     }
 
+    /* 銘柄タイトル横「ウォッチリストに追加」ボタン（オーバーレイはpointer-events:noneなのでautoで復活） */
+    .symbol-overlay-fav {
+      pointer-events: auto;
+      align-self: center;
+      margin-left: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1976d2;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #1976d2;
+      border-radius: 4px;
+      padding: 2px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .symbol-overlay-fav:hover { background: #e3f2fd; }
+    .symbol-overlay-fav.added {
+      color: #26a69a;
+      border-color: #26a69a;
+      background: rgba(38, 166, 154, 0.10);
+    }
+
     /* インジケーター凡例（チャート上部に表示） */
     .indicator-legend {
       position: absolute;
@@ -1613,160 +1634,266 @@
 
     /* ========================================
        スマートフォン（480px以下）
+       TradingView風の「2ビュー切替」レイアウト：
+         - 既定: ウォッチリストのみ全画面
+         - body.mobile-show-chart: チャートのみ全画面（戻るボタン付き）
     ======================================== */
     @media (max-width: 480px) {
       body {
-        overflow-y: auto;
-        height: auto;
+        overflow: hidden;
+        height: 100vh;
+        height: 100dvh; /* Safariのアドレスバー分を考慮 */
+        width: 100vw;
+        max-width: 100vw;
       }
 
-      /* ヘッダー: コンパクト化 */
-      .header {
-        padding: 4px 8px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-      }
-
-      .header-left {
-        width: 100%;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .app-title {
-        font-size: 13px;
-      }
-
-      .stock-info {
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-
-      .stock-symbol { font-size: 15px; }
-      .stock-name { font-size: 11px; }
-      .stock-price { font-size: 15px; }
-      .stock-change { font-size: 12px; }
-      .stock-dividend { font-size: 10px; padding: 1px 6px; }
-
-      /* 検索バー: 全幅 */
-      .search-container {
-        width: 100%;
-      }
-
-      .search-input {
-        width: 100%;
-        font-size: 16px;
-      }
-
-      .search-results {
-        width: 100%;
-        max-height: 200px;
-      }
-
-      /* ヘッダー: スクロール可能に */
-      .header {
-        padding: 3px 6px;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        gap: 2px;
-        height: auto;
-      }
-
-      .header::-webkit-scrollbar {
-        display: none;
-      }
-
-      .toolbar-label {
-        font-size: 9px;
-        white-space: nowrap;
-      }
-
-      .toolbar-group {
-        flex-shrink: 0;
-      }
-
-      .toolbar-separator {
-        display: none;
-      }
-
-      .interval-btn,
-      .range-btn,
-      .toggle-btn,
-      .drawing-btn {
-        padding: 3px 7px;
-        font-size: 11px;
-        min-height: 28px;
-      }
-
-      /* スマホでは全体を縦積みに（左カラム + ウォッチリスト 縦並び） */
+      /* アプリルート: 単一画面の縦flex */
       .app-root {
         flex-direction: column;
-        height: auto;
+        height: 100vh;
+        height: 100dvh;
+        width: 100%;
+        max-width: 100vw;
+        overflow: hidden;
       }
 
-      /* メインエリア: 縦積みレイアウト */
-      .main-area {
-        flex-direction: column;
-        height: auto;
+      /* === 既定状態（ウォッチリストビュー）=== */
+      /* チャート側のカラムは丸ごと隠す */
+      .left-column {
+        display: none;
       }
 
-      /* チャート: 画面幅いっぱい、高さ固定 */
-      .chart-container {
-        width: 100% !important;
-        height: 55vh !important;
-        min-height: 300px;
-      }
-
-      /* ウォッチリスト: 下に配置、全幅 */
+      /* ウォッチリストを画面いっぱいに（safe-areaを差し引く） */
       .watchlist {
         width: 100% !important;
-        min-width: 100% !important;
-        height: auto;
-        max-height: 40vh;
+        min-width: 0 !important;
+        max-width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
         border-left: none;
-        border-top: 2px solid #e0e0e0;
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+        box-sizing: border-box;
+        overflow-x: hidden;
       }
 
-      .watchlist.hidden {
-        display: none;
+      .watchlist-header,
+      .watchlist-tabs,
+      .watchlist-sort-bar,
+      .mobile-watchlist-search,
+      .watchlist-items {
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* リサイズハンドルはモバイルでは無効 */
+      .watchlist-resize-handle {
+        display: none !important;
       }
 
       .watchlist-items {
-        max-height: 25vh;
+        flex: 1;
+        max-height: none;
       }
 
+      /* アイテム：コンパクトに（高さ半分） */
       .watchlist-item {
-        padding: 8px 12px;
+        padding: 7px 14px;
+        min-height: 38px;
+        height: auto;
+        width: 100%;
+        box-sizing: border-box;
+        max-width: 100%;
       }
 
-      .watchlist-item-name {
-        max-width: 120px;
+      .watchlist-item-left {
+        max-width: calc(100% - 88px); /* 右側の変動率分を確保 */
+        padding-right: 8px;
       }
 
-      /* 詳細パネル */
-      .stock-detail-panel {
-        max-height: 40vh;
+      .watchlist-item-symbol { font-size: 16px; }
+      .watchlist-item-name { font-size: 13px; max-width: 100%; }
+      .watchlist-item-price { font-size: 16px; font-weight: 600; }
+      .watchlist-item-change { font-size: 14px; min-width: 70px; padding: 3px 8px; }
+
+      /* 変動率ヘッダーを右揃え（数字に合わせる） */
+      #sortChangeBtn {
+        text-align: right;
+        padding-right: 14px;
       }
 
-      /* ツールチップ: モバイルでは非表示（タッチ操作と相性悪い） */
-      .tooltip {
+      /* スマホでは「×」削除ボタンを非表示
+         （hoverで現れる仕組みのため、モバイルだとタップが2回必要になる問題を解消） */
+      .watchlist-tab .tab-close {
+        display: none !important;
+      }
+      .watchlist-tab:hover .tab-close {
+        display: none !important;
+      }
+
+      /* タブをタップしやすく */
+      .watchlist-tab {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+      }
+
+      /* スマホ専用：ウォッチリスト先頭の検索/追加バー */
+      .mobile-watchlist-search {
+        display: block;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e0e0e0;
+        background: #fff;
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .mobile-watchlist-search input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d0d0d0;
+        border-radius: 10px;
+        font-size: 16px; /* iOSズーム抑制 */
+        background: #f8f9fa;
+        outline: none;
+        -webkit-appearance: none;
+      }
+
+      .mobile-watchlist-search input:focus {
+        border-color: #1976d2;
+        background: #fff;
+      }
+
+      .mobile-watchlist-search .search-results {
+        position: absolute;
+        top: calc(100% - 4px);
+        left: 12px;
+        right: 12px;
+        max-height: 50vh;
+      }
+
+      /* === チャートビュー（body.mobile-show-chart 時）=== */
+      body.mobile-show-chart .left-column {
+        display: flex;
+        height: 100vh;
+        height: 100dvh; /* Safariのアドレスバー分を考慮（X軸の年表示が隠れないように） */
+        width: 100%;
+      }
+
+      body.mobile-show-chart .watchlist {
+        display: none !important;
+      }
+
+      body.mobile-show-chart .header {
+        padding: 4px 6px;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        height: auto;
+        gap: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      body.mobile-show-chart .header::-webkit-scrollbar {
         display: none;
       }
 
-      /* 指標設定パネル: 全幅 */
+      body.mobile-show-chart .header-left {
+        flex-shrink: 0;
+      }
+
+      /* チャートビューでは検索とロゴは隠して、戻るボタン+時間足のみ */
+      body.mobile-show-chart .search-container {
+        display: none;
+      }
+
+      body.mobile-show-chart .app-logo-wrapper {
+        display: none;
+      }
+
+      body.mobile-show-chart .toolbar-separator {
+        display: none;
+      }
+
+      body.mobile-show-chart .interval-btn,
+      body.mobile-show-chart .range-btn,
+      body.mobile-show-chart .toggle-btn,
+      body.mobile-show-chart .drawing-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        min-height: 30px;
+        flex-shrink: 0;
+      }
+
+      body.mobile-show-chart .toolbar-group {
+        flex-shrink: 0;
+      }
+
+      body.mobile-show-chart .main-area {
+        flex: 1;
+        min-height: 0;
+      }
+
+      body.mobile-show-chart .chart-container {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        position: relative;
+      }
+
+      /* スマホ専用：戻るボタン（チャートビューでのみ表示） */
+      .mobile-back-btn {
+        display: none;
+      }
+
+      body.mobile-show-chart .mobile-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        background: none;
+        border: none;
+        font-size: 14px;
+        color: #1976d2;
+        padding: 6px 8px;
+        cursor: pointer;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      body.mobile-show-chart .mobile-back-btn:active {
+        background: rgba(25, 118, 210, 0.1);
+        border-radius: 6px;
+      }
+
+      /* タッチ操作と相性悪いツールチップは非表示 */
+      .tooltip { display: none; }
+
+      /* 詳細パネルは使わない（直接チャートへ） */
+      .stock-detail-panel { display: none !important; }
+
+      /* 指標設定パネル */
       .indicator-panel {
         width: calc(100vw - 20px);
         right: 10px;
       }
 
       /* セーフエリア対応（ノッチ付きiPhone） */
-      .header {
+      body.mobile-show-chart .header {
         padding-top: max(4px, env(safe-area-inset-top));
         padding-left: max(6px, env(safe-area-inset-left));
         padding-right: max(6px, env(safe-area-inset-right));
       }
+    }
+
+    /* デスクトップでは mobile-only 要素を隠す */
+    @media (min-width: 481px) {
+      .mobile-watchlist-search { display: none !important; }
+      .mobile-back-btn { display: none !important; }
     }
   </style>
 </head>
@@ -1785,6 +1912,9 @@
   ========================================== -->
   <header class="header">
     <div class="header-left">
+      <button type="button" class="mobile-back-btn" id="mobileBackBtn" aria-label="ウォッチリストに戻る">
+        &#8249; 戻る
+      </button>
       <div class="app-logo-wrapper">
         <button type="button" class="app-logo-btn" id="appLogoBtn" aria-haspopup="true" aria-expanded="false">
           <span class="app-title">StockView</span>
@@ -1849,6 +1979,7 @@
     <div class="symbol-overlay" id="symbolOverlay">
       <span class="symbol-overlay-code" id="symbolOverlayCode">-</span>
       <span class="symbol-overlay-name" id="symbolOverlayName"></span>
+      <button class="symbol-overlay-fav" id="symbolOverlayFav" onclick="addCurrentToWatchlist()" title="この銘柄をウォッチリストに追加">☆ ウォッチリストに追加</button>
     </div>
 
     <!-- インジケーター凡例（チャート上部） -->
@@ -1933,6 +2064,11 @@
        app-root 直下に配置 → ページの最上端から最下端まで独立
   ========================================== -->
   <div class="watchlist" id="watchlistPanel">
+    <!-- スマホ専用：銘柄検索/追加バー（PCでは非表示） -->
+    <div class="mobile-watchlist-search">
+      <input type="text" id="mobileSearchInput" placeholder="🔍 銘柄を追加（7203, AAPL, トヨタ...）" autocomplete="off" inputmode="search">
+      <div class="search-results" id="mobileSearchResults"></div>
+    </div>
     <div class="watchlist-header">
       <h3>ウォッチリスト</h3>
       <div class="watchlist-header-btns">
@@ -2001,6 +2137,12 @@
       <div class="watchlist-empty" id="watchlistEmpty">
         銘柄がありません<br>
         検索から銘柄を追加できます
+        <div style="margin-top: 16px;">
+          <button type="button" id="restoreWatchlistBtn"
+            style="background:#1976d2;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">
+            🔄 前回のウォッチリストを復元
+          </button>
+        </div>
       </div>
     </div>
 
@@ -2874,6 +3016,55 @@
       const nameEl = document.getElementById("symbolOverlayName");
       if (codeEl) codeEl.textContent = displaySymbol;
       if (nameEl) nameEl.textContent = name && name !== displaySymbol ? name : "";
+
+      // 「ウォッチリストに追加」ボタンの状態を更新（追加済みなら★表示）
+      const favBtn = document.getElementById("symbolOverlayFav");
+      if (favBtn) {
+        const inList = isInWatchlistNow(stockData.symbol);
+        favBtn.textContent = inList ? "★ 追加済み" : "☆ ウォッチリストに追加";
+        favBtn.classList.toggle("added", inList);
+      }
+    }
+
+    /** 現在チャート表示中の銘柄がウォッチリスト（JP/US）に入っているか */
+    function isInWatchlistNow(symbol) {
+      for (const k of [WATCHLIST_KEY_JP, WATCHLIST_KEY_US]) {
+        try {
+          const list = JSON.parse(localStorage.getItem(k) || "[]");
+          if (Array.isArray(list) && list.some((it) => it && it.symbol === symbol)) return true;
+        } catch { /* ignore */ }
+      }
+      return false;
+    }
+
+    /** チャート上部のボタン：今見ている銘柄をウォッチリストに追加／解除（トグル） */
+    function addCurrentToWatchlist() {
+      if (!currentSymbol) return;
+      const favBtn = document.getElementById("symbolOverlayFav");
+      if (isInWatchlistNow(currentSymbol)) {
+        // 解除：JP/US両方のキーから確実に取り除く
+        for (const k of [WATCHLIST_KEY_JP, WATCHLIST_KEY_US]) {
+          try {
+            const list = JSON.parse(localStorage.getItem(k) || "[]");
+            if (Array.isArray(list)) {
+              const filtered = list.filter((it) => it && it.symbol !== currentSymbol);
+              if (filtered.length !== list.length) localStorage.setItem(k, JSON.stringify(filtered));
+            }
+          } catch { /* ignore */ }
+        }
+        if (typeof clearAlert === "function") clearAlert(currentSymbol);
+        renderWatchlist();
+        if (favBtn) {
+          favBtn.textContent = "☆ ウォッチリストに追加";
+          favBtn.classList.remove("added");
+        }
+      } else {
+        addToWatchlist(currentSymbol, lookupStockName(currentSymbol));
+        if (favBtn) {
+          favBtn.textContent = "★ 追加済み";
+          favBtn.classList.add("added");
+        }
+      }
     }
 
     // ==========================================
@@ -2938,6 +3129,132 @@
     }
 
     // ==========================================
+    // スマホUI（戻るボタン & ウォッチリスト先頭の検索バー）
+    // ==========================================
+
+    function setupMobileUI() {
+      // 戻るボタン: チャートビュー → ウォッチリストビュー
+      const backBtn = document.getElementById("mobileBackBtn");
+      if (backBtn) {
+        backBtn.addEventListener("click", () => {
+          document.body.classList.remove("mobile-show-chart");
+          // ウォッチリストの再描画は不要だが、念のためアクティブ状態を見直し
+          window.dispatchEvent(new Event("resize"));
+        });
+      }
+
+      // ウォッチリスト復元ボタン
+      // 既存データは上書きしない方式（空のキーだけ補完）
+      const restoreBtn = document.getElementById("restoreWatchlistBtn");
+      if (restoreBtn) {
+        // 個人の投資情報を公開URLに置かないため、復元は「手元のバックアップJSONを選ぶ」方式にする。
+        restoreBtn.addEventListener("click", () => {
+          const picker = document.createElement("input");
+          picker.type = "file";
+          picker.accept = "application/json,.json";
+          picker.onchange = async () => {
+            const file = picker.files && picker.files[0];
+            if (!file) return;
+            if (!confirm("選んだバックアップから、空になっている項目だけを復元します（既存のJP銘柄やフラグなどは上書きされません）。続行しますか？")) return;
+            restoreBtn.disabled = true;
+            restoreBtn.textContent = "復元中...";
+            try {
+              const data = JSON.parse(await file.text());
+              const isEmpty = (v) => !v || v === "" || v === "[]" || v === "{}" || v === "null";
+              let restoredKeys = [];
+              Object.entries(data).forEach(([k, v]) => {
+                const cur = localStorage.getItem(k);
+                // 既存データがあればスキップ（上書きしない）
+                if (!isEmpty(cur)) return;
+                if (v !== null && v !== undefined) {
+                  localStorage.setItem(k, v);
+                  restoredKeys.push(k);
+                }
+              });
+              if (restoredKeys.length === 0) {
+                alert("復元する項目がありませんでした（既に全データが揃っています）");
+                restoreBtn.disabled = false;
+                restoreBtn.textContent = "🔄 前回のウォッチリストを復元";
+                return;
+              }
+              location.reload();
+            } catch (e) {
+              alert("復元に失敗しました: " + e.message);
+              restoreBtn.disabled = false;
+              restoreBtn.textContent = "🔄 前回のウォッチリストを復元";
+            }
+          };
+          picker.click();
+        });
+      }
+
+      // モバイル検索バー → 既存の検索ロジックに転送
+      const mobileInput = document.getElementById("mobileSearchInput");
+      const mobileResults = document.getElementById("mobileSearchResults");
+      const mainInput = document.getElementById("searchInput");
+      const mainResults = document.getElementById("searchResults");
+
+      if (!mobileInput || !mainInput) return;
+
+      // 入力をメイン検索に転送して、結果のHTMLを mobile 側にも反映
+      const syncResults = () => {
+        if (!mobileResults || !mainResults) return;
+        mobileResults.innerHTML = mainResults.innerHTML;
+        if (mainResults.classList.contains("active")) {
+          mobileResults.classList.add("active");
+        } else {
+          mobileResults.classList.remove("active");
+        }
+
+        // mobile側の各結果アイテムにもクリックイベントを設定（メイン側のクリックを発火）
+        mobileResults.querySelectorAll(".search-result-item").forEach((el, idx) => {
+          el.addEventListener("click", (e) => {
+            // 対応するメイン側のアイテムをクリックして同じ動作にする
+            const mainItems = mainResults.querySelectorAll(".search-result-item");
+            if (mainItems[idx]) {
+              if (e.target.closest(".result-add-btn")) {
+                const addBtn = mainItems[idx].querySelector(".result-add-btn");
+                if (addBtn) addBtn.click();
+              } else {
+                mainItems[idx].click();
+              }
+            }
+            mobileInput.value = "";
+            mobileResults.classList.remove("active");
+            mobileResults.innerHTML = "";
+          });
+        });
+      };
+
+      mobileInput.addEventListener("input", () => {
+        mainInput.value = mobileInput.value;
+        mainInput.dispatchEvent(new Event("input"));
+        // 検索は300msデバウンスなので、結果反映は少し遅らせる
+        setTimeout(syncResults, 350);
+      });
+
+      mobileInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          mainInput.value = mobileInput.value;
+          // メイン側のEnterハンドラを発火（チャート表示+ウォッチリスト追加）
+          mainInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+          mobileInput.value = "";
+          mobileResults.classList.remove("active");
+          mobileResults.innerHTML = "";
+        }
+      });
+
+      // 入力欄外をタップで結果を閉じる
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".mobile-watchlist-search")) {
+          if (mobileResults) {
+            mobileResults.classList.remove("active");
+          }
+        }
+      });
+    }
+
+    // ==========================================
     // 銘柄検索
     // ==========================================
 
@@ -2972,6 +3289,7 @@
       input.addEventListener("focus", () => {
         if (input.value.trim().length >= 1) {
           results.classList.add("active");
+          positionSearchDropdown();
         }
       });
 
@@ -2984,84 +3302,181 @@
 
       // Enterキーで直接シンボルを指定（チャート表示＋ウォッチリスト追加）
       input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const query = input.value.trim().toUpperCase();
-          if (query) {
-            // 4桁数字なら日本株
-            const symbol = /^\d{4}$/.test(query) ? query + ".T" : query;
-            const name = lookupStockName(symbol);
-            loadSymbol(symbol);
-            addToWatchlist(symbol, name);
-            input.value = "";
-            results.classList.remove("active");
+        if (e.key !== "Enter") return;
+        const raw = input.value.trim();
+        if (!raw) return;
+
+        // チャートを開く（ウォッチリストには追加しない）
+        const goView = (symbol) => {
+          loadSymbol(symbol);
+          if (typeof updateStockDetailPanel === "function") updateStockDetailPanel(symbol);
+          input.value = "";
+          results.classList.remove("active");
+          if (window.matchMedia && window.matchMedia("(max-width: 480px)").matches) {
+            document.body.classList.add("mobile-show-chart");
+            window.dispatchEvent(new Event("resize"));
           }
-        }
+        };
+
+        // 4桁コード or 英字ティッカーの「完全一致」だけ直接表示（曖昧でないので）
+        if (/^\d{4}$/.test(raw)) { goView(raw + ".T"); return; }
+        const upper = raw.toUpperCase();
+        const exactUS = usStocksMaster.find((s) => s && (s.symbol || "").toUpperCase() === upper);
+        if (exactUS) { goView(exactUS.symbol); return; }
+
+        // それ以外（会社名・部分一致）は候補リストを出すだけ。決め打ち・自動追加はしない＝自分で選ぶ
+        renderSearchResults(searchLocalMaster(raw));
       });
     }
 
-    async function searchStocks(query) {
-      const results = document.getElementById("searchResults");
+    /**
+     * 手元の銘柄マスタ（jp-stocks.json / us-stocks.json）でクライアント検索する。
+     * コード・ティッカーの前方一致を優先し、企業名（日本語含む）の部分一致も拾う。
+     */
+    // TOPIX区分で会社の規模順位を返す（小さいほど大企業＝候補の上位に）
+    function sizeRank(sz) {
+      sz = sz || "";
+      if (sz.includes("Core30")) return 0;
+      if (sz.includes("Large70")) return 1;
+      if (sz.includes("Mid400")) return 2;
+      if (sz.includes("Small")) return 3;
+      return 4;
+    }
 
+    function searchLocalMaster(query) {
+      const q = (query || "").trim();
+      if (!q) return [];
+      const qLower = q.toLowerCase();
+      const scored = [];
+      if (currentMarket === "JP") {
+        for (const s of jpStocksMaster) {
+          if (!s) continue;
+          const code = s.code || "", name = s.name || "";
+          let score = -1;
+          if (code === q) score = 0;            // コード完全一致
+          else if (name === q) score = 1;       // 名前完全一致
+          else if (code.startsWith(q)) score = 2;
+          else if (name.startsWith(q)) score = 3; // 名前の前方一致（トヨタ自動車 など）
+          else if (name.includes(q)) score = 5;   // 名前の部分一致
+          else if (code.includes(q)) score = 6;
+          if (score < 0) continue;
+          scored.push({ s, score, tie: sizeRank(s.size) });
+        }
+        // スコア→規模の順で並べる（同点なら大企業が上）
+        scored.sort((a, b) => a.score - b.score || a.tie - b.tie);
+        return scored.slice(0, 15).map(({ s }) => ({
+          symbol: s.code + ".T", name: s.name, sector: s.sector, market: s.market,
+        }));
+      } else {
+        for (const s of usStocksMaster) {
+          if (!s) continue;
+          const sym = s.symbol || "", name = s.name || "";
+          const symL = sym.toLowerCase(), nameL = name.toLowerCase();
+          let score = -1;
+          if (symL === qLower) score = 0;
+          else if (symL.startsWith(qLower)) score = 2;
+          else if (nameL.startsWith(qLower)) score = 3;
+          else if (nameL.includes(qLower)) score = 5;
+          else if (symL.includes(qLower)) score = 6;
+          if (score < 0) continue;
+          scored.push({ s, score, tie: sym.length });
+        }
+        scored.sort((a, b) => a.score - b.score || a.tie - b.tie);
+        return scored.slice(0, 15).map(({ s }) => ({
+          symbol: s.symbol, name: s.name, sector: s.sector,
+        }));
+      }
+    }
+
+    /** 検索結果ドロップダウンを描画する（クリック＝チャート表示／「+」＝ウォッチリスト追加） */
+    /** 検索ドロップダウンを入力欄の真下（viewport基準）に配置する */
+    function positionSearchDropdown() {
+      const inputEl = document.getElementById("searchInput");
+      const dd = document.getElementById("searchResults");
+      if (!inputEl || !dd) return;
+      const r = inputEl.getBoundingClientRect();
+      dd.style.top = (r.bottom + 4) + "px";
+      dd.style.left = r.left + "px";
+      dd.style.width = Math.max(r.width, 240) + "px";
+    }
+
+    function renderSearchResults(items) {
+      const results = document.getElementById("searchResults");
+      if (items && items.length > 0) {
+        results.innerHTML = items
+          .map((item) => {
+            const sectorTag = item.sector
+              ? `<span class="result-market">${item.sector}</span>`
+              : `<span class="result-market">${item.market || ""}</span>`;
+            return `
+              <div class="search-result-item" data-symbol="${item.symbol}" data-name="${(item.name || "").replace(/"/g, "&quot;")}">
+                <div>
+                  <span class="result-symbol">${item.symbol}</span>
+                  <span class="result-name">${item.name}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  ${sectorTag}
+                  <button class="result-add-btn" title="ウォッチリストに追加">+</button>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+
+        results.querySelectorAll(".search-result-item").forEach((el) => {
+          // 「+」ボタン → ウォッチリストに追加のみ
+          const addBtn = el.querySelector(".result-add-btn");
+          if (addBtn) addBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const sym = el.dataset.symbol;
+            const name = el.dataset.name || sym;
+            const symbol = /^\d{4}$/.test(sym) ? sym + ".T" : sym;
+            addToWatchlist(symbol, name);
+            addBtn.textContent = "✓";
+            addBtn.style.borderColor = "#26a69a";
+            addBtn.style.color = "#26a69a";
+          });
+
+          // 行クリック → チャート表示 + 詳細パネル更新
+          el.addEventListener("click", (e) => {
+            if (e.target.closest(".result-add-btn")) return;
+            const sym = el.dataset.symbol;
+            const symbol = /^\d{4}$/.test(sym) ? sym + ".T" : sym;
+            loadSymbol(symbol);
+            updateStockDetailPanel(symbol);
+            document.getElementById("searchInput").value = "";
+            results.classList.remove("active");
+            if (window.matchMedia && window.matchMedia("(max-width: 480px)").matches) {
+              document.body.classList.add("mobile-show-chart");
+              window.dispatchEvent(new Event("resize"));
+            }
+          });
+        });
+        results.classList.add("active");
+        positionSearchDropdown();
+      } else {
+        results.innerHTML = '<div class="search-result-item"><span class="result-name">該当する銘柄が見つかりません</span></div>';
+        results.classList.add("active");
+        positionSearchDropdown();
+      }
+    }
+
+    async function searchStocks(query) {
+      // 1) まず手元のマスタでクライアント検索（日本語の企業名も確実・高速・オフラインでも動く）
+      const local = searchLocalMaster(query);
+      if (local.length > 0) {
+        renderSearchResults(local);
+        return;
+      }
+      // 2) 見つからなければ Yahoo 検索API にフォールバック
       try {
         const url = `/api/search?q=${encodeURIComponent(query)}&market=${currentMarket}`;
         const response = await fetch(url);
         const data = await response.json();
-
-        if (data.results && data.results.length > 0) {
-          results.innerHTML = data.results
-            .map((item) => {
-              const sectorTag = item.sector
-                ? `<span class="result-market">${item.sector}</span>`
-                : `<span class="result-market">${item.market}</span>`;
-              return `
-                <div class="search-result-item" data-symbol="${item.symbol}" data-name="${(item.name || "").replace(/"/g, "&quot;")}">
-                  <div>
-                    <span class="result-symbol">${item.symbol}</span>
-                    <span class="result-name">${item.name}</span>
-                  </div>
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    ${sectorTag}
-                    <button class="result-add-btn" title="ウォッチリストに追加">+</button>
-                  </div>
-                </div>
-              `;
-            })
-            .join("");
-
-          // 各結果のクリックイベント
-          results.querySelectorAll(".search-result-item").forEach((el) => {
-            // 「+」ボタン → ウォッチリストに追加のみ
-            const addBtn = el.querySelector(".result-add-btn");
-            addBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              const sym = el.dataset.symbol;
-              const name = el.dataset.name || sym;
-              const symbol = /^\d{4}$/.test(sym) ? sym + ".T" : sym;
-              addToWatchlist(symbol, name);
-              addBtn.textContent = "✓";
-              addBtn.style.borderColor = "#26a69a";
-              addBtn.style.color = "#26a69a";
-            });
-
-            // 行クリック → チャート表示 + 詳細パネル更新
-            el.addEventListener("click", (e) => {
-              if (e.target.closest(".result-add-btn")) return;
-              const sym = el.dataset.symbol;
-              const symbol = /^\d{4}$/.test(sym) ? sym + ".T" : sym;
-              loadSymbol(symbol);
-              updateStockDetailPanel(symbol);
-              document.getElementById("searchInput").value = "";
-              results.classList.remove("active");
-            });
-          });
-
-          results.classList.add("active");
-        } else {
-          results.innerHTML = '<div class="search-result-item"><span class="result-name">該当する銘柄が見つかりません</span></div>';
-          results.classList.add("active");
-        }
+        renderSearchResults(data.results || []);
       } catch (error) {
         console.error("検索エラー:", error);
+        renderSearchResults([]);
       }
     }
 
@@ -3737,8 +4152,15 @@
     // ==========================================
     // 配当データ プリフェッチ＆キャッシュ
     // ==========================================
-    const DIV_CACHE_KEY = "stockview_div_cache";
+    // キャッシュキーにバージョンを付与。デプロイでロジックが変わったらここを上げて
+    // 既存ユーザーの古いキャッシュを自動無効化する。
+    // v2: 2026-05-08 ETF/REIT 配当 chart_events フォールバック対応
+    // v3: 2026-05-08 米国ETF配当 Yahoo v10失敗時のchart_events フォールバック追加
+    const DIV_CACHE_KEY = "stockview_div_cache_v3";
     const DIV_CACHE_TTL = 30 * 60 * 1000; // 30分間キャッシュ有効
+    // 古いキャッシュは即削除（容量節約・混乱回避）
+    try { localStorage.removeItem("stockview_div_cache"); } catch { /* noop */ }
+    try { localStorage.removeItem("stockview_div_cache_v2"); } catch { /* noop */ }
 
     // メモリ上にキャッシュを保持し、localStorageへの書き込みはデバウンスする
     let _divCache = null;
@@ -4073,8 +4495,11 @@
         // 年間配当金 + データソースを1行に統合
         const sourceTag = (data.source === "forward" || data.source === "yahoo_jp")
           ? "予想" : "実績";
+        // 円は小数1位・ドルは小数2位で表示（浮動小数点誤差を表面に出さない）
+        const divDecimals = data.currency === "JPY" ? 1 : 2;
+        const divRateDisplay = (data.dividendRate || 0).toFixed(divDecimals);
         document.getElementById("detailDividendRate").innerHTML =
-          `${curr}${data.dividendRate} <span style="font-size:10px;color:#999;">(${sourceTag})</span>`;
+          `${curr}${divRateDisplay} <span style="font-size:10px;color:#999;">(${sourceTag})</span>`;
       } else if (data.source === "none") {
         document.getElementById("detailDividendYield").textContent = "配当なし";
         document.getElementById("detailDividendRate").textContent = "-";
@@ -4441,6 +4866,13 @@
         wlContainer.querySelectorAll(".watchlist-item").forEach((i) => i.classList.remove("active"));
         item.classList.add("active");
         updateStockDetailPanel(symbol);
+
+        // スマホ：銘柄タップでチャートビューに切り替え
+        if (window.matchMedia && window.matchMedia("(max-width: 480px)").matches) {
+          document.body.classList.add("mobile-show-chart");
+          // チャートのリサイズを促す
+          window.dispatchEvent(new Event("resize"));
+        }
       });
 
       // ホバー先読み
@@ -5465,6 +5897,9 @@
 
       // 3. 検索機能を設定
       setupSearch();
+
+      // 3.2 スマホ用: 戻るボタン & モバイル検索バー
+      setupMobileUI();
 
       // 3.5 ロゴドロップダウン & 設定モーダル（fetchを待たずに早期登録）
       initLogoDropdownAndSettings();

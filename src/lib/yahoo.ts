@@ -6,11 +6,9 @@ const COMMON_HEADERS = {
 // ========================
 // 株価チャートデータ
 // ========================
-export async function fetchYahooFinance(
-  symbol: string,
-  interval: string,
-  range: string
-) {
+
+// 内部用：Yahoo Finance Chart API を1回叩いて生のチャート結果を返す
+async function fetchYahooChartRaw(symbol: string, interval: string, range: string) {
   const params = new URLSearchParams({
     interval,
     range,
@@ -28,10 +26,75 @@ export async function fetchYahooFinance(
       events?: { dividends?: Record<string, { amount: number; date: number }> };
     }> };
   };
-
   const result = raw.chart?.result?.[0];
   if (!result) throw new Error("データが見つかりません");
+  return result;
+}
 
+// 内部用：日次チャート（interval=1d）から「前営業日比」を算出する。
+// 引数の dailyChart は必ず日次のYahoo Chart結果。
+// 1. meta.regularMarketChange / regularMarketChangePercent が両方あればそれを使う
+// 2. 1がダメなら、日次キャンドルの末尾2本の終値から算出
+// 3. それもダメなら、meta.chartPreviousClose（=日次の前営業日終値）から算出
+// 4. それもダメなら 0 を返す（データ無し）
+function computeDailyChange(dailyChart: Awaited<ReturnType<typeof fetchYahooChartRaw>>) {
+  const meta = dailyChart.meta;
+  const currentPrice = meta.regularMarketPrice as number ?? 0;
+  const rawChangePct = meta.regularMarketChangePercent as number | undefined | null;
+  const rawChange = meta.regularMarketChange as number | undefined | null;
+
+  // 1. Yahooがリアルタイム前日比を提供している場合はそれを使用
+  if (rawChangePct != null && rawChange != null) {
+    // Yahooの regularMarketChangePercent は既に「％値」(例 1.5 = 1.5%)。
+    // 他の分岐 (change/prev)*100 と同じスケールに合わせるため ×100 しない。
+    return {
+      change: rawChange,
+      changePct: rawChangePct,
+    };
+  }
+
+  // 2. 日次キャンドルの末尾2本の終値から算出
+  const closes = (dailyChart.indicators?.quote?.[0]?.close ?? []).filter((c) => c != null) as number[];
+  if (closes.length >= 2) {
+    const last = closes[closes.length - 1];
+    const prev = closes[closes.length - 2];
+    if (prev > 0) {
+      const change = last - prev;
+      return {
+        change,
+        changePct: (change / prev) * 100,
+      };
+    }
+  }
+
+  // 3. chartPreviousClose（日次なので前営業日終値で安全）
+  const prevClose = meta.chartPreviousClose as number ?? 0;
+  if (prevClose > 0) {
+    const change = currentPrice - prevClose;
+    return {
+      change,
+      changePct: (change / prevClose) * 100,
+    };
+  }
+
+  // 4. 最終フォールバック
+  return { change: 0, changePct: 0 };
+}
+
+export async function fetchYahooFinance(
+  symbol: string,
+  interval: string,
+  range: string
+) {
+  // 要求された interval/range のチャートと、前日比算出用の日次チャートを並列で取得する。
+  // interval が既に "1d" の場合は同じデータを使い回し、API呼び出しを節約する。
+  const isDailyRequest = interval === "1d";
+  const [primary, daily] = await Promise.all([
+    fetchYahooChartRaw(symbol, interval, range),
+    isDailyRequest ? Promise.resolve(null) : fetchYahooChartRaw(symbol, "1d", "5d").catch(() => null),
+  ]);
+
+  const result = primary;
   const meta = result.meta;
   const timestamps = result.timestamp ?? [];
   const quote = result.indicators?.quote?.[0] ?? {};
@@ -57,14 +120,13 @@ export async function fetchYahooFinance(
 
   const currency = meta.currency as string ?? "JPY";
   const currentPrice = meta.regularMarketPrice as number ?? 0;
-  // regularMarketChangePercent はリアルタイムの前日比（詳細パネルと同じ値）
-  const rawChangePct = meta.regularMarketChangePercent as number;
-  const rawChange = meta.regularMarketChange as number;
-  const prevClose = meta.chartPreviousClose as number ?? 0;
-  const changePct = rawChangePct != null ? rawChangePct * 100
-    : prevClose ? ((currentPrice - prevClose) / prevClose) * 100 : 0;
-  const change = rawChange != null ? rawChange
-    : prevClose ? currentPrice - prevClose : 0;
+
+  // 変化率は常に「前営業日比」で算出する。週足や月足のチャートでも、
+  // 表示する change/changePercent は日次ベースに統一する（TradingViewと同じ挙動）。
+  // - interval=1d の場合: primary 自体が日次なので primary を使う
+  // - それ以外: 別途取得した daily を使う（取得失敗時は primary にフォールバック）
+  const dailyChart = daily ?? primary;
+  const { change, changePct } = computeDailyChange(dailyChart);
 
   return {
     symbol,
@@ -106,6 +168,57 @@ function previousBusinessDay(date: Date): Date {
 // 月末配当の権利落ち日（権利確定日 = 月末営業日、権利落ち日 = その1営業日前）
 function exDividendDateForMonth(year: number, month1to12: number): Date {
   return previousBusinessDay(lastBusinessDayOfMonth(year, month1to12));
+}
+
+// Yahoo Chart API の events.dividends から「直近12ヶ月の年間配当合計」と「最新の権利落ち日」を算出する。
+// ETF や REIT は v10 quoteSummary で配当が0で返ることが多く、IR Bank も対応していないので、
+// この関数が3段目のフォールバックになる（個別株でも有効）。
+async function fetchTrailingAnnualDividendFromChart(symbol: string): Promise<{ rate: number; exDate: string }> {
+  try {
+    const params = new URLSearchParams({
+      interval: "1mo",
+      range: "2y",
+      includePrePost: "false",
+      events: "div",
+    });
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?${params}`;
+    const res = await fetch(url, { headers: COMMON_HEADERS });
+    if (!res.ok) return { rate: 0, exDate: "" };
+    const raw = await res.json() as {
+      chart: { result: Array<{
+        events?: { dividends?: Record<string, { amount: number; date: number }> };
+      }> };
+    };
+    const result = raw.chart?.result?.[0];
+    const dividends = result?.events?.dividends ?? {};
+    const events = Object.values(dividends).filter((d) => d && typeof d.amount === "number" && typeof d.date === "number");
+    if (events.length === 0) return { rate: 0, exDate: "" };
+
+    // 直近12ヶ月（365日）の合計（浮動小数点誤差を避けるため小数2位で丸め）
+    const nowSec = Math.floor(Date.now() / 1000);
+    const oneYearSec = 365 * 24 * 60 * 60;
+    const recent = events.filter((d) => d.date >= nowSec - oneYearSec);
+    const trailingRaw = recent.reduce((sum, d) => sum + d.amount, 0);
+    const trailing = Math.round(trailingRaw * 100) / 100;
+
+    // 最新の権利落ち日（unixタイムスタンプ最大）
+    const latest = events.reduce((best, d) => (d.date > best.date ? d : best), events[0]);
+    const latestDate = new Date(latest.date * 1000);
+    const today = new Date();
+    let exDate = "";
+    if (latestDate >= today) {
+      exDate = latestDate.toISOString().slice(0, 10);
+    } else {
+      // 過去の権利落ち日 → 同月の翌年予想として表示
+      const m = latestDate.getMonth() + 1;
+      const y = today.getMonth() + 1 <= m ? today.getFullYear() : today.getFullYear() + 1;
+      exDate = `${y}-${String(m).padStart(2, "0")}（予想）`;
+    }
+
+    return { rate: trailing, exDate };
+  } catch {
+    return { rate: 0, exDate: "" };
+  }
 }
 
 // 日本株の次回配当落ち日を IR Bank の決算期間から推定
@@ -172,8 +285,20 @@ async function fetchDividendFromIrBank(symbol: string) {
   // 最新の有効な配当値（dl.gdlの年間合計を優先、なければ予想テーブルの値を使用）
   const latestForecast = [...forecastVals].reverse().find((v) => v !== null && v !== undefined) ?? 0;
   const latestActual = [...divVals].reverse().find((v) => v !== null && v !== undefined) ?? 0;
-  const latestDividend = latestActual > 0 ? latestActual : latestForecast;
+  let latestDividend = latestActual > 0 ? latestActual : latestForecast;
   const latestYieldPct = [...yieldVals].reverse().find((v) => v !== null && v !== undefined) ?? 0;
+  let exDividendDate = computeNextExDividendJp(data.periods, new Date());
+  let irbankSource: "irbank" | "chart_events" | "none" = latestDividend > 0 ? "irbank" : "none";
+
+  // ETF/REITはIR Bank対象外なのでChart eventsから補正（v10失敗時のフォールバックとしても有効）
+  if (latestDividend === 0) {
+    const chartDiv = await fetchTrailingAnnualDividendFromChart(symbol);
+    if (chartDiv.rate > 0) {
+      latestDividend = chartDiv.rate;
+      if (!exDividendDate && chartDiv.exDate) exDividendDate = chartDiv.exDate;
+      irbankSource = "chart_events";
+    }
+  }
 
   // 現在価格があれば利回りを再計算、なければIR Bankの値を利用
   const computedYield = price > 0 && latestDividend > 0 ? (latestDividend / price) * 100 : latestYieldPct;
@@ -190,12 +315,12 @@ async function fetchDividendFromIrBank(symbol: string) {
     trailingYield: Math.round(computedYield * 100) / 100,
     dividendRate: latestDividend,
     dividendYield: Math.round(computedYield * 100) / 100,
-    source: latestDividend > 0 ? "irbank" : "none",
+    source: irbankSource,
     price,
     change: Math.round(change * 100) / 100,
     changePercent: Math.round(changePct * 100) / 100,
     currency,
-    exDividendDate: computeNextExDividendJp(data.periods, new Date()),
+    exDividendDate,
   };
 }
 
@@ -298,6 +423,22 @@ export async function fetchDividendData(symbol: string) {
       }
     }
 
+    // 3段目フォールバック: ETF・REIT 用に Yahoo Chart API events.dividends から年間分配金を計算
+    // Yahoo summary もIR Bankも 0 の場合のみ実行（個別株のYahoo配当データは信頼性が高いので壊さない）
+    let chartDebug = "skipped";
+    if (useRate === 0) {
+      const chartDiv = await fetchTrailingAnnualDividendFromChart(symbol);
+      chartDebug = `chart_rate=${chartDiv.rate},chart_exDate=${chartDiv.exDate}`;
+      if (chartDiv.rate > 0) {
+        useRate = chartDiv.rate;
+        useYield = currentPrice > 0 ? chartDiv.rate / currentPrice : 0;
+        source = "chart_events";
+        if (!exDivDate && chartDiv.exDate) {
+          exDivDate = chartDiv.exDate;
+        }
+      }
+    }
+
     return {
       symbol,
       name: shortName,
@@ -316,13 +457,56 @@ export async function fetchDividendData(symbol: string) {
       changePercent: Math.round(changePct * 10000) / 100,
       currency,
       exDividendDate: exDivDate,
-      _debug: irDebug,
+      _debug: `ir:${irDebug} | chart:${chartDebug}`,
     };
   } catch {
-    // 日本株はIR Bankにフォールバック
+    // 日本株はIR Bankにフォールバック（IR Bank内でChart eventsもフォールバック）
     if (symbol.endsWith(".T") || /^\d{4}$/.test(symbol)) {
       const irData = await fetchDividendFromIrBank(symbol);
       if (irData) return irData;
+    }
+    // 米国株・ETFなど: Yahoo v10がInvalid Crumb等で失敗するケースがあるため、
+    // Chart APIのevents.dividendsから直接配当を計算する
+    try {
+      const chartDiv = await fetchTrailingAnnualDividendFromChart(symbol);
+      if (chartDiv.rate > 0) {
+        // 価格を取るため別途 Chart API で日次取得
+        let price = 0, change = 0, changePct = 0, currency = "USD", shortName = symbol, exchange = "";
+        try {
+          const chart = await fetchYahooFinance(symbol, "1d", "5d");
+          price = chart.currentPrice;
+          change = chart.change;
+          changePct = chart.changePercent;
+          currency = chart.currency;
+          shortName = chart.name;
+          exchange = chart.exchange;
+        } catch {
+          // 価格取得失敗時は0で続行
+        }
+        const yieldPct = price > 0 ? (chartDiv.rate / price) * 100 : 0;
+        return {
+          symbol,
+          name: shortName,
+          exchange,
+          sector: "",
+          industry: "",
+          forwardDividend: chartDiv.rate,
+          forwardYield: Math.round(yieldPct * 100) / 100,
+          trailingDividend: chartDiv.rate,
+          trailingYield: Math.round(yieldPct * 100) / 100,
+          dividendRate: chartDiv.rate,
+          dividendYield: Math.round(yieldPct * 100) / 100,
+          source: "chart_events",
+          price,
+          change: Math.round(change * 100) / 100,
+          changePercent: Math.round(changePct * 100) / 100,
+          currency,
+          exDividendDate: chartDiv.exDate,
+          _debug: "v10_failed,chart_events_fallback",
+        };
+      }
+    } catch {
+      // chart events も失敗 → emptyにフォールバック
     }
     return emptyDividend(symbol);
   }
